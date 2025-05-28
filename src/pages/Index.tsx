@@ -1,62 +1,33 @@
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import ProfileCard from '../components/ProfileCard';
 import MatchModal from '../components/MatchModal';
 import PaymentModal from '../components/PaymentModal';
-import { Heart, X, Settings, User } from 'lucide-react';
+import { Heart, X, Settings, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Profile {
-  id: number;
-  name: string;
+  id: string;
+  display_name: string;
   age: number;
-  image: string;
   bio: string;
   whatsapp: string;
   location: string;
+  profile_image_url?: string;
 }
 
-const mockProfiles: Profile[] = [
-  {
-    id: 1,
-    name: "Emma",
-    age: 28,
-    image: "https://images.unsplash.com/photo-1494790108755-2616b612b566?w=400&h=600&fit=crop",
-    bio: "Love hiking and good coffee ☕",
-    whatsapp: "+27123456789",
-    location: "Cape Town"
-  },
-  {
-    id: 2,
-    name: "Sarah",
-    age: 25,
-    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=600&fit=crop",
-    bio: "Adventure seeker and wine enthusiast 🍷",
-    whatsapp: "+27987654321",
-    location: "Johannesburg"
-  },
-  {
-    id: 3,
-    name: "Lisa",
-    age: 30,
-    image: "https://images.unsplash.com/photo-1534751516642-a1af1ef26a56?w=400&h=600&fit=crop",
-    bio: "Yoga instructor & nature lover 🧘‍♀️",
-    whatsapp: "+27555123456",
-    location: "Durban"
-  },
-  {
-    id: 4,
-    name: "Maria",
-    age: 27,
-    image: "https://images.unsplash.com/photo-1488716820095-cbe80883c496?w=400&h=600&fit=crop",
-    bio: "Photographer capturing life's moments 📸",
-    whatsapp: "+27444987654",
-    location: "Pretoria"
-  }
-];
-
 const Index = () => {
-  const [profiles, setProfiles] = useState<Profile[]>(mockProfiles);
+  const { user, signOut } = useAuth();
+  const [profiles, setProfiles] = useState<Profile[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [matches, setMatches] = useState<Profile[]>([]);
   const [showMatch, setShowMatch] = useState(false);
@@ -64,22 +35,91 @@ const Index = () => {
   const [showPayment, setShowPayment] = useState(false);
   const [isSwipingDisabled, setIsSwipingDisabled] = useState(false);
   const [swipeCount, setSwipeCount] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   const currentProfile = profiles[currentIndex];
 
-  const handleSwipe = (direction: 'left' | 'right') => {
-    if (isSwipingDisabled || !currentProfile) return;
+  useEffect(() => {
+    if (user) {
+      fetchProfiles();
+    }
+  }, [user]);
+
+  const fetchProfiles = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .neq('id', user?.id)
+        .limit(10);
+
+      if (error) throw error;
+
+      // Transform data to match expected interface
+      const transformedProfiles = data?.map(profile => ({
+        id: profile.id,
+        display_name: profile.display_name || 'Anonymous',
+        age: profile.age || 25,
+        bio: profile.bio || 'Hello there! 👋',
+        whatsapp: profile.whatsapp || '',
+        location: profile.location || 'Unknown',
+        profile_image_url: profile.profile_image_url || `https://images.unsplash.com/photo-${Math.random() > 0.5 ? '1494790108755-2616b612b566' : '1438761681033-6461ffad8d80'}?w=400&h=600&fit=crop`
+      })) || [];
+
+      setProfiles(transformedProfiles);
+    } catch (error: any) {
+      toast({
+        title: "Error loading profiles",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSwipe = async (direction: 'left' | 'right') => {
+    if (isSwipingDisabled || !currentProfile || !user) return;
 
     const newSwipeCount = swipeCount + 1;
     setSwipeCount(newSwipeCount);
 
-    if (direction === 'right') {
-      // Simulate match (50% chance)
-      if (Math.random() > 0.5) {
-        setMatches(prev => [...prev, currentProfile]);
-        setLastMatch(currentProfile);
-        setShowMatch(true);
+    try {
+      // Record the swipe
+      await supabase
+        .from('swipes')
+        .insert({
+          user_id: user.id,
+          target_user_id: currentProfile.id,
+          liked: direction === 'right'
+        });
+
+      if (direction === 'right') {
+        // Check if target user already liked this user
+        const { data: mutualLike } = await supabase
+          .from('swipes')
+          .select('*')
+          .eq('user_id', currentProfile.id)
+          .eq('target_user_id', user.id)
+          .eq('liked', true)
+          .single();
+
+        if (mutualLike) {
+          // Create match
+          await supabase
+            .from('matches')
+            .insert({
+              user1_id: user.id,
+              user2_id: currentProfile.id
+            });
+
+          setMatches(prev => [...prev, currentProfile]);
+          setLastMatch(currentProfile);
+          setShowMatch(true);
+        }
       }
+    } catch (error: any) {
+      console.error('Error recording swipe:', error);
     }
 
     // Show paywall after 5 swipes
@@ -98,6 +138,26 @@ const Index = () => {
     setSwipeCount(0);
   };
 
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error: any) {
+      toast({
+        title: "Error signing out",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center">
+        <div className="text-white text-lg">Loading profiles...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 text-white">
       {/* Header */}
@@ -107,12 +167,19 @@ const Index = () => {
           <span className="text-xl font-bold">Connect</span>
         </div>
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
-            <User className="w-5 h-5" />
-          </Button>
-          <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
-            <Settings className="w-5 h-5" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
+                <User className="w-5 h-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="bg-gray-800 border-gray-700">
+              <DropdownMenuItem onClick={handleSignOut} className="text-white hover:bg-gray-700">
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -121,7 +188,15 @@ const Index = () => {
         {currentProfile && currentIndex < profiles.length ? (
           <div className="relative">
             <ProfileCard 
-              profile={currentProfile} 
+              profile={{
+                id: parseInt(currentProfile.id),
+                name: currentProfile.display_name,
+                age: currentProfile.age,
+                image: currentProfile.profile_image_url || '',
+                bio: currentProfile.bio,
+                whatsapp: currentProfile.whatsapp,
+                location: currentProfile.location
+              }}
               onSwipe={handleSwipe}
               disabled={isSwipingDisabled}
             />
@@ -168,9 +243,10 @@ const Index = () => {
                 setCurrentIndex(0);
                 setSwipeCount(0);
                 setIsSwipingDisabled(false);
+                fetchProfiles();
               }}
             >
-              Start Over
+              Refresh
             </Button>
           </div>
         )}
@@ -179,7 +255,15 @@ const Index = () => {
       {/* Match Modal */}
       {showMatch && lastMatch && (
         <MatchModal
-          profile={lastMatch}
+          profile={{
+            id: parseInt(lastMatch.id),
+            name: lastMatch.display_name,
+            age: lastMatch.age,
+            image: lastMatch.profile_image_url || '',
+            bio: lastMatch.bio,
+            whatsapp: lastMatch.whatsapp,
+            location: lastMatch.location
+          }}
           onClose={() => setShowMatch(false)}
         />
       )}
