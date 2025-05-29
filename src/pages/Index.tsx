@@ -1,8 +1,11 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProfileCompletion } from '@/hooks/useProfileCompletion';
 import ProfileCard from '../components/ProfileCard';
 import MatchModal from '../components/MatchModal';
 import PaymentModal from '../components/PaymentModal';
+import ProfileCompletionBanner from '../components/ProfileCompletionBanner';
 import { Heart, X, Settings, User, LogOut, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,6 +30,7 @@ interface Profile {
 
 const Index = () => {
   const { user, signOut } = useAuth();
+  const { isComplete, missingFields, loading: profileLoading } = useProfileCompletion();
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -41,10 +45,19 @@ const Index = () => {
   const currentProfile = profiles[currentIndex];
 
   useEffect(() => {
-    if (user) {
+    if (user && !profileLoading) {
       fetchProfiles();
     }
-  }, [user]);
+  }, [user, profileLoading]);
+
+  // Disable swiping if profile is incomplete
+  useEffect(() => {
+    if (!profileLoading && !isComplete) {
+      setIsSwipingDisabled(true);
+    } else if (!profileLoading && isComplete) {
+      setIsSwipingDisabled(false);
+    }
+  }, [isComplete, profileLoading]);
 
   const fetchProfiles = async () => {
     try {
@@ -151,7 +164,7 @@ const Index = () => {
     }
   };
 
-  if (loading) {
+  if (loading || profileLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center">
         <div className="text-white text-lg">Loading profiles...</div>
@@ -193,6 +206,11 @@ const Index = () => {
 
       {/* Main Content */}
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] p-4">
+        {/* Profile Completion Banner */}
+        <div className="w-full max-w-md mb-4">
+          <ProfileCompletionBanner missingFields={missingFields} />
+        </div>
+
         {currentProfile && currentIndex < profiles.length ? (
           <div className="relative">
             <ProfileCard 
@@ -232,10 +250,19 @@ const Index = () => {
             </div>
 
             {/* Paywall Notice */}
-            {swipeCount >= 3 && !isSwipingDisabled && (
+            {swipeCount >= 3 && !isSwipingDisabled && isComplete && (
               <div className="text-center mt-4 p-3 bg-purple-500/20 rounded-lg backdrop-blur-md">
                 <p className="text-sm text-purple-200">
                   {5 - swipeCount} swipes remaining before premium required
+                </p>
+              </div>
+            )}
+
+            {/* Profile Incomplete Notice */}
+            {!isComplete && (
+              <div className="text-center mt-4 p-3 bg-orange-500/20 rounded-lg backdrop-blur-md">
+                <p className="text-sm text-orange-200">
+                  Complete your profile to start swiping!
                 </p>
               </div>
             )}
@@ -250,7 +277,7 @@ const Index = () => {
               onClick={() => {
                 setCurrentIndex(0);
                 setSwipeCount(0);
-                setIsSwipingDisabled(false);
+                setIsSwipingDisabled(!isComplete);
                 fetchProfiles();
               }}
             >
