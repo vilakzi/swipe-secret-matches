@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import ProfileCard from '../components/ProfileCard';
 import MatchModal from '../components/MatchModal';
 import PaymentModal from '../components/PaymentModal';
-import { Heart, X, Settings, User, LogOut } from 'lucide-react';
+import { Heart, X, Settings, User, LogOut, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -14,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useNavigate } from 'react-router-dom';
 
 interface Profile {
   id: string;
@@ -27,6 +27,7 @@ interface Profile {
 
 const Index = () => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [matches, setMatches] = useState<Profile[]>([]);
@@ -174,6 +175,13 @@ const Index = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="bg-gray-800 border-gray-700">
+              <DropdownMenuItem 
+                onClick={() => navigate('/profile')} 
+                className="text-white hover:bg-gray-700"
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                Edit Profile
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={handleSignOut} className="text-white hover:bg-gray-700">
                 <LogOut className="w-4 h-4 mr-2" />
                 Sign Out
