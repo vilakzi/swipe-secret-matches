@@ -1,8 +1,9 @@
-
 import { useState, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MapPin, MessageCircle, Heart } from 'lucide-react';
+import OnlineStatus from './OnlineStatus';
+import { usePresence } from '@/hooks/usePresence';
 
 interface Profile {
   id: number;
@@ -22,6 +23,8 @@ interface ProfileCardProps {
 }
 
 const ProfileCard = ({ profile, onSwipe, disabled = false }: ProfileCardProps) => {
+  const { isUserOnline } = usePresence();
+  
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [rotation, setRotation] = useState(0);
@@ -111,6 +114,15 @@ const ProfileCard = ({ profile, onSwipe, disabled = false }: ProfileCardProps) =
           className="w-full h-64 bg-cover bg-center relative"
           style={{ backgroundImage: `url(${profile.image})` }}
         >
+          {/* Online Status Indicator */}
+          <div className="absolute top-2 left-2">
+            <OnlineStatus 
+              isOnline={isUserOnline(profile.id.toString())} 
+              size="md"
+              className="bg-gray-900/50 rounded-full p-1"
+            />
+          </div>
+
           {/* Liked Indicator */}
           {profile.liked && (
             <div className="absolute top-2 right-2 bg-pink-500 rounded-full p-2">
@@ -138,9 +150,15 @@ const ProfileCard = ({ profile, onSwipe, disabled = false }: ProfileCardProps) =
         {/* Profile Info */}
         <div className="p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold text-white">
-              {profile.name}, {profile.age}
-            </h3>
+            <div className="flex items-center space-x-2">
+              <h3 className="text-xl font-bold text-white">
+                {profile.name}, {profile.age}
+              </h3>
+              <OnlineStatus 
+                isOnline={isUserOnline(profile.id.toString())} 
+                size="sm"
+              />
+            </div>
             <Button
               size="sm"
               className="bg-green-600 hover:bg-green-700 text-white"

@@ -1,11 +1,12 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfileCompletion } from '@/hooks/useProfileCompletion';
+import { usePresence } from '@/hooks/usePresence';
 import ProfileCard from '../components/ProfileCard';
 import MatchModal from '../components/MatchModal';
 import PaymentModal from '../components/PaymentModal';
 import ProfileCompletionBanner from '../components/ProfileCompletionBanner';
+import OnlineStatus from '../components/OnlineStatus';
 import { Heart, X, Settings, User, LogOut, Edit, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -33,6 +34,7 @@ interface Profile {
 const Index = () => {
   const { user, signOut } = useAuth();
   const { isComplete, missingFields, loading: profileLoading } = useProfileCompletion();
+  const { isUserOnline } = usePresence();
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [matches, setMatches] = useState<Profile[]>([]);
@@ -217,8 +219,13 @@ const Index = () => {
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
+              <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 relative">
                 <User className="w-5 h-5" />
+                {user && (
+                  <div className="absolute -top-1 -right-1">
+                    <OnlineStatus isOnline={isUserOnline(user.id)} size="sm" />
+                  </div>
+                )}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="bg-gray-800 border-gray-700">
