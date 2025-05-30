@@ -30,6 +30,107 @@ export type Database = {
         }
         Relationships: []
       }
+      post_payments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          currency: string | null
+          id: string
+          payment_status: string | null
+          post_id: string
+          promotion_hours: number
+          provider_id: string
+          stripe_session_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          payment_status?: string | null
+          post_id: string
+          promotion_hours: number
+          provider_id: string
+          stripe_session_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          payment_status?: string | null
+          post_id?: string
+          promotion_hours?: number
+          provider_id?: string
+          stripe_session_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_payments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_payments_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          content_url: string
+          created_at: string | null
+          expires_at: string
+          id: string
+          is_promoted: boolean | null
+          payment_status: string | null
+          post_type: Database["public"]["Enums"]["post_type"]
+          promotion_type: Database["public"]["Enums"]["promotion_type"] | null
+          provider_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          content_url: string
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          is_promoted?: boolean | null
+          payment_status?: string | null
+          post_type: Database["public"]["Enums"]["post_type"]
+          promotion_type?: Database["public"]["Enums"]["promotion_type"] | null
+          provider_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          content_url?: string
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          is_promoted?: boolean | null
+          payment_status?: string | null
+          post_type?: Database["public"]["Enums"]["post_type"]
+          promotion_type?: Database["public"]["Enums"]["promotion_type"] | null
+          provider_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           age: number | null
@@ -40,6 +141,7 @@ export type Database = {
           location: string | null
           profile_image_url: string | null
           updated_at: string
+          user_type: Database["public"]["Enums"]["user_type"] | null
           whatsapp: string | null
         }
         Insert: {
@@ -51,6 +153,7 @@ export type Database = {
           location?: string | null
           profile_image_url?: string | null
           updated_at?: string
+          user_type?: Database["public"]["Enums"]["user_type"] | null
           whatsapp?: string | null
         }
         Update: {
@@ -62,6 +165,7 @@ export type Database = {
           location?: string | null
           profile_image_url?: string | null
           updated_at?: string
+          user_type?: Database["public"]["Enums"]["user_type"] | null
           whatsapp?: string | null
         }
         Relationships: []
@@ -98,7 +202,9 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      post_type: "image" | "video"
+      promotion_type: "free_2h" | "paid_8h" | "paid_12h"
+      user_type: "user" | "service_provider"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -213,6 +319,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      post_type: ["image", "video"],
+      promotion_type: ["free_2h", "paid_8h", "paid_12h"],
+      user_type: ["user", "service_provider"],
+    },
   },
 } as const

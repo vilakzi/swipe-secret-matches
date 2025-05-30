@@ -3,14 +3,15 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Crown, Heart, MessageCircle, Zap, X, Check } from 'lucide-react';
+import { Crown, Heart, MessageCircle, Zap, X, Check, Clock } from 'lucide-react';
 
 interface PaymentModalProps {
   onSuccess: () => void;
   onClose: () => void;
+  promotionType?: 'paid_8h' | 'paid_12h';
 }
 
-const PaymentModal = ({ onSuccess, onClose }: PaymentModalProps) => {
+const PaymentModal = ({ onSuccess, onClose, promotionType = 'paid_8h' }: PaymentModalProps) => {
   const [isOpen, setIsOpen] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -38,12 +39,33 @@ const PaymentModal = ({ onSuccess, onClose }: PaymentModalProps) => {
     }
   };
 
-  const features = [
-    { icon: Heart, text: "Unlimited swipes" },
-    { icon: MessageCircle, text: "Direct WhatsApp access" },
-    { icon: Zap, text: "See who liked you" },
-    { icon: Crown, text: "Premium badge" },
-  ];
+  const getPromotionDetails = () => {
+    if (promotionType === 'paid_12h') {
+      return {
+        price: 'R39',
+        duration: '12 hours',
+        features: [
+          { icon: Clock, text: "12 hour promotion" },
+          { icon: Crown, text: "Premium visibility" },
+          { icon: Zap, text: "External platform reach" },
+          { icon: Heart, text: "Priority positioning" },
+        ]
+      };
+    }
+    
+    return {
+      price: 'R20',
+      duration: '8 hours',
+      features: [
+        { icon: Clock, text: "8 hour promotion" },
+        { icon: Crown, text: "Enhanced visibility" },
+        { icon: Zap, text: "Platform promotion" },
+        { icon: Heart, text: "Boosted engagement" },
+      ]
+    };
+  };
+
+  const { price, duration, features } = getPromotionDetails();
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -51,7 +73,7 @@ const PaymentModal = ({ onSuccess, onClose }: PaymentModalProps) => {
         <DialogHeader>
           <div className="flex justify-between items-center">
             <DialogTitle className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-              Upgrade to Premium
+              Promote Your Post
             </DialogTitle>
             <Button
               variant="ghost"
@@ -80,8 +102,8 @@ const PaymentModal = ({ onSuccess, onClose }: PaymentModalProps) => {
           {/* Pricing */}
           <Card className="bg-gradient-to-r from-purple-600 to-pink-600 border-none p-6 text-center">
             <div className="space-y-2">
-              <div className="text-3xl font-bold">R150</div>
-              <div className="text-sm opacity-90">One-time payment</div>
+              <div className="text-3xl font-bold">{price}</div>
+              <div className="text-sm opacity-90">Promote for {duration}</div>
               <div className="text-xs opacity-75">Secure payment via PayFast</div>
             </div>
           </Card>
@@ -100,7 +122,7 @@ const PaymentModal = ({ onSuccess, onClose }: PaymentModalProps) => {
             ) : (
               <div className="flex items-center space-x-2">
                 <Crown className="w-5 h-5" />
-                <span>Upgrade Now - R150</span>
+                <span>Pay {price} - Promote for {duration}</span>
               </div>
             )}
           </Button>

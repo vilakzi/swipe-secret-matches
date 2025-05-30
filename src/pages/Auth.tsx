@@ -4,14 +4,16 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Heart, Eye, EyeOff } from 'lucide-react';
+import { Heart, Eye, EyeOff, User, Briefcase } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [userType, setUserType] = useState<'user' | 'service_provider'>('user');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
@@ -38,9 +40,20 @@ const Auth = () => {
           return;
         }
         await signUp(email, password, displayName);
+
+        // Update user type in profiles table
+        const { error } = await supabase
+          .from('profiles')
+          .update({ user_type: userType })
+          .eq('id', (await supabase.auth.getUser()).data.user?.id);
+
+        if (error) {
+          console.error('Error updating user type:', error);
+        }
+
         toast({
           title: "Account created!",
-          description: "Welcome to the app. You can now start swiping!",
+          description: `Welcome ${userType === 'service_provider' ? 'Service Provider' : 'User'}! You can now start using the app.`,
         });
       }
       navigate('/');
@@ -86,19 +99,47 @@ const Auth = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Display Name
-                </label>
-                <Input
-                  type="text"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className="bg-gray-800 border-gray-600 text-white"
-                  placeholder="Enter your display name"
-                  required={!isLogin}
-                />
-              </div>
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Account Type
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      type="button"
+                      variant={userType === 'user' ? "default" : "outline"}
+                      className="flex items-center justify-center space-x-2"
+                      onClick={() => setUserType('user')}
+                    >
+                      <User className="w-4 h-4" />
+                      <span>User</span>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={userType === 'service_provider' ? "default" : "outline"}
+                      className="flex items-center justify-center space-x-2"
+                      onClick={() => setUserType('service_provider')}
+                    >
+                      <Briefcase className="w-4 h-4" />
+                      <span>Provider</span>
+                    </Button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Display Name
+                  </label>
+                  <Input
+                    type="text"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    className="bg-gray-800 border-gray-600 text-white"
+                    placeholder="Enter your display name"
+                    required={!isLogin}
+                  />
+                </div>
+              </>
             )}
 
             <div>
