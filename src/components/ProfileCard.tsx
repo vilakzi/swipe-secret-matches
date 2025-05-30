@@ -2,7 +2,7 @@
 import { useState, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MapPin, MessageCircle } from 'lucide-react';
+import { MapPin, MessageCircle, Heart } from 'lucide-react';
 
 interface Profile {
   id: number;
@@ -12,6 +12,7 @@ interface Profile {
   bio: string;
   whatsapp: string;
   location: string;
+  liked?: boolean;
 }
 
 interface ProfileCardProps {
@@ -93,7 +94,9 @@ const ProfileCard = ({ profile, onSwipe, disabled = false }: ProfileCardProps) =
     <div className="relative w-80 h-96 mx-auto select-none">
       <Card
         ref={cardRef}
-        className="w-full h-full bg-gray-800 border-gray-700 overflow-hidden cursor-grab active:cursor-grabbing relative"
+        className={`w-full h-full bg-gray-800 border-gray-700 overflow-hidden cursor-grab active:cursor-grabbing relative ${
+          profile.liked ? 'ring-2 ring-pink-500' : ''
+        }`}
         style={cardStyle}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -108,6 +111,13 @@ const ProfileCard = ({ profile, onSwipe, disabled = false }: ProfileCardProps) =
           className="w-full h-64 bg-cover bg-center relative"
           style={{ backgroundImage: `url(${profile.image})` }}
         >
+          {/* Liked Indicator */}
+          {profile.liked && (
+            <div className="absolute top-2 right-2 bg-pink-500 rounded-full p-2">
+              <Heart className="w-4 h-4 text-white fill-white" />
+            </div>
+          )}
+
           {/* Swipe Overlays */}
           {isDragging && (
             <>

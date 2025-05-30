@@ -6,8 +6,9 @@ import ProfileCard from '../components/ProfileCard';
 import MatchModal from '../components/MatchModal';
 import PaymentModal from '../components/PaymentModal';
 import ProfileCompletionBanner from '../components/ProfileCompletionBanner';
-import { Heart, X, Settings, User, LogOut, Edit } from 'lucide-react';
+import { Heart, X, Settings, User, LogOut, Edit, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import {
@@ -26,6 +27,7 @@ interface Profile {
   whatsapp: string;
   location: string;
   profile_image_url?: string;
+  liked?: boolean;
 }
 
 const Index = () => {
@@ -33,7 +35,6 @@ const Index = () => {
   const { isComplete, missingFields, loading: profileLoading } = useProfileCompletion();
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [matches, setMatches] = useState<Profile[]>([]);
   const [showMatch, setShowMatch] = useState(false);
   const [lastMatch, setLastMatch] = useState<Profile | null>(null);
@@ -41,8 +42,7 @@ const Index = () => {
   const [isSwipingDisabled, setIsSwipingDisabled] = useState(false);
   const [swipeCount, setSwipeCount] = useState(0);
   const [loading, setLoading] = useState(true);
-
-  const currentProfile = profiles[currentIndex];
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (user && !profileLoading) {
@@ -59,13 +59,15 @@ const Index = () => {
     }
   }, [isComplete, profileLoading]);
 
-  const fetchProfiles = async () => {
+  const fetchProfiles = async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true);
+    
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .neq('id', user?.id)
-        .limit(10);
+        .limit(20);
 
       if (error) throw error;
 
@@ -77,10 +79,20 @@ const Index = () => {
         bio: profile.bio || 'Hello there! 👋',
         whatsapp: profile.whatsapp || '',
         location: profile.location || 'Unknown',
-        profile_image_url: profile.profile_image_url || `https://images.unsplash.com/photo-${Math.random() > 0.5 ? '1494790108755-2616b612b566' : '1438761681033-6461ffad8d80'}?w=400&h=600&fit=crop`
+        profile_image_url: profile.profile_image_url || `https://images.unsplash.com/photo-${Math.random() > 0.5 ? '1494790108755-2616b612b566' : '1438761681033-6461ffad8d80'}?w=400&h=600&fit=crop`,
+        liked: false
       })) || [];
 
-      setProfiles(transformedProfiles);
+      if (isRefresh) {
+        setProfiles(transformedProfiles);
+        setSwipeCount(0);
+        toast({
+          title: "Refreshed!",
+          description: "New profiles loaded",
+        });
+      } else {
+        setProfiles(transformedProfiles);
+      }
     } catch (error: any) {
       toast({
         title: "Error loading profiles",
@@ -89,14 +101,25 @@ const Index = () => {
       });
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  const handleSwipe = async (direction: 'left' | 'right') => {
-    if (isSwipingDisabled || !currentProfile || !user) return;
+  const handleSwipe = async (profileId: string, direction: 'left' | 'right') => {
+    if (isSwipingDisabled || !user) return;
+
+    const profile = profiles.find(p => p.id === profileId);
+    if (!profile) return;
 
     const newSwipeCount = swipeCount + 1;
     setSwipeCount(newSwipeCount);
+
+    // Mark profile as liked in the UI but don't remove it
+    if (direction === 'right') {
+      setProfiles(prev => prev.map(p => 
+        p.id === profileId ? { ...p, liked: true } : p
+      ));
+    }
 
     try {
       // Record the swipe
@@ -104,7 +127,7 @@ const Index = () => {
         .from('swipes')
         .insert({
           user_id: user.id,
-          target_user_id: currentProfile.id,
+          target_user_id: profile.id,
           liked: direction === 'right'
         });
 
@@ -113,7 +136,7 @@ const Index = () => {
         const { data: mutualLike } = await supabase
           .from('swipes')
           .select('*')
-          .eq('user_id', currentProfile.id)
+          .eq('user_id', profile.id)
           .eq('target_user_id', user.id)
           .eq('liked', true)
           .single();
@@ -124,11 +147,11 @@ const Index = () => {
             .from('matches')
             .insert({
               user1_id: user.id,
-              user2_id: currentProfile.id
+              user2_id: profile.id
             });
 
-          setMatches(prev => [...prev, currentProfile]);
-          setLastMatch(currentProfile);
+          setMatches(prev => [...prev, profile]);
+          setLastMatch(profile);
           setShowMatch(true);
         }
       }
@@ -142,8 +165,6 @@ const Index = () => {
       setShowPayment(true);
       return;
     }
-
-    setCurrentIndex(prev => prev + 1);
   };
 
   const handlePaymentSuccess = () => {
@@ -164,6 +185,10 @@ const Index = () => {
     }
   };
 
+  const handleRefresh = () => {
+    fetchProfiles(true);
+  };
+
   if (loading || profileLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center">
@@ -175,12 +200,21 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 text-white">
       {/* Header */}
-      <div className="flex justify-between items-center p-4 bg-black/20 backdrop-blur-md">
+      <div className="flex justify-between items-center p-4 bg-black/20 backdrop-blur-md sticky top-0 z-10">
         <div className="flex items-center space-x-2">
           <Heart className="w-6 h-6 text-pink-500" />
           <span className="text-xl font-bold">Connect</span>
         </div>
         <div className="flex items-center space-x-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-white hover:bg-white/10"
+            onClick={handleRefresh}
+            disabled={refreshing}
+          >
+            <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
@@ -204,88 +238,68 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] p-4">
-        {/* Profile Completion Banner */}
-        <div className="w-full max-w-md mb-4">
-          <ProfileCompletionBanner missingFields={missingFields} />
-        </div>
+      {/* Profile Completion Banner */}
+      <div className="px-4 py-2">
+        <ProfileCompletionBanner missingFields={missingFields} />
+      </div>
 
-        {currentProfile && currentIndex < profiles.length ? (
-          <div className="relative">
-            <ProfileCard 
-              profile={{
-                id: parseInt(currentProfile.id),
-                name: currentProfile.display_name,
-                age: currentProfile.age,
-                image: currentProfile.profile_image_url || '',
-                bio: currentProfile.bio,
-                whatsapp: currentProfile.whatsapp,
-                location: currentProfile.location
-              }}
-              onSwipe={handleSwipe}
-              disabled={isSwipingDisabled}
-            />
-            
-            {/* Action Buttons */}
-            <div className="flex justify-center space-x-8 mt-8">
-              <Button
-                size="lg"
-                variant="outline"
-                className="rounded-full w-16 h-16 border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
-                onClick={() => handleSwipe('left')}
-                disabled={isSwipingDisabled}
+      {/* Scrollable Feed */}
+      <ScrollArea className="h-[calc(100vh-120px)]">
+        <div className="flex flex-col items-center space-y-6 p-4">
+          {profiles.length > 0 ? (
+            profiles.map((profile) => (
+              <div key={profile.id} className="w-full flex justify-center">
+                <ProfileCard 
+                  profile={{
+                    id: parseInt(profile.id),
+                    name: profile.display_name,
+                    age: profile.age,
+                    image: profile.profile_image_url || '',
+                    bio: profile.bio,
+                    whatsapp: profile.whatsapp,
+                    location: profile.location,
+                    liked: profile.liked
+                  }}
+                  onSwipe={(direction) => handleSwipe(profile.id, direction)}
+                  disabled={isSwipingDisabled}
+                />
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <Heart className="w-16 h-16 text-pink-500 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold mb-2">No profiles available</h2>
+              <p className="text-gray-400 mb-4">Check back later for more connections</p>
+              <Button 
+                className="bg-purple-600 hover:bg-purple-700"
+                onClick={handleRefresh}
+                disabled={refreshing}
               >
-                <X className="w-8 h-8" />
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="rounded-full w-16 h-16 border-green-500 text-green-500 hover:bg-green-500 hover:text-white transition-colors"
-                onClick={() => handleSwipe('right')}
-                disabled={isSwipingDisabled}
-              >
-                <Heart className="w-8 h-8" />
+                <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+                Refresh
               </Button>
             </div>
+          )}
 
-            {/* Paywall Notice */}
-            {swipeCount >= 3 && !isSwipingDisabled && isComplete && (
-              <div className="text-center mt-4 p-3 bg-purple-500/20 rounded-lg backdrop-blur-md">
-                <p className="text-sm text-purple-200">
-                  {5 - swipeCount} swipes remaining before premium required
-                </p>
-              </div>
-            )}
+          {/* Paywall Notice */}
+          {swipeCount >= 3 && !isSwipingDisabled && isComplete && (
+            <div className="text-center mt-4 p-3 bg-purple-500/20 rounded-lg backdrop-blur-md max-w-md">
+              <p className="text-sm text-purple-200">
+                {5 - swipeCount} swipes remaining before premium required
+              </p>
+            </div>
+          )}
 
-            {/* Profile Incomplete Notice */}
-            {!isComplete && (
-              <div className="text-center mt-4 p-3 bg-orange-500/20 rounded-lg backdrop-blur-md">
-                <p className="text-sm text-orange-200">
-                  Complete your profile to start swiping!
-                </p>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="text-center">
-            <Heart className="w-16 h-16 text-pink-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2">No more profiles!</h2>
-            <p className="text-gray-400">Check back later for more connections</p>
-            <Button 
-              className="mt-4 bg-purple-600 hover:bg-purple-700"
-              onClick={() => {
-                setCurrentIndex(0);
-                setSwipeCount(0);
-                setIsSwipingDisabled(!isComplete);
-                fetchProfiles();
-              }}
-            >
-              Refresh
-            </Button>
-          </div>
-        )}
-      </div>
+          {/* Profile Incomplete Notice */}
+          {!isComplete && (
+            <div className="text-center mt-4 p-3 bg-orange-500/20 rounded-lg backdrop-blur-md max-w-md">
+              <p className="text-sm text-orange-200">
+                Complete your profile to start swiping!
+              </p>
+            </div>
+          )}
+        </div>
+      </ScrollArea>
 
       {/* Match Modal */}
       {showMatch && lastMatch && (
