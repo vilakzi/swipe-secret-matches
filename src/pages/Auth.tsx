@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Heart, Eye, EyeOff, User, Briefcase } from 'lucide-react';
+import { Heart, Eye, EyeOff, User, Briefcase, Shield } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -14,6 +14,7 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [userType, setUserType] = useState<'user' | 'service_provider'>('user');
+  const [isAdmin, setIsAdmin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
@@ -39,12 +40,15 @@ const Auth = () => {
           });
           return;
         }
-        await signUp(email, password, displayName);
+        await signUp(email, password, displayName, userType, isAdmin);
 
-        // Update user type in profiles table
+        // Update user type and role in profiles table
         const { error } = await supabase
           .from('profiles')
-          .update({ user_type: userType })
+          .update({ 
+            user_type: userType,
+            role: isAdmin ? 'admin' : userType 
+          })
           .eq('id', (await supabase.auth.getUser()).data.user?.id);
 
         if (error) {
@@ -53,7 +57,7 @@ const Auth = () => {
 
         toast({
           title: "Account created!",
-          description: `Welcome ${userType === 'service_provider' ? 'Service Provider' : 'User'}! You can now start using the app.`,
+          description: `Welcome ${isAdmin ? 'Administrator' : userType === 'service_provider' ? 'Service Provider' : 'User'}! You can now start using the app.`,
         });
       }
       navigate('/');
@@ -104,24 +108,39 @@ const Auth = () => {
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Account Type
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     <Button
                       type="button"
-                      variant={userType === 'user' ? "default" : "outline"}
+                      variant={userType === 'user' && !isAdmin ? "default" : "outline"}
                       className="flex items-center justify-center space-x-2"
-                      onClick={() => setUserType('user')}
+                      onClick={() => {
+                        setUserType('user');
+                        setIsAdmin(false);
+                      }}
                     >
                       <User className="w-4 h-4" />
                       <span>User</span>
                     </Button>
                     <Button
                       type="button"
-                      variant={userType === 'service_provider' ? "default" : "outline"}
+                      variant={userType === 'service_provider' && !isAdmin ? "default" : "outline"}
                       className="flex items-center justify-center space-x-2"
-                      onClick={() => setUserType('service_provider')}
+                      onClick={() => {
+                        setUserType('service_provider');
+                        setIsAdmin(false);
+                      }}
                     >
                       <Briefcase className="w-4 h-4" />
                       <span>Provider</span>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={isAdmin ? "default" : "outline"}
+                      className="flex items-center justify-center space-x-2"
+                      onClick={() => setIsAdmin(!isAdmin)}
+                    >
+                      <Shield className="w-4 h-4" />
+                      <span>Admin</span>
                     </Button>
                   </div>
                 </div>

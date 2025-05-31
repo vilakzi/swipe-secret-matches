@@ -171,6 +171,7 @@ export type Database = {
           location: string | null
           profile_image_url: string | null
           profile_images: string[] | null
+          role: Database["public"]["Enums"]["app_role"] | null
           updated_at: string
           user_type: Database["public"]["Enums"]["user_type"] | null
           whatsapp: string | null
@@ -184,6 +185,7 @@ export type Database = {
           location?: string | null
           profile_image_url?: string | null
           profile_images?: string[] | null
+          role?: Database["public"]["Enums"]["app_role"] | null
           updated_at?: string
           user_type?: Database["public"]["Enums"]["user_type"] | null
           whatsapp?: string | null
@@ -197,6 +199,7 @@ export type Database = {
           location?: string | null
           profile_image_url?: string | null
           profile_images?: string[] | null
+          role?: Database["public"]["Enums"]["app_role"] | null
           updated_at?: string
           user_type?: Database["public"]["Enums"]["user_type"] | null
           whatsapp?: string | null
@@ -263,17 +266,57 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      get_user_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
+      promote_to_admin: {
+        Args: { _user_email: string }
+        Returns: undefined
+      }
       reset_daily_usage: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
     }
     Enums: {
+      app_role: "user" | "service_provider" | "admin"
       post_type: "image" | "video"
       promotion_type: "free_2h" | "paid_8h" | "paid_12h"
       user_type: "user" | "service_provider"
@@ -392,6 +435,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["user", "service_provider", "admin"],
       post_type: ["image", "video"],
       promotion_type: ["free_2h", "paid_8h", "paid_12h"],
       user_type: ["user", "service_provider"],

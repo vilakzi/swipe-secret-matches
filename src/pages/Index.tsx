@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Heart, RotateCcw, User, LogOut, Settings, Briefcase } from 'lucide-react';
+import { Heart, RotateCcw, User, LogOut, Settings, Briefcase, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import ProfileCard from '@/components/ProfileCard';
@@ -11,6 +10,7 @@ import PaywallModal from '@/components/PaywallModal';
 import UsageCounter from '@/components/UsageCounter';
 import { usePresence } from '@/hooks/usePresence';
 import { useSubscription, useUsageTracking } from '@/hooks/useSubscription';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface Profile {
   id: number;
@@ -56,47 +56,29 @@ const mockProfiles: Profile[] = [
 const Index = () => {
   const { user, signOut } = useAuth();
   const { isUserOnline } = usePresence();
+  const { role, isAdmin, isServiceProvider, loading: roleLoading } = useUserRole();
   const navigate = useNavigate();
   const [currentProfileIndex, setCurrentProfileIndex] = useState(0);
   const [likedProfiles, setLikedProfiles] = useState<Set<number>>(new Set());
-  const [userType, setUserType] = useState<'user' | 'service_provider' | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
   const [paywallTrigger, setPaywallTrigger] = useState<'interaction' | 'scroll_limit' | 'initial'>('initial');
   
   const { subscribed, loading: subscriptionLoading } = useSubscription();
   const { scrollsToday, remainingScrolls, trackScroll } = useUsageTracking();
 
+  // Show initial paywall for new non-subscribed regular users (not admins)
   useEffect(() => {
-    const checkUserType = async () => {
-      if (user) {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('user_type')
-          .eq('id', user.id)
-          .single();
-
-        if (!error && data) {
-          setUserType(data.user_type);
-        }
-      }
-    };
-
-    checkUserType();
-  }, [user]);
-
-  // Show initial paywall for new non-subscribed users
-  useEffect(() => {
-    if (!subscriptionLoading && !subscribed && user && userType === 'user') {
+    if (!subscriptionLoading && !subscribed && user && role === 'user' && !isAdmin && !roleLoading) {
       setTimeout(() => {
         setPaywallTrigger('initial');
         setShowPaywall(true);
-      }, 2000); // Show after 2 seconds
+      }, 2000);
     }
-  }, [subscribed, subscriptionLoading, user, userType]);
+  }, [subscribed, subscriptionLoading, user, role, isAdmin, roleLoading]);
 
   const handleSwipe = async (direction: 'left' | 'right') => {
-    // Check if user can interact
-    if (!subscribed) {
+    // Admins have unlimited access
+    if (!isAdmin && !subscribed) {
       setPaywallTrigger('interaction');
       setShowPaywall(true);
       return;
@@ -110,15 +92,14 @@ const Index = () => {
   };
 
   const handleRefresh = async () => {
-    if (!subscribed) {
-      // Check if user has remaining scrolls
+    // Admins bypass all restrictions
+    if (!isAdmin && !subscribed) {
       if (remainingScrolls <= 0) {
         setPaywallTrigger('scroll_limit');
         setShowPaywall(true);
         return;
       }
 
-      // Track the scroll/refresh
       const canContinue = await trackScroll();
       if (!canContinue) {
         setPaywallTrigger('scroll_limit');
@@ -131,15 +112,14 @@ const Index = () => {
   };
 
   const handleProfileNavigation = async () => {
-    if (!subscribed) {
-      // Check if user has remaining scrolls
+    // Admins have unlimited navigation
+    if (!isAdmin && !subscribed) {
       if (remainingScrolls <= 0) {
         setPaywallTrigger('scroll_limit');
         setShowPaywall(true);
         return false;
       }
 
-      // Track the scroll
       const canContinue = await trackScroll();
       if (!canContinue) {
         setPaywallTrigger('scroll_limit');
@@ -169,6 +149,18 @@ const Index = () => {
     return null;
   }
 
+  const getRoleIcon = () => {
+    if (isAdmin) return <Shield className="w-4 h-4 text-white" />;
+    if (isServiceProvider) return <Briefcase className="w-4 h-4 text-white" />;
+    return <User className="w-4 h-4 text-white" />;
+  };
+
+  const getRoleColor = () => {
+    if (isAdmin) return 'bg-red-600';
+    if (isServiceProvider) return 'bg-purple-600';
+    return 'bg-purple-600';
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900">
       {/* Header */}
@@ -176,6 +168,11 @@ const Index = () => {
         <div className="flex items-center space-x-3">
           <Heart className="w-8 h-8 text-pink-500" />
           <h1 className="text-2xl font-bold text-white">Connect</h1>
+          {isAdmin && (
+            <span className="bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
+              ADMIN
+            </span>
+          )}
         </div>
         
         <div className="flex items-center space-x-4">
@@ -190,12 +187,8 @@ const Index = () => {
           
           <div className="flex items-center space-x-3 bg-black/20 backdrop-blur-md rounded-full px-4 py-2 border border-gray-700">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
-                {userType === 'service_provider' ? (
-                  <Briefcase className="w-4 h-4 text-white" />
-                ) : (
-                  <User className="w-4 h-4 text-white" />
-                )}
+              <div className={`w-8 h-8 ${getRoleColor()} rounded-full flex items-center justify-center`}>
+                {getRoleIcon()}
               </div>
               <OnlineStatus 
                 isOnline={isUserOnline(user.id)} 
@@ -204,7 +197,7 @@ const Index = () => {
             </div>
             
             <div className="flex items-center space-x-2">
-              {userType === 'service_provider' && (
+              {isServiceProvider && (
                 <Button
                   onClick={handleDashboard}
                   variant="ghost"
@@ -228,8 +221,8 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Usage Counter for regular users */}
-      {userType === 'user' && (
+      {/* Usage Counter for regular users (not admins) */}
+      {role === 'user' && !isAdmin && (
         <div className="px-4 mb-4">
           <UsageCounter 
             scrollsToday={scrollsToday}
@@ -241,7 +234,7 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="flex-1 p-4">
-        {userType === 'service_provider' ? (
+        {isServiceProvider ? (
           // Service Provider View
           <div className="text-center">
             <div className="max-w-md mx-auto">
@@ -261,14 +254,14 @@ const Index = () => {
             </div>
           </div>
         ) : (
-          // Regular User View - Profile Cards
+          // Regular User/Admin View - Profile Cards
           <div className="flex justify-center">
             {mockProfiles.length > 0 ? (
               <ProfileCard
                 profile={mockProfiles[currentProfileIndex]}
                 onSwipe={handleSwipe}
                 onNavigate={handleProfileNavigation}
-                isSubscribed={subscribed}
+                isSubscribed={subscribed || isAdmin} // Admins get unlimited access
               />
             ) : (
               <div className="text-center text-white">
@@ -288,13 +281,15 @@ const Index = () => {
         )}
       </main>
 
-      {/* Paywall Modal */}
-      <PaywallModal
-        isOpen={showPaywall}
-        onClose={() => setShowPaywall(false)}
-        trigger={paywallTrigger}
-        remainingScrolls={remainingScrolls}
-      />
+      {/* Paywall Modal - Don't show to admins */}
+      {!isAdmin && (
+        <PaywallModal
+          isOpen={showPaywall}
+          onClose={() => setShowPaywall(false)}
+          trigger={paywallTrigger}
+          remainingScrolls={remainingScrolls}
+        />
+      )}
     </div>
   );
 };
