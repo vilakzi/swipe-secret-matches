@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -10,81 +11,6 @@ import InstagramFeed from '@/components/InstagramFeed';
 import { usePresence } from '@/hooks/usePresence';
 import { useSubscription, useUsageTracking } from '@/hooks/useSubscription';
 import { useUserRole } from '@/hooks/useUserRole';
-
-interface Profile {
-  id: number;
-  name: string;
-  age: number;
-  image: string;
-  bio: string;
-  whatsapp: string;
-  location: string;
-  gender?: 'male' | 'female';
-  liked?: boolean;
-}
-
-const mockProfiles: Profile[] = [
-  {
-    id: 1,
-    name: 'Alice',
-    age: 28,
-    image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8M3x8cGVvcGxlfGVufDB8fDB8fA%3D%3D&auto=format&fit=crop&w=500&q=60',
-    bio: 'Loves hiking and photography. Looking for someone to explore the outdoors with.',
-    whatsapp: '+15551234567',
-    location: 'New York, NY',
-    gender: 'female',
-  },
-  {
-    id: 2,
-    name: 'Bob',
-    age: 32,
-    image: 'https://images.unsplash.com/photo-1500648767791-00d0cb3c60c5?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Nnx8cGVvcGxlfGVufDB8fDB8fA%3D%3D&auto=format&fit=crop&w=500&q=60',
-    bio: 'Enjoys cooking and trying new restaurants. Seeking a partner to share culinary adventures.',
-    whatsapp: '+15559876543',
-    location: 'Los Angeles, CA',
-    gender: 'male',
-  },
-  {
-    id: 3,
-    name: 'Charlie',
-    age: 25,
-    image: 'https://images.unsplash.com/photo-1534528741702-a0cfae562c9c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8MTB8fHBlb3BsZXxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=500&q=60',
-    bio: 'Passionate about music and concerts. Hoping to find someone to rock out with.',
-    whatsapp: '+15551112233',
-    location: 'Chicago, IL',
-    gender: 'male',
-  },
-  {
-    id: 4,
-    name: 'Diana',
-    age: 30,
-    image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60',
-    bio: 'Yoga instructor and wellness enthusiast. Looking for mindful connections.',
-    whatsapp: '+15554567890',
-    location: 'San Francisco, CA',
-    gender: 'female',
-  },
-  {
-    id: 5,
-    name: 'Ethan',
-    age: 29,
-    image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60',
-    bio: 'Tech entrepreneur with a passion for travel and good coffee.',
-    whatsapp: '+15556789012',
-    location: 'Austin, TX',
-    gender: 'male',
-  },
-  {
-    id: 6,
-    name: 'Fiona',
-    age: 26,
-    image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60',
-    bio: 'Artist and creative soul. Love painting, dancing, and deep conversations.',
-    whatsapp: '+15557890123',
-    location: 'Portland, OR',
-    gender: 'female',
-  }
-];
 
 const Index = () => {
   const { user, signOut } = useAuth();
@@ -106,51 +32,6 @@ const Index = () => {
       }, 2000);
     }
   }, [subscribed, subscriptionLoading, user, role, isAdmin, roleLoading]);
-
-  const handleLike = async (profileId: number) => {
-    // Admins have unlimited access
-    if (!isAdmin && !subscribed) {
-      setPaywallTrigger('interaction');
-      setShowPaywall(true);
-      return;
-    }
-
-    console.log('Liked profile:', profileId);
-  };
-
-  const handleContact = async (profile: Profile) => {
-    // Admins have unlimited access
-    if (!isAdmin && !subscribed) {
-      setPaywallTrigger('interaction');
-      setShowPaywall(true);
-      return;
-    }
-
-    const message = encodeURIComponent(`Hi ${profile.name}! I saw your profile and would love to chat.`);
-    window.open(`https://wa.me/${profile.whatsapp.replace('+', '')}?text=${message}`, '_blank');
-  };
-
-  const handleRefresh = async () => {
-    // Admins bypass all restrictions
-    if (!isAdmin && !subscribed) {
-      if (remainingScrolls <= 0) {
-        setPaywallTrigger('scroll_limit');
-        setShowPaywall(true);
-        return;
-      }
-
-      const canContinue = await trackScroll();
-      if (!canContinue) {
-        setPaywallTrigger('scroll_limit');
-        setShowPaywall(true);
-        return;
-      }
-    }
-
-    // Shuffle profiles for fresh content
-    console.log('Refreshing feed...');
-    window.location.reload();
-  };
 
   const handleSignOut = async () => {
     try {

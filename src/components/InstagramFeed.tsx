@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from '@/hooks/use-toast';
 import FeedHeader from './feed/FeedHeader';
 import FeedContent from './feed/FeedContent';
@@ -9,9 +10,13 @@ import FeedContent from './feed/FeedContent';
 const InstagramFeed = () => {
   const { user } = useAuth();
   const { subscribed } = useSubscription();
+  const { isAdmin } = useUserRole();
   const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
   const [showFilters, setShowFilters] = useState(false);
   const [filterGender, setFilterGender] = useState<'male' | 'female' | null>(null);
+
+  // Check if user has access (either subscribed or admin)
+  const hasAccess = subscribed || isAdmin;
 
   // Mock data for profiles and posts
   const allProfiles = [
@@ -97,7 +102,7 @@ const InstagramFeed = () => {
   }, [filteredProfiles]);
 
   const handleLike = (itemId: string, profileId: number) => {
-    if (!subscribed) {
+    if (!hasAccess) {
       toast({
         title: "Subscribe to like profiles",
         description: "Upgrade to premium to like profiles and send messages.",
@@ -123,7 +128,7 @@ const InstagramFeed = () => {
   };
 
   const handleContact = (profile: any) => {
-    if (!subscribed) {
+    if (!hasAccess) {
       toast({
         title: "Subscribe to contact",
         description: "Upgrade to premium to contact profiles.",
@@ -155,7 +160,7 @@ const InstagramFeed = () => {
         <FeedContent
           feedItems={feedItems}
           likedItems={likedItems}
-          isSubscribed={subscribed}
+          isSubscribed={hasAccess}
           filterGender={filterGender}
           onLike={handleLike}
           onContact={handleContact}
