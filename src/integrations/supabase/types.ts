@@ -167,6 +167,7 @@ export type Database = {
           bio: string | null
           created_at: string
           display_name: string | null
+          gender: string | null
           id: string
           location: string | null
           profile_image_url: string | null
@@ -181,6 +182,7 @@ export type Database = {
           bio?: string | null
           created_at?: string
           display_name?: string | null
+          gender?: string | null
           id: string
           location?: string | null
           profile_image_url?: string | null
@@ -195,6 +197,7 @@ export type Database = {
           bio?: string | null
           created_at?: string
           display_name?: string | null
+          gender?: string | null
           id?: string
           location?: string | null
           profile_image_url?: string | null

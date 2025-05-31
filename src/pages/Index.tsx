@@ -20,6 +20,7 @@ interface Profile {
   bio: string;
   whatsapp: string;
   location: string;
+  gender?: 'male' | 'female';
   liked?: boolean;
 }
 
@@ -32,6 +33,7 @@ const mockProfiles: Profile[] = [
     bio: 'Loves hiking and photography. Looking for someone to explore the outdoors with.',
     whatsapp: '+15551234567',
     location: 'New York, NY',
+    gender: 'female',
   },
   {
     id: 2,
@@ -41,6 +43,7 @@ const mockProfiles: Profile[] = [
     bio: 'Enjoys cooking and trying new restaurants. Seeking a partner to share culinary adventures.',
     whatsapp: '+15559876543',
     location: 'Los Angeles, CA',
+    gender: 'male',
   },
   {
     id: 3,
@@ -50,6 +53,7 @@ const mockProfiles: Profile[] = [
     bio: 'Passionate about music and concerts. Hoping to find someone to rock out with.',
     whatsapp: '+15551112233',
     location: 'Chicago, IL',
+    gender: 'male',
   },
   {
     id: 4,
@@ -59,6 +63,7 @@ const mockProfiles: Profile[] = [
     bio: 'Yoga instructor and wellness enthusiast. Looking for mindful connections.',
     whatsapp: '+15554567890',
     location: 'San Francisco, CA',
+    gender: 'female',
   },
   {
     id: 5,
@@ -68,6 +73,7 @@ const mockProfiles: Profile[] = [
     bio: 'Tech entrepreneur with a passion for travel and good coffee.',
     whatsapp: '+15556789012',
     location: 'Austin, TX',
+    gender: 'male',
   },
   {
     id: 6,
@@ -77,6 +83,7 @@ const mockProfiles: Profile[] = [
     bio: 'Artist and creative soul. Love painting, dancing, and deep conversations.',
     whatsapp: '+15557890123',
     location: 'Portland, OR',
+    gender: 'female',
   }
 ];
 

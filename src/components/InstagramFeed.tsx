@@ -1,8 +1,7 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Heart, MessageCircle, MapPin, RotateCcw, Share, Lock } from 'lucide-react';
+import { Heart, MessageCircle, MapPin, RotateCcw, Share, Lock, Filter } from 'lucide-react';
 import OnlineStatus from './OnlineStatus';
 import { usePresence } from '@/hooks/usePresence';
 
@@ -14,6 +13,7 @@ interface Profile {
   bio: string;
   whatsapp: string;
   location: string;
+  gender?: 'male' | 'female';
   liked?: boolean;
   posts?: string[];
 }
@@ -38,13 +38,20 @@ const InstagramFeed = ({ profiles, onLike, onContact, onRefresh, isSubscribed = 
   const { isUserOnline } = usePresence();
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
   const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
+  const [filterGender, setFilterGender] = useState<'male' | 'female' | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
   const feedRef = useRef<HTMLDivElement>(null);
 
-  // Generate feed items with profiles and their posts
+  // Filter profiles based on gender
+  const filteredProfiles = profiles.filter(
+    (profile) => !filterGender || profile.gender === filterGender
+  );
+
+  // Generate feed items with filtered profiles and their posts
   useEffect(() => {
     const items: FeedItem[] = [];
     
-    profiles.forEach(profile => {
+    filteredProfiles.forEach(profile => {
       // Add profile as main item
       items.push({
         id: `profile-${profile.id}`,
@@ -68,7 +75,7 @@ const InstagramFeed = ({ profiles, onLike, onContact, onRefresh, isSubscribed = 
     // Shuffle items for more dynamic feed
     const shuffled = items.sort(() => Math.random() - 0.5);
     setFeedItems(shuffled);
-  }, [profiles]);
+  }, [filteredProfiles]);
 
   const handleLike = (itemId: string, profileId: number) => {
     if (!isSubscribed) {
@@ -118,6 +125,11 @@ const InstagramFeed = ({ profiles, onLike, onContact, onRefresh, isSubscribed = 
             <div className="flex items-center text-gray-400 text-sm">
               <MapPin className="w-3 h-3 mr-1" />
               {item.profile.location}
+              {item.profile.gender && (
+                <span className="ml-2 text-xs bg-purple-600 px-2 py-1 rounded-full">
+                  {item.profile.gender}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -255,21 +267,81 @@ const InstagramFeed = ({ profiles, onLike, onContact, onRefresh, isSubscribed = 
       className="max-w-md mx-auto h-full overflow-y-auto scrollbar-hide"
       style={{ scrollBehavior: 'smooth' }}
     >
+      {/* Filter Controls */}
+      <div className="sticky top-0 z-10 bg-black/80 backdrop-blur-md p-4 border-b border-gray-700">
+        <div className="flex items-center justify-between">
+          <h2 className="text-white font-semibold">Feed</h2>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-white"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter className="w-4 h-4 mr-2" />
+            Filter
+          </Button>
+        </div>
+        
+        {showFilters && (
+          <div className="mt-3 flex items-center space-x-2">
+            <Button
+              variant={filterGender === null ? "default" : "ghost"}
+              size="sm"
+              className={filterGender === null ? "bg-purple-600" : "text-white"}
+              onClick={() => setFilterGender(null)}
+            >
+              All
+            </Button>
+            <Button
+              variant={filterGender === 'male' ? "default" : "ghost"}
+              size="sm"
+              className={filterGender === 'male' ? "bg-purple-600" : "text-white"}
+              onClick={() => setFilterGender('male')}
+            >
+              Male
+            </Button>
+            <Button
+              variant={filterGender === 'female' ? "default" : "ghost"}
+              size="sm"
+              className={filterGender === 'female' ? "bg-purple-600" : "text-white"}
+              onClick={() => setFilterGender('female')}
+            >
+              Female
+            </Button>
+          </div>
+        )}
+      </div>
+
       <div className="pb-20">
-        {feedItems.map(item => 
-          item.type === 'profile' ? renderProfileCard(item) : renderPostCard(item)
+        {feedItems.length > 0 ? (
+          feedItems.map(item => 
+            item.type === 'profile' ? renderProfileCard(item) : renderPostCard(item)
+          )
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-gray-400">No profiles found for the selected filter.</p>
+            <Button
+              variant="ghost"
+              className="text-purple-400 mt-2"
+              onClick={() => setFilterGender(null)}
+            >
+              Clear filters
+            </Button>
+          </div>
         )}
         
         {/* Refresh Button */}
-        <div className="flex justify-center mt-8">
-          <Button
-            onClick={onRefresh}
-            className="bg-purple-600 hover:bg-purple-700 text-white"
-          >
-            <RotateCcw className="w-4 h-4 mr-2" />
-            Load More
-          </Button>
-        </div>
+        {feedItems.length > 0 && (
+          <div className="flex justify-center mt-8">
+            <Button
+              onClick={onRefresh}
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Load More
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
