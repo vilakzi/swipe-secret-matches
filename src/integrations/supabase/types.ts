@@ -9,6 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      daily_usage: {
+        Row: {
+          created_at: string | null
+          date: string
+          id: string
+          last_scroll_at: string | null
+          profile_scrolls: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          date?: string
+          id?: string
+          last_scroll_at?: string | null
+          profile_scrolls?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          id?: string
+          last_scroll_at?: string | null
+          profile_scrolls?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       matches: {
         Row: {
           created_at: string
@@ -140,6 +170,7 @@ export type Database = {
           id: string
           location: string | null
           profile_image_url: string | null
+          profile_images: string[] | null
           updated_at: string
           user_type: Database["public"]["Enums"]["user_type"] | null
           whatsapp: string | null
@@ -152,6 +183,7 @@ export type Database = {
           id: string
           location?: string | null
           profile_image_url?: string | null
+          profile_images?: string[] | null
           updated_at?: string
           user_type?: Database["public"]["Enums"]["user_type"] | null
           whatsapp?: string | null
@@ -164,9 +196,46 @@ export type Database = {
           id?: string
           location?: string | null
           profile_image_url?: string | null
+          profile_images?: string[] | null
           updated_at?: string
           user_type?: Database["public"]["Enums"]["user_type"] | null
           whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          stripe_customer_id: string | null
+          subscribed: boolean
+          subscription_end: string | null
+          subscription_tier: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          stripe_customer_id?: string | null
+          subscribed?: boolean
+          subscription_end?: string | null
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          stripe_customer_id?: string | null
+          subscribed?: boolean
+          subscription_end?: string | null
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -199,7 +268,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      reset_daily_usage: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       post_type: "image" | "video"

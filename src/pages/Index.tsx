@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,10 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import ProfileCard from '@/components/ProfileCard';
 import OnlineStatus from '@/components/OnlineStatus';
+import PaywallModal from '@/components/PaywallModal';
+import UsageCounter from '@/components/UsageCounter';
 import { usePresence } from '@/hooks/usePresence';
+import { useSubscription, useUsageTracking } from '@/hooks/useSubscription';
 
 interface Profile {
   id: number;
@@ -56,6 +60,11 @@ const Index = () => {
   const [currentProfileIndex, setCurrentProfileIndex] = useState(0);
   const [likedProfiles, setLikedProfiles] = useState<Set<number>>(new Set());
   const [userType, setUserType] = useState<'user' | 'service_provider' | null>(null);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [paywallTrigger, setPaywallTrigger] = useState<'interaction' | 'scroll_limit' | 'initial'>('initial');
+  
+  const { subscribed, loading: subscriptionLoading } = useSubscription();
+  const { scrollsToday, remainingScrolls, trackScroll } = useUsageTracking();
 
   useEffect(() => {
     const checkUserType = async () => {
@@ -75,7 +84,24 @@ const Index = () => {
     checkUserType();
   }, [user]);
 
-  const handleSwipe = (direction: 'left' | 'right') => {
+  // Show initial paywall for new non-subscribed users
+  useEffect(() => {
+    if (!subscriptionLoading && !subscribed && user && userType === 'user') {
+      setTimeout(() => {
+        setPaywallTrigger('initial');
+        setShowPaywall(true);
+      }, 2000); // Show after 2 seconds
+    }
+  }, [subscribed, subscriptionLoading, user, userType]);
+
+  const handleSwipe = async (direction: 'left' | 'right') => {
+    // Check if user can interact
+    if (!subscribed) {
+      setPaywallTrigger('interaction');
+      setShowPaywall(true);
+      return;
+    }
+
     if (direction === 'right') {
       setLikedProfiles(prev => new Set(prev).add(mockProfiles[currentProfileIndex].id));
     }
@@ -83,8 +109,47 @@ const Index = () => {
     setCurrentProfileIndex((prevIndex) => (prevIndex + 1) % mockProfiles.length);
   };
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
+    if (!subscribed) {
+      // Check if user has remaining scrolls
+      if (remainingScrolls <= 0) {
+        setPaywallTrigger('scroll_limit');
+        setShowPaywall(true);
+        return;
+      }
+
+      // Track the scroll/refresh
+      const canContinue = await trackScroll();
+      if (!canContinue) {
+        setPaywallTrigger('scroll_limit');
+        setShowPaywall(true);
+        return;
+      }
+    }
+
     setCurrentProfileIndex(0);
+  };
+
+  const handleProfileNavigation = async () => {
+    if (!subscribed) {
+      // Check if user has remaining scrolls
+      if (remainingScrolls <= 0) {
+        setPaywallTrigger('scroll_limit');
+        setShowPaywall(true);
+        return false;
+      }
+
+      // Track the scroll
+      const canContinue = await trackScroll();
+      if (!canContinue) {
+        setPaywallTrigger('scroll_limit');
+        setShowPaywall(true);
+        return false;
+      }
+    }
+
+    setCurrentProfileIndex((prevIndex) => (prevIndex + 1) % mockProfiles.length);
+    return true;
   };
 
   const handleSignOut = async () => {
@@ -163,6 +228,17 @@ const Index = () => {
         </div>
       </header>
 
+      {/* Usage Counter for regular users */}
+      {userType === 'user' && (
+        <div className="px-4 mb-4">
+          <UsageCounter 
+            scrollsToday={scrollsToday}
+            remainingScrolls={remainingScrolls}
+            isSubscribed={subscribed}
+          />
+        </div>
+      )}
+
       {/* Main Content */}
       <main className="flex-1 p-4">
         {userType === 'service_provider' ? (
@@ -191,6 +267,8 @@ const Index = () => {
               <ProfileCard
                 profile={mockProfiles[currentProfileIndex]}
                 onSwipe={handleSwipe}
+                onNavigate={handleProfileNavigation}
+                isSubscribed={subscribed}
               />
             ) : (
               <div className="text-center text-white">
@@ -209,6 +287,14 @@ const Index = () => {
           </div>
         )}
       </main>
+
+      {/* Paywall Modal */}
+      <PaywallModal
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        trigger={paywallTrigger}
+        remainingScrolls={remainingScrolls}
+      />
     </div>
   );
 };

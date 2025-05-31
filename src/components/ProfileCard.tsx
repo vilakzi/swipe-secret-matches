@@ -1,7 +1,8 @@
+
 import { useState, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MapPin, MessageCircle, Heart } from 'lucide-react';
+import { MapPin, MessageCircle, Heart, Lock } from 'lucide-react';
 import OnlineStatus from './OnlineStatus';
 import { usePresence } from '@/hooks/usePresence';
 
@@ -19,10 +20,12 @@ interface Profile {
 interface ProfileCardProps {
   profile: Profile;
   onSwipe: (direction: 'left' | 'right') => void;
+  onNavigate?: () => Promise<boolean>;
   disabled?: boolean;
+  isSubscribed?: boolean;
 }
 
-const ProfileCard = ({ profile, onSwipe, disabled = false }: ProfileCardProps) => {
+const ProfileCard = ({ profile, onSwipe, onNavigate, disabled = false, isSubscribed = false }: ProfileCardProps) => {
   const { isUserOnline } = usePresence();
   
   const [isDragging, setIsDragging] = useState(false);
@@ -65,7 +68,7 @@ const ProfileCard = ({ profile, onSwipe, disabled = false }: ProfileCardProps) =
     setRotation(deltaX * 0.1);
   };
 
-  const handleEnd = () => {
+  const handleEnd = async () => {
     if (!isDragging || disabled) return;
     
     setIsDragging(false);
@@ -73,6 +76,9 @@ const ProfileCard = ({ profile, onSwipe, disabled = false }: ProfileCardProps) =
     const threshold = 100;
     if (Math.abs(dragOffset.x) > threshold) {
       onSwipe(dragOffset.x > 0 ? 'right' : 'left');
+    } else if (onNavigate) {
+      // If it's just a small movement, treat as navigation
+      await onNavigate();
     }
     
     setDragOffset({ x: 0, y: 0 });
@@ -80,8 +86,17 @@ const ProfileCard = ({ profile, onSwipe, disabled = false }: ProfileCardProps) =
   };
 
   const handleWhatsAppClick = () => {
+    if (!isSubscribed) {
+      onSwipe('right'); // This will trigger the paywall
+      return;
+    }
+    
     const message = encodeURIComponent(`Hi ${profile.name}! I saw your profile and would love to chat.`);
     window.open(`https://wa.me/${profile.whatsapp.replace('+', '')}?text=${message}`, '_blank');
+  };
+
+  const handleLikeClick = () => {
+    onSwipe('right'); // This will trigger paywall check or like action
   };
 
   const cardStyle = {
@@ -123,9 +138,16 @@ const ProfileCard = ({ profile, onSwipe, disabled = false }: ProfileCardProps) =
             />
           </div>
 
+          {/* Subscription Status */}
+          {!isSubscribed && (
+            <div className="absolute top-2 right-2 bg-yellow-500 rounded-full p-2">
+              <Lock className="w-4 h-4 text-white" />
+            </div>
+          )}
+
           {/* Liked Indicator */}
           {profile.liked && (
-            <div className="absolute top-2 right-2 bg-pink-500 rounded-full p-2">
+            <div className="absolute bottom-2 right-2 bg-pink-500 rounded-full p-2">
               <Heart className="w-4 h-4 text-white fill-white" />
             </div>
           )}
@@ -159,14 +181,25 @@ const ProfileCard = ({ profile, onSwipe, disabled = false }: ProfileCardProps) =
                 size="sm"
               />
             </div>
-            <Button
-              size="sm"
-              className="bg-green-600 hover:bg-green-700 text-white"
-              onClick={handleWhatsAppClick}
-            >
-              <MessageCircle className="w-4 h-4 mr-1" />
-              WhatsApp
-            </Button>
+            <div className="flex space-x-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className={`${isSubscribed ? 'bg-pink-600 hover:bg-pink-700' : 'bg-gray-600 hover:bg-gray-700'} text-white border-none`}
+                onClick={handleLikeClick}
+              >
+                <Heart className="w-4 h-4 mr-1" />
+                {isSubscribed ? 'Like' : <Lock className="w-3 h-3" />}
+              </Button>
+              <Button
+                size="sm"
+                className={`${isSubscribed ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-600 hover:bg-gray-700'} text-white`}
+                onClick={handleWhatsAppClick}
+              >
+                <MessageCircle className="w-4 h-4 mr-1" />
+                {isSubscribed ? 'Chat' : <Lock className="w-3 h-3" />}
+              </Button>
+            </div>
           </div>
           
           <div className="flex items-center text-gray-400 text-sm">
