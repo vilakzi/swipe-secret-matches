@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -21,8 +22,10 @@ const Auth = () => {
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return; // Prevent multiple submissions
+    
     setLoading(true);
 
     try {
@@ -39,21 +42,30 @@ const Auth = () => {
             description: "Please enter a display name.",
             variant: "destructive",
           });
+          setLoading(false);
           return;
         }
+        
         await signUp(email, password, displayName, userType, isAdmin);
 
-        // Update user type and role in profiles table
-        const { error } = await supabase
-          .from('profiles')
-          .update({ 
-            user_type: userType,
-            role: isAdmin ? 'admin' : userType 
-          })
-          .eq('id', (await supabase.auth.getUser()).data.user?.id);
+        // Update user type and role in profiles table only if signup was successful
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const { error } = await supabase
+              .from('profiles')
+              .update({ 
+                user_type: userType,
+                role: isAdmin ? 'admin' : userType 
+              })
+              .eq('id', user.id);
 
-        if (error) {
-          console.error('Error updating user type:', error);
+            if (error) {
+              console.error('Error updating user type:', error);
+            }
+          }
+        } catch (profileError) {
+          console.error('Profile update error:', profileError);
         }
 
         toast({
@@ -71,9 +83,9 @@ const Auth = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isLogin, email, password, displayName, userType, isAdmin, loading, signIn, signUp, navigate]);
 
-  const handleForgotPassword = async (resetEmail: string) => {
+  const handleForgotPassword = useCallback(async (resetEmail: string) => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
         redirectTo: `${window.location.origin}/auth`,
@@ -92,7 +104,24 @@ const Auth = () => {
         variant: "destructive",
       });
     }
-  };
+  }, []);
+
+  const handleUserTypeChange = useCallback((newUserType: 'user' | 'service_provider') => {
+    setUserType(newUserType);
+    setIsAdmin(false);
+  }, []);
+
+  const handleAdminToggle = useCallback(() => {
+    setIsAdmin(!isAdmin);
+  }, [isAdmin]);
+
+  const toggleAuthMode = useCallback(() => {
+    setIsLogin(!isLogin);
+  }, [isLogin]);
+
+  const togglePasswordVisibility = useCallback(() => {
+    setShowPassword(!showPassword);
+  }, [showPassword]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center p-4">
@@ -135,10 +164,7 @@ const Auth = () => {
                       type="button"
                       variant={userType === 'user' && !isAdmin ? "default" : "outline"}
                       className="flex items-center justify-center space-x-2"
-                      onClick={() => {
-                        setUserType('user');
-                        setIsAdmin(false);
-                      }}
+                      onClick={() => handleUserTypeChange('user')}
                     >
                       <User className="w-4 h-4" />
                       <span>User</span>
@@ -147,10 +173,7 @@ const Auth = () => {
                       type="button"
                       variant={userType === 'service_provider' && !isAdmin ? "default" : "outline"}
                       className="flex items-center justify-center space-x-2"
-                      onClick={() => {
-                        setUserType('service_provider');
-                        setIsAdmin(false);
-                      }}
+                      onClick={() => handleUserTypeChange('service_provider')}
                     >
                       <Briefcase className="w-4 h-4" />
                       <span>Provider</span>
@@ -159,7 +182,7 @@ const Auth = () => {
                       type="button"
                       variant={isAdmin ? "default" : "outline"}
                       className="flex items-center justify-center space-x-2"
-                      onClick={() => setIsAdmin(!isAdmin)}
+                      onClick={handleAdminToggle}
                     >
                       <Shield className="w-4 h-4" />
                       <span>Admin</span>
@@ -215,7 +238,7 @@ const Auth = () => {
                   variant="ghost"
                   size="sm"
                   className="absolute right-0 top-0 h-full px-3 text-gray-400 hover:text-white"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={togglePasswordVisibility}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </Button>
@@ -250,7 +273,7 @@ const Auth = () => {
               {isLogin ? "Don't have an account? " : "Already have an account? "}
               <button
                 type="button"
-                onClick={() => setIsLogin(!isLogin)}
+                onClick={toggleAuthMode}
                 className="text-purple-400 hover:text-purple-300 font-medium"
               >
                 {isLogin ? "Sign up" : "Sign in"}
