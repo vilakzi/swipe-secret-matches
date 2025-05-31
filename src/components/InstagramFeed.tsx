@@ -1,81 +1,108 @@
 
-import { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/hooks/useSubscription';
+import { toast } from '@/hooks/use-toast';
 import FeedHeader from './feed/FeedHeader';
 import FeedContent from './feed/FeedContent';
 
-interface Profile {
-  id: number;
-  name: string;
-  age: number;
-  image: string;
-  bio: string;
-  whatsapp: string;
-  location: string;
-  gender?: 'male' | 'female';
-  liked?: boolean;
-  posts?: string[];
-}
-
-interface FeedItem {
-  id: string;
-  type: 'profile' | 'post';
-  profile: Profile;
-  postImage?: string;
-  caption?: string;
-}
-
-interface InstagramFeedProps {
-  profiles: Profile[];
-  onLike: (profileId: number) => void;
-  onContact: (profile: Profile) => void;
-  onRefresh: () => void;
-  isSubscribed?: boolean;
-}
-
-const InstagramFeed = ({ profiles, onLike, onContact, onRefresh, isSubscribed = false }: InstagramFeedProps) => {
-  const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
+const InstagramFeed = () => {
+  const { user } = useAuth();
+  const { isSubscribed } = useSubscription();
   const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
-  const [filterGender, setFilterGender] = useState<'male' | 'female' | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [filterGender, setFilterGender] = useState<'male' | 'female' | null>(null);
 
-  // Filter profiles based on gender
-  const filteredProfiles = profiles.filter(
-    (profile) => !filterGender || profile.gender === filterGender
-  );
+  // Mock data for profiles and posts
+  const allProfiles = [
+    {
+      id: 1,
+      name: "Sarah",
+      age: 24,
+      image: "/placeholder.svg",
+      bio: "Love traveling and photography 📸",
+      whatsapp: "+1234567890",
+      location: "New York, NY",
+      gender: 'female' as const,
+      posts: ["/placeholder.svg", "/placeholder.svg"]
+    },
+    {
+      id: 2,
+      name: "Mike",
+      age: 28,
+      image: "/placeholder.svg",
+      bio: "Fitness enthusiast and chef 🍳",
+      whatsapp: "+1234567891",
+      location: "Los Angeles, CA",
+      gender: 'male' as const,
+      posts: ["/placeholder.svg"]
+    },
+    {
+      id: 3,
+      name: "Emma",
+      age: 26,
+      image: "/placeholder.svg",
+      bio: "Artist and coffee lover ☕",
+      whatsapp: "+1234567892",
+      location: "Seattle, WA",
+      gender: 'female' as const,
+      posts: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg"]
+    },
+    {
+      id: 4,
+      name: "Alex",
+      age: 30,
+      image: "/placeholder.svg",
+      bio: "Software engineer and gamer 🎮",
+      whatsapp: "+1234567893",
+      location: "Austin, TX",
+      gender: 'male' as const,
+      posts: ["/placeholder.svg", "/placeholder.svg"]
+    }
+  ];
 
-  // Generate feed items with filtered profiles and their posts
-  useEffect(() => {
-    const items: FeedItem[] = [];
+  // Filter profiles based on gender filter
+  const filteredProfiles = useMemo(() => {
+    if (!filterGender) return allProfiles;
+    return allProfiles.filter(profile => profile.gender === filterGender);
+  }, [filterGender]);
+
+  // Create feed items (mix of profiles and posts)
+  const feedItems = useMemo(() => {
+    const items: any[] = [];
     
-    filteredProfiles.forEach(profile => {
-      // Add profile as main item
+    filteredProfiles.forEach((profile, index) => {
+      // Add profile card
       items.push({
         id: `profile-${profile.id}`,
         type: 'profile',
-        profile
+        profile: profile
       });
-
-      // Add posts for each profile (mock posts)
-      const postCount = Math.floor(Math.random() * 3) + 1; // 1-3 posts per profile
-      for (let i = 0; i < postCount; i++) {
-        items.push({
-          id: `post-${profile.id}-${i}`,
-          type: 'post',
-          profile,
-          postImage: `https://images.unsplash.com/photo-${1500000000000 + Math.floor(Math.random() * 100000000)}?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80`,
-          caption: `Check out this amazing moment! #life #fun #${profile.location.replace(/\s+/g, '').toLowerCase()}`
+      
+      // Add posts for this profile
+      if (profile.posts && profile.posts.length > 0) {
+        profile.posts.forEach((postImage, postIndex) => {
+          items.push({
+            id: `post-${profile.id}-${postIndex}`,
+            type: 'post',
+            profile: profile,
+            postImage: postImage,
+            caption: `Post ${postIndex + 1} from ${profile.name}`
+          });
         });
       }
     });
-
-    // Shuffle items for more dynamic feed
-    const shuffled = items.sort(() => Math.random() - 0.5);
-    setFeedItems(shuffled);
+    
+    return items;
   }, [filteredProfiles]);
 
   const handleLike = (itemId: string, profileId: number) => {
     if (!isSubscribed) {
-      onLike(profileId); // This will trigger paywall
+      toast({
+        title: "Subscribe to like profiles",
+        description: "Upgrade to premium to like profiles and send messages.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -88,19 +115,35 @@ const InstagramFeed = ({ profiles, onLike, onContact, onRefresh, isSubscribed = 
       }
       return newLiked;
     });
-    onLike(profileId);
+
+    toast({
+      title: likedItems.has(itemId) ? "Like removed" : "Profile liked!",
+      description: likedItems.has(itemId) ? "You unliked this profile." : "Your like has been sent!",
+    });
   };
 
-  const handleContact = (profile: Profile) => {
+  const handleContact = (profile: any) => {
     if (!isSubscribed) {
-      onContact(profile); // This will trigger paywall
+      toast({
+        title: "Subscribe to contact",
+        description: "Upgrade to premium to contact profiles.",
+        variant: "destructive",
+      });
       return;
     }
-    onContact(profile);
+
+    window.open(`https://wa.me/${profile.whatsapp.replace(/[^0-9]/g, '')}`, '_blank');
+  };
+
+  const handleRefresh = () => {
+    toast({
+      title: "Feed refreshed",
+      description: "Loading new profiles...",
+    });
   };
 
   return (
-    <div className="max-w-md mx-auto h-full overflow-y-auto">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900">
       <FeedHeader
         showFilters={showFilters}
         setShowFilters={setShowFilters}
@@ -108,16 +151,18 @@ const InstagramFeed = ({ profiles, onLike, onContact, onRefresh, isSubscribed = 
         setFilterGender={setFilterGender}
       />
       
-      <FeedContent
-        feedItems={feedItems}
-        likedItems={likedItems}
-        isSubscribed={isSubscribed}
-        filterGender={filterGender}
-        onLike={handleLike}
-        onContact={handleContact}
-        onRefresh={onRefresh}
-        setFilterGender={setFilterGender}
-      />
+      <div className="max-w-md mx-auto">
+        <FeedContent
+          feedItems={feedItems}
+          likedItems={likedItems}
+          isSubscribed={isSubscribed}
+          filterGender={filterGender}
+          onLike={handleLike}
+          onContact={handleContact}
+          onRefresh={handleRefresh}
+          setFilterGender={setFilterGender}
+        />
+      </div>
     </div>
   );
 };
