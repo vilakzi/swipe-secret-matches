@@ -18,7 +18,7 @@ const InstagramFeed = () => {
   // Check if user has access (either subscribed or admin)
   const hasAccess = subscribed || isAdmin;
 
-  // Mock data for profiles and posts
+  // Mock data for profiles and posts - always show to everyone
   const allProfiles = [
     {
       id: 1,
@@ -66,13 +66,13 @@ const InstagramFeed = () => {
     }
   ];
 
-  // Filter profiles based on gender filter
+  // Filter profiles based on gender filter - always show profiles
   const filteredProfiles = useMemo(() => {
     if (!filterGender) return allProfiles;
     return allProfiles.filter(profile => profile.gender === filterGender);
   }, [filterGender]);
 
-  // Create feed items (mix of profiles and posts)
+  // Create feed items (mix of profiles and posts) - always show
   const feedItems = useMemo(() => {
     const items: any[] = [];
     
