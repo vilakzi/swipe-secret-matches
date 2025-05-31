@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -7,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Heart, Eye, EyeOff, User, Briefcase, Shield } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import ForgotPasswordModal from '@/components/ForgotPasswordModal';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -17,6 +17,7 @@ const Auth = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
 
@@ -69,6 +70,27 @@ const Auth = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (resetEmail: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Reset link sent!",
+        description: "Check your email for a password reset link.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send reset link. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -200,6 +222,20 @@ const Auth = () => {
               </div>
             </div>
 
+            {isLogin && (
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-purple-400 hover:text-purple-300 p-0 h-auto"
+                  onClick={() => setShowForgotPassword(true)}
+                >
+                  Forgot Password?
+                </Button>
+              </div>
+            )}
+
             <Button
               type="submit"
               className="w-full bg-purple-600 hover:bg-purple-700"
@@ -223,6 +259,12 @@ const Auth = () => {
           </div>
         </div>
       </div>
+
+      <ForgotPasswordModal
+        isOpen={showForgotPassword}
+        onClose={() => setShowForgotPassword(false)}
+        onForgotPassword={handleForgotPassword}
+      />
     </div>
   );
 };
