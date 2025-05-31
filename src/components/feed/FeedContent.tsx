@@ -47,7 +47,7 @@ const FeedContent = ({
   setFilterGender
 }: FeedContentProps) => {
   return (
-    <div className="pb-20">
+    <div className="pb-20" style={{ scrollBehavior: 'auto' }}>
       {feedItems.length > 0 ? (
         feedItems.map(item => 
           item.type === 'profile' ? (
