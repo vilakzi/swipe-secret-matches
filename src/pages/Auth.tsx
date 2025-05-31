@@ -2,12 +2,13 @@
 import React, { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Heart, Eye, EyeOff, User, Briefcase, Shield } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import ForgotPasswordModal from '@/components/ForgotPasswordModal';
+import AuthHeader from '@/components/auth/AuthHeader';
+import AuthToggle from '@/components/auth/AuthToggle';
+import AuthForm from '@/components/auth/AuthForm';
+import AuthFooter from '@/components/auth/AuthFooter';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -24,7 +25,7 @@ const Auth = () => {
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    if (loading) return; // Prevent multiple submissions
+    if (loading) return;
     
     setLoading(true);
 
@@ -48,7 +49,6 @@ const Auth = () => {
         
         await signUp(email, password, displayName, userType, isAdmin);
 
-        // Update user type and role in profiles table only if signup was successful
         try {
           const { data: { user } } = await supabase.auth.getUser();
           if (user) {
@@ -126,160 +126,31 @@ const Auth = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Heart className="w-12 h-12 text-pink-500 mx-auto mb-4" />
-          <h1 className="text-3xl font-bold text-white mb-2">Connect</h1>
-          <p className="text-gray-400">Find your perfect match</p>
-        </div>
+        <AuthHeader />
 
         <div className="bg-black/20 backdrop-blur-md rounded-lg p-6 border border-gray-700">
-          <div className="flex mb-6">
-            <Button
-              type="button"
-              variant={isLogin ? "default" : "ghost"}
-              className="flex-1 mr-2"
-              onClick={() => setIsLogin(true)}
-            >
-              Sign In
-            </Button>
-            <Button
-              type="button"
-              variant={!isLogin ? "default" : "ghost"}
-              className="flex-1 ml-2"
-              onClick={() => setIsLogin(false)}
-            >
-              Sign Up
-            </Button>
-          </div>
+          <AuthToggle isLogin={isLogin} onToggle={setIsLogin} />
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Account Type
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <Button
-                      type="button"
-                      variant={userType === 'user' && !isAdmin ? "default" : "outline"}
-                      className="flex items-center justify-center space-x-2"
-                      onClick={() => handleUserTypeChange('user')}
-                    >
-                      <User className="w-4 h-4" />
-                      <span>User</span>
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={userType === 'service_provider' && !isAdmin ? "default" : "outline"}
-                      className="flex items-center justify-center space-x-2"
-                      onClick={() => handleUserTypeChange('service_provider')}
-                    >
-                      <Briefcase className="w-4 h-4" />
-                      <span>Provider</span>
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={isAdmin ? "default" : "outline"}
-                      className="flex items-center justify-center space-x-2"
-                      onClick={handleAdminToggle}
-                    >
-                      <Shield className="w-4 h-4" />
-                      <span>Admin</span>
-                    </Button>
-                  </div>
-                </div>
+          <AuthForm
+            isLogin={isLogin}
+            email={email}
+            password={password}
+            displayName={displayName}
+            userType={userType}
+            isAdmin={isAdmin}
+            showPassword={showPassword}
+            loading={loading}
+            onEmailChange={setEmail}
+            onPasswordChange={setPassword}
+            onDisplayNameChange={setDisplayName}
+            onUserTypeChange={handleUserTypeChange}
+            onAdminToggle={handleAdminToggle}
+            onPasswordToggle={togglePasswordVisibility}
+            onSubmit={handleSubmit}
+            onForgotPassword={() => setShowForgotPassword(true)}
+          />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Display Name
-                  </label>
-                  <Input
-                    type="text"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    className="bg-gray-800 border-gray-600 text-white"
-                    placeholder="Enter your display name"
-                    required={!isLogin}
-                  />
-                </div>
-              </>
-            )}
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Email
-              </label>
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="bg-gray-800 border-gray-600 text-white"
-                placeholder="Enter your email"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-gray-800 border-gray-600 text-white pr-10"
-                  placeholder="Enter your password"
-                  required
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 text-gray-400 hover:text-white"
-                  onClick={togglePasswordVisibility}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </Button>
-              </div>
-            </div>
-
-            {isLogin && (
-              <div className="flex justify-end">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="text-purple-400 hover:text-purple-300 p-0 h-auto"
-                  onClick={() => setShowForgotPassword(true)}
-                >
-                  Forgot Password?
-                </Button>
-              </div>
-            )}
-
-            <Button
-              type="submit"
-              className="w-full bg-purple-600 hover:bg-purple-700"
-              disabled={loading}
-            >
-              {loading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
-            </Button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-gray-400 text-sm">
-              {isLogin ? "Don't have an account? " : "Already have an account? "}
-              <button
-                type="button"
-                onClick={toggleAuthMode}
-                className="text-purple-400 hover:text-purple-300 font-medium"
-              >
-                {isLogin ? "Sign up" : "Sign in"}
-              </button>
-            </p>
-          </div>
+          <AuthFooter isLogin={isLogin} onToggle={toggleAuthMode} />
         </div>
       </div>
 
