@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,7 +41,6 @@ const InstagramFeed = ({ profiles, onLike, onContact, onRefresh, isSubscribed = 
   const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
   const [filterGender, setFilterGender] = useState<'male' | 'female' | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-  const feedRef = useRef<HTMLDivElement>(null);
 
   // Filter profiles based on gender
   const filteredProfiles = profiles.filter(
@@ -262,11 +262,7 @@ const InstagramFeed = ({ profiles, onLike, onContact, onRefresh, isSubscribed = 
   );
 
   return (
-    <div 
-      ref={feedRef}
-      className="max-w-md mx-auto h-full overflow-y-auto scrollbar-hide"
-      style={{ scrollBehavior: 'smooth' }}
-    >
+    <div className="max-w-md mx-auto h-full overflow-y-auto">
       {/* Filter Controls */}
       <div className="sticky top-0 z-10 bg-black/80 backdrop-blur-md p-4 border-b border-gray-700">
         <div className="flex items-center justify-between">
