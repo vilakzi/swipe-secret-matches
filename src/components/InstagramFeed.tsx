@@ -1,22 +1,22 @@
 
 import React, { useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSubscription } from '@/hooks/useSubscription';
 import { useUserRole } from '@/hooks/useUserRole';
-import { toast } from '@/hooks/use-toast';
 import FeedHeader from './feed/FeedHeader';
 import FeedContent from './feed/FeedContent';
 
-const InstagramFeed = () => {
+interface InstagramFeedProps {
+  onLike: (itemId: string, profileId: number) => void;
+  onContact: (profile: any) => void;
+  onRefresh: () => void;
+  likedItems: Set<string>;
+}
+
+const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFeedProps) => {
   const { user } = useAuth();
-  const { subscribed } = useSubscription();
   const { isAdmin } = useUserRole();
-  const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
   const [showFilters, setShowFilters] = useState(false);
   const [filterGender, setFilterGender] = useState<'male' | 'female' | null>(null);
-
-  // Check if user has access (either subscribed or admin)
-  const hasAccess = subscribed || isAdmin;
 
   // Mock data for profiles and posts - always show to everyone
   const allProfiles = [
@@ -101,52 +101,6 @@ const InstagramFeed = () => {
     return items;
   }, [filteredProfiles]);
 
-  const handleLike = (itemId: string, profileId: number) => {
-    if (!hasAccess) {
-      toast({
-        title: "Subscribe to like profiles",
-        description: "Upgrade to premium to like profiles and send messages.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLikedItems(prev => {
-      const newLiked = new Set(prev);
-      if (newLiked.has(itemId)) {
-        newLiked.delete(itemId);
-      } else {
-        newLiked.add(itemId);
-      }
-      return newLiked;
-    });
-
-    toast({
-      title: likedItems.has(itemId) ? "Like removed" : "Profile liked!",
-      description: likedItems.has(itemId) ? "You unliked this profile." : "Your like has been sent!",
-    });
-  };
-
-  const handleContact = (profile: any) => {
-    if (!hasAccess) {
-      toast({
-        title: "Subscribe to contact",
-        description: "Upgrade to premium to contact profiles.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    window.open(`https://wa.me/${profile.whatsapp.replace(/[^0-9]/g, '')}`, '_blank');
-  };
-
-  const handleRefresh = () => {
-    toast({
-      title: "Feed refreshed",
-      description: "Loading new profiles...",
-    });
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 overflow-x-hidden">
       <FeedHeader
@@ -160,11 +114,11 @@ const InstagramFeed = () => {
         <FeedContent
           feedItems={feedItems}
           likedItems={likedItems}
-          isSubscribed={hasAccess}
+          isSubscribed={true} // Always true since we removed paywall
           filterGender={filterGender}
-          onLike={handleLike}
-          onContact={handleContact}
-          onRefresh={handleRefresh}
+          onLike={onLike}
+          onContact={onContact}
+          onRefresh={onRefresh}
           setFilterGender={setFilterGender}
         />
       </div>
