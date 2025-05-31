@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -265,13 +264,7 @@ const Index = () => {
           </div>
         ) : (
           // Regular User/Admin View - Instagram-style Feed
-          <InstagramFeed
-            profiles={mockProfiles}
-            onLike={handleLike}
-            onContact={handleContact}
-            onRefresh={handleRefresh}
-            isSubscribed={subscribed || isAdmin} // Admins get unlimited access
-          />
+          <InstagramFeed />
         )}
       </main>
 
