@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -22,109 +23,103 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const itemsPerPage = 6;
 
-  // Enhanced mock data with provider profiles
+  // Enhanced demo profiles for hookup app
   const allProfiles = [
     {
       id: 1,
-      name: "Sarah",
-      age: 24,
-      image: "/placeholder.svg",
-      bio: "Professional photographer specializing in portraits and events",
+      name: "Ashley",
+      age: 23,
+      image: "https://images.unsplash.com/photo-1494790108755-2616b332c6db?w=400",
+      bio: "Looking for fun connections and good vibes ✨",
       whatsapp: "+1234567890",
-      location: "New York, NY",
+      location: "Miami, FL",
       gender: 'female' as const,
-      userType: 'service_provider' as const,
-      serviceCategory: "Photography",
-      services: ["Portrait Photography", "Event Photography", "Wedding Photography"],
-      portfolio: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
-      rating: 4.8,
-      reviewCount: 127,
-      isAvailable: true,
-      posts: ["/placeholder.svg", "/placeholder.svg"]
+      userType: 'user' as const,
+      posts: ["https://images.unsplash.com/photo-1494790108755-2616b332c6db?w=600", "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=600"]
     },
     {
       id: 2,
-      name: "Mike",
-      age: 28,
-      image: "/placeholder.svg",
-      bio: "Personal trainer and nutrition coach",
+      name: "Jessica",
+      age: 25,
+      image: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=400",
+      bio: "Adventure seeker, night owl 🌙 Let's make tonight memorable",
       whatsapp: "+1234567891",
       location: "Los Angeles, CA",
-      gender: 'male' as const,
-      userType: 'service_provider' as const,
-      serviceCategory: "Fitness & Health",
-      services: ["Personal Training", "Nutrition Coaching", "Fitness Plans"],
-      portfolio: ["/placeholder.svg", "/placeholder.svg"],
-      rating: 4.9,
-      reviewCount: 89,
-      isAvailable: true,
-      posts: ["/placeholder.svg"]
+      gender: 'female' as const,
+      userType: 'user' as const,
+      posts: ["https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=600"]
     },
     {
       id: 3,
-      name: "Emma",
-      age: 26,
-      image: "/placeholder.svg",
-      bio: "Graphic designer and brand consultant",
+      name: "Sofia",
+      age: 24,
+      image: "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=400",
+      bio: "Free spirit, here for a good time not a long time 💫",
       whatsapp: "+1234567892",
-      location: "Seattle, WA",
+      location: "New York, NY",
       gender: 'female' as const,
-      userType: 'service_provider' as const,
-      serviceCategory: "Design & Creative",
-      services: ["Logo Design", "Brand Identity", "Web Design"],
-      portfolio: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
-      rating: 4.7,
-      reviewCount: 156,
-      isAvailable: false,
-      posts: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg"]
+      userType: 'user' as const,
+      posts: ["https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=600", "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600"]
     },
     {
       id: 4,
-      name: "Alex",
-      age: 30,
-      image: "/placeholder.svg",
-      bio: "Software engineer and tech consultant",
+      name: "Maya",
+      age: 22,
+      image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400",
+      bio: "Spontaneous nights and deep conversations 🔥",
       whatsapp: "+1234567893",
-      location: "Austin, TX",
-      gender: 'male' as const,
+      location: "Chicago, IL",
+      gender: 'female' as const,
       userType: 'user' as const,
-      posts: ["/placeholder.svg", "/placeholder.svg"]
+      posts: ["https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600"]
     },
     {
       id: 5,
-      name: "Jessica",
-      age: 27,
-      image: "/placeholder.svg",
-      bio: "Yoga instructor and wellness coach",
+      name: "Ryan",
+      age: 28,
+      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400",
+      bio: "Looking for chemistry and connection 💫",
       whatsapp: "+1234567894",
-      location: "Portland, OR",
-      gender: 'female' as const,
-      userType: 'service_provider' as const,
-      serviceCategory: "Health & Wellness",
-      services: ["Yoga Classes", "Meditation", "Wellness Coaching"],
-      portfolio: ["/placeholder.svg", "/placeholder.svg"],
-      rating: 4.6,
-      reviewCount: 78,
-      isAvailable: true,
-      posts: ["/placeholder.svg", "/placeholder.svg"]
+      location: "Austin, TX",
+      gender: 'male' as const,
+      userType: 'user' as const,
+      posts: ["https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600"]
     },
     {
       id: 6,
-      name: "David",
-      age: 32,
-      image: "/placeholder.svg",
-      bio: "Music producer and sound engineer",
+      name: "Emma",
+      age: 26,
+      image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400",
+      bio: "Life's too short for boring nights ✨ Let's have fun",
       whatsapp: "+1234567895",
-      location: "Nashville, TN",
+      location: "Seattle, WA",
+      gender: 'female' as const,
+      userType: 'user' as const,
+      posts: ["https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600", "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600"]
+    },
+    {
+      id: 7,
+      name: "Bella",
+      age: 24,
+      image: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400",
+      bio: "Confident, flirty, and ready for adventure 🌹",
+      whatsapp: "+1234567896",
+      location: "Miami, FL",
+      gender: 'female' as const,
+      userType: 'user' as const,
+      posts: ["https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600"]
+    },
+    {
+      id: 8,
+      name: "Alex",
+      age: 29,
+      image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400",
+      bio: "Good vibes only, let's see where the night takes us 🔥",
+      whatsapp: "+1234567897",
+      location: "Las Vegas, NV",
       gender: 'male' as const,
-      userType: 'service_provider' as const,
-      serviceCategory: "Music & Audio",
-      services: ["Music Production", "Sound Engineering", "Audio Mixing"],
-      portfolio: ["/placeholder.svg"],
-      rating: 4.5,
-      reviewCount: 92,
-      isAvailable: true,
-      posts: ["/placeholder.svg"]
+      userType: 'user' as const,
+      posts: ["https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600"]
     }
   ];
 
@@ -132,22 +127,13 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
   const filteredProfiles = useMemo(() => {
     let profiles = allProfiles;
 
-    // Apply role-based filtering first
-    if (isAdmin) {
-      // Admin sees all profiles
-      profiles = allProfiles;
-    } else {
-      // Users see only service providers
-      profiles = allProfiles.filter(profile => profile.userType === 'service_provider');
-    }
-
-    // Then apply gender filter
+    // Apply gender filter
     if (filterGender) {
       profiles = profiles.filter(profile => profile.gender === filterGender);
     }
 
     return profiles;
-  }, [filterGender, isAdmin]);
+  }, [filterGender]);
 
   // Create all feed items
   const allFeedItems = useMemo(() => {
@@ -169,7 +155,7 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
             type: 'post',
             profile: profile,
             postImage: postImage,
-            caption: `Post ${postIndex + 1} from ${profile.name}`
+            caption: `Feeling good tonight 💫`
           });
         });
       }
