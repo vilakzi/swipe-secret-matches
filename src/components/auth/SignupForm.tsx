@@ -33,10 +33,7 @@ const SignupForm = () => {
 
     setLoading(true);
     try {
-      await signUp(formData.email, formData.password, {
-        display_name: formData.displayName,
-        user_type: formData.userType
-      });
+      await signUp(formData.email, formData.password, formData.displayName, formData.userType);
       toast({
         title: "Success",
         description: "Account created successfully!"

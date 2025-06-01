@@ -13,6 +13,15 @@ export const handleApiError = (error: any): ApiError => {
   return { message: 'An unexpected error occurred' };
 };
 
+// Helper function to get current user ID
+const getCurrentUserId = async (): Promise<string> => {
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user) {
+    throw new Error('User not authenticated');
+  }
+  return user.id;
+};
+
 // Profile API functions
 export const profileApi = {
   async getProfile(userId: string) {
@@ -70,9 +79,12 @@ export const profileApi = {
 // Swipe API functions
 export const swipeApi = {
   async createSwipe(targetUserId: string, liked: boolean) {
+    const userId = await getCurrentUserId();
+    
     const { data, error } = await supabase
       .from('swipes')
       .insert({
+        user_id: userId,
         target_user_id: targetUserId,
         liked
       })
@@ -84,9 +96,12 @@ export const swipeApi = {
   },
 
   async createSuperLike(targetUserId: string) {
+    const userId = await getCurrentUserId();
+    
     const { data, error } = await supabase
       .from('super_likes')
       .insert({
+        user_id: userId,
         target_user_id: targetUserId
       })
       .select()
@@ -118,9 +133,12 @@ export const matchApi = {
 // Block/Report API functions
 export const moderationApi = {
   async blockUser(userId: string) {
+    const blockerId = await getCurrentUserId();
+    
     const { data, error } = await supabase
       .from('blocked_users')
       .insert({
+        blocker_id: blockerId,
         blocked_id: userId
       })
       .select()
@@ -131,9 +149,12 @@ export const moderationApi = {
   },
 
   async reportUser(userId: string, reason: string, description?: string) {
+    const reporterId = await getCurrentUserId();
+    
     const { data, error } = await supabase
       .from('user_reports')
       .insert({
+        reporter_id: reporterId,
         reported_id: userId,
         reason,
         description
