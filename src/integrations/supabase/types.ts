@@ -169,12 +169,15 @@ export type Database = {
           display_name: string | null
           gender: string | null
           id: string
+          interests: string[] | null
           location: string | null
+          privacy_settings: Json | null
           profile_image_url: string | null
           profile_images: string[] | null
           role: Database["public"]["Enums"]["app_role"] | null
           updated_at: string
           user_type: Database["public"]["Enums"]["user_type"] | null
+          verifications: Json | null
           whatsapp: string | null
         }
         Insert: {
@@ -184,12 +187,15 @@ export type Database = {
           display_name?: string | null
           gender?: string | null
           id: string
+          interests?: string[] | null
           location?: string | null
+          privacy_settings?: Json | null
           profile_image_url?: string | null
           profile_images?: string[] | null
           role?: Database["public"]["Enums"]["app_role"] | null
           updated_at?: string
           user_type?: Database["public"]["Enums"]["user_type"] | null
+          verifications?: Json | null
           whatsapp?: string | null
         }
         Update: {
@@ -199,12 +205,15 @@ export type Database = {
           display_name?: string | null
           gender?: string | null
           id?: string
+          interests?: string[] | null
           location?: string | null
+          privacy_settings?: Json | null
           profile_image_url?: string | null
           profile_images?: string[] | null
           role?: Database["public"]["Enums"]["app_role"] | null
           updated_at?: string
           user_type?: Database["public"]["Enums"]["user_type"] | null
+          verifications?: Json | null
           whatsapp?: string | null
         }
         Relationships: []
