@@ -2,7 +2,7 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, MessageCircle, MapPin, Share, Lock, Star, Clock, Phone, Gallery } from 'lucide-react';
+import { Heart, MessageCircle, MapPin, Share, Lock, Star, Clock, Phone, Images } from 'lucide-react';
 import OnlineStatus from '@/components/OnlineStatus';
 import { usePresence } from '@/hooks/usePresence';
 import { useState } from 'react';
@@ -153,7 +153,7 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
             className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white"
             onClick={() => setShowPortfolio(!showPortfolio)}
           >
-            <Gallery className="w-4 h-4 mr-1" />
+            <Images className="w-4 h-4 mr-1" />
             Portfolio ({item.profile.portfolio.length})
           </Button>
         )}
