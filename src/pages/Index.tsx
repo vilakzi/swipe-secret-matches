@@ -21,7 +21,7 @@ const Index = () => {
   // Check if user is logged in
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center p-8">
           <h2 className="text-2xl font-bold text-white mb-4">Please log in to access the feed</h2>
           <Button
@@ -34,15 +34,6 @@ const Index = () => {
       </div>
     );
   }
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      navigate('/auth');
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
-  };
 
   const handleDashboard = () => {
     navigate('/dashboard');
@@ -122,9 +113,9 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900">
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-gray-700">
+    <div className="min-h-screen">
+      {/* Simplified Header */}
+      <header className="fixed top-0 left-0 right-0 z-40 bg-black/80 backdrop-blur-md border-b border-gray-700">
         <div className="p-4 flex justify-between items-center max-w-md mx-auto">
           <div className="flex items-center space-x-3">
             <Heart className="w-8 h-8 text-pink-500" />
@@ -157,15 +148,6 @@ const Index = () => {
                 <Settings className="w-4 h-4" />
               </Button>
             )}
-            
-            <Button
-              onClick={handleSignOut}
-              variant="ghost"
-              size="sm"
-              className="text-white hover:bg-white/10"
-            >
-              <LogOut className="w-4 h-4" />
-            </Button>
           </div>
         </div>
       </header>

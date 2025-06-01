@@ -7,14 +7,26 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ServiceProviderRoute from "@/components/ServiceProviderRoute";
+import AppLayout from "@/components/layout/AppLayout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
+import Matches from "./pages/Matches";
+import Messages from "./pages/Messages";
+import Settings from "./pages/Settings";
 import Onboarding from "./pages/Onboarding";
 import ServiceProviderDashboard from "./pages/ServiceProviderDashboard";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes
+      retry: 2,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -27,26 +39,58 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/onboarding" element={
               <ProtectedRoute>
-                <Onboarding />
+                <AppLayout showBottomNav={false}>
+                  <Onboarding />
+                </AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/" element={
               <ProtectedRoute>
-                <Index />
+                <AppLayout>
+                  <Index />
+                </AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/profile" element={
               <ProtectedRoute>
-                <Profile />
+                <AppLayout>
+                  <Profile />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/matches" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <Matches />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/messages" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <Messages />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <Settings />
+                </AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/dashboard" element={
               <ServiceProviderRoute>
-                <ServiceProviderDashboard />
+                <AppLayout showBottomNav={false}>
+                  <ServiceProviderDashboard />
+                </AppLayout>
               </ServiceProviderRoute>
             } />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
+            <Route path="*" element={
+              <AppLayout showBottomNav={false}>
+                <NotFound />
+              </AppLayout>
+            } />
           </Routes>
         </AuthProvider>
       </BrowserRouter>

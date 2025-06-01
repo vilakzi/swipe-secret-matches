@@ -19,7 +19,7 @@ const Profile = () => {
 
   if (editing) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 text-white p-4">
+      <div className="min-h-screen text-white p-4">
         <ProfileEditor
           profileData={profileData}
           onSave={handleSave}
@@ -30,7 +30,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 text-white p-4">
+    <div className="min-h-screen text-white p-4">
       <div className="max-w-2xl mx-auto">
         <ProfileHeader onEditClick={() => setEditing(true)} />
 
