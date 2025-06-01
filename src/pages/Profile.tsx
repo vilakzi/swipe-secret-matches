@@ -89,6 +89,15 @@ const Profile = () => {
       }
 
       if (data) {
+        // Safely parse JSON fields with proper type casting and fallbacks
+        const privacySettings = data.privacy_settings ? 
+          (typeof data.privacy_settings === 'object' && data.privacy_settings !== null ? 
+            data.privacy_settings as any : {}) : {};
+            
+        const verifications = data.verifications ? 
+          (typeof data.verifications === 'object' && data.verifications !== null ? 
+            data.verifications as any : {}) : {};
+
         setProfileData({
           display_name: data.display_name || '',
           age: data.age,
@@ -98,20 +107,20 @@ const Profile = () => {
           profile_image_url: data.profile_image_url,
           profile_images: data.profile_images || [],
           interests: data.interests || [],
-          privacySettings: data.privacy_settings || {
-            showOnlineStatus: true,
-            showLastSeen: true,
-            showLocation: true,
-            showContact: false,
-            allowMessages: true,
-            profileVisibility: 'public'
+          privacySettings: {
+            showOnlineStatus: privacySettings.showOnlineStatus ?? true,
+            showLastSeen: privacySettings.showLastSeen ?? true,
+            showLocation: privacySettings.showLocation ?? true,
+            showContact: privacySettings.showContact ?? false,
+            allowMessages: privacySettings.allowMessages ?? true,
+            profileVisibility: privacySettings.profileVisibility ?? 'public'
           },
-          verifications: data.verifications || {
-            emailVerified: true,
-            phoneVerified: false,
-            photoVerified: false,
-            locationVerified: false,
-            premiumUser: false
+          verifications: {
+            emailVerified: verifications.emailVerified ?? true,
+            phoneVerified: verifications.phoneVerified ?? false,
+            photoVerified: verifications.photoVerified ?? false,
+            locationVerified: verifications.locationVerified ?? false,
+            premiumUser: verifications.premiumUser ?? false
           }
         });
       }
