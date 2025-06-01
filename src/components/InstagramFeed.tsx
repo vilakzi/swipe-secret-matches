@@ -1,9 +1,11 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import FeedHeader from './feed/FeedHeader';
 import FeedContent from './feed/FeedContent';
+import PullToRefresh from './feed/PullToRefresh';
+import InfiniteScroll from './feed/InfiniteScroll';
 
 interface InstagramFeedProps {
   onLike: (itemId: string, profileId: number) => void;
@@ -17,6 +19,9 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
   const { isAdmin } = useUserRole();
   const [showFilters, setShowFilters] = useState(false);
   const [filterGender, setFilterGender] = useState<'male' | 'female' | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const itemsPerPage = 6; // Show 6 items per page
 
   // Mock data for profiles and posts - always show to everyone
   const allProfiles = [
@@ -63,17 +68,39 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
       location: "Austin, TX",
       gender: 'male' as const,
       posts: ["/placeholder.svg", "/placeholder.svg"]
+    },
+    {
+      id: 5,
+      name: "Jessica",
+      age: 27,
+      image: "/placeholder.svg",
+      bio: "Yoga instructor and nature lover 🌿",
+      whatsapp: "+1234567894",
+      location: "Portland, OR",
+      gender: 'female' as const,
+      posts: ["/placeholder.svg", "/placeholder.svg"]
+    },
+    {
+      id: 6,
+      name: "David",
+      age: 32,
+      image: "/placeholder.svg",
+      bio: "Musician and food enthusiast 🎵",
+      whatsapp: "+1234567895",
+      location: "Nashville, TN",
+      gender: 'male' as const,
+      posts: ["/placeholder.svg"]
     }
   ];
 
-  // Filter profiles based on gender filter - always show profiles
+  // Filter profiles based on gender filter
   const filteredProfiles = useMemo(() => {
     if (!filterGender) return allProfiles;
     return allProfiles.filter(profile => profile.gender === filterGender);
   }, [filterGender]);
 
-  // Create feed items (mix of profiles and posts) - always show
-  const feedItems = useMemo(() => {
+  // Create all feed items
+  const allFeedItems = useMemo(() => {
     const items: any[] = [];
     
     filteredProfiles.forEach((profile, index) => {
@@ -101,26 +128,64 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
     return items;
   }, [filteredProfiles]);
 
+  // Get items for current page
+  const displayedItems = useMemo(() => {
+    return allFeedItems.slice(0, currentPage * itemsPerPage);
+  }, [allFeedItems, currentPage, itemsPerPage]);
+
+  const hasMoreItems = displayedItems.length < allFeedItems.length;
+
+  const handleLoadMore = useCallback(() => {
+    if (isLoadingMore || !hasMoreItems) return;
+    
+    setIsLoadingMore(true);
+    // Simulate loading delay
+    setTimeout(() => {
+      setCurrentPage(prev => prev + 1);
+      setIsLoadingMore(false);
+    }, 800);
+  }, [isLoadingMore, hasMoreItems]);
+
+  const handleRefresh = useCallback(async () => {
+    setCurrentPage(1);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    onRefresh();
+  }, [onRefresh]);
+
+  // Reset pagination when filter changes
+  const handleFilterChange = useCallback((gender: 'male' | 'female' | null) => {
+    setFilterGender(gender);
+    setCurrentPage(1);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 overflow-x-hidden">
       <FeedHeader
         showFilters={showFilters}
         setShowFilters={setShowFilters}
         filterGender={filterGender}
-        setFilterGender={setFilterGender}
+        setFilterGender={handleFilterChange}
       />
       
       <div className="max-w-md mx-auto">
-        <FeedContent
-          feedItems={feedItems}
-          likedItems={likedItems}
-          isSubscribed={true} // Always true since we removed paywall
-          filterGender={filterGender}
-          onLike={onLike}
-          onContact={onContact}
-          onRefresh={onRefresh}
-          setFilterGender={setFilterGender}
-        />
+        <PullToRefresh onRefresh={handleRefresh} className="pt-20">
+          <InfiniteScroll
+            hasMore={hasMoreItems}
+            isLoading={isLoadingMore}
+            onLoadMore={handleLoadMore}
+          >
+            <FeedContent
+              feedItems={displayedItems}
+              likedItems={likedItems}
+              isSubscribed={true}
+              filterGender={filterGender}
+              onLike={onLike}
+              onContact={onContact}
+              onRefresh={onRefresh}
+              setFilterGender={handleFilterChange}
+            />
+          </InfiniteScroll>
+        </PullToRefresh>
       </div>
     </div>
   );

@@ -1,6 +1,5 @@
 
 import { Button } from '@/components/ui/button';
-import { RotateCcw } from 'lucide-react';
 import ProfileCard from './ProfileCard';
 import PostCard from './PostCard';
 
@@ -49,27 +48,29 @@ const FeedContent = ({
   return (
     <div className="pb-20">
       {feedItems.length > 0 ? (
-        feedItems.map(item => 
-          item.type === 'profile' ? (
-            <ProfileCard
-              key={item.id}
-              item={item}
-              likedItems={likedItems}
-              isSubscribed={isSubscribed}
-              onLike={onLike}
-              onContact={onContact}
-            />
-          ) : (
-            <PostCard
-              key={item.id}
-              item={item}
-              likedItems={likedItems}
-              isSubscribed={isSubscribed}
-              onLike={onLike}
-              onContact={onContact}
-            />
-          )
-        )
+        <div className="space-y-4">
+          {feedItems.map(item => 
+            item.type === 'profile' ? (
+              <ProfileCard
+                key={item.id}
+                item={item}
+                likedItems={likedItems}
+                isSubscribed={isSubscribed}
+                onLike={onLike}
+                onContact={onContact}
+              />
+            ) : (
+              <PostCard
+                key={item.id}
+                item={item}
+                likedItems={likedItems}
+                isSubscribed={isSubscribed}
+                onLike={onLike}
+                onContact={onContact}
+              />
+            )
+          )}
+        </div>
       ) : (
         <div className="text-center py-8">
           <p className="text-gray-400">No profiles found for the selected filter.</p>
@@ -79,19 +80,6 @@ const FeedContent = ({
             onClick={() => setFilterGender(null)}
           >
             Clear filters
-          </Button>
-        </div>
-      )}
-      
-      {/* Refresh Button */}
-      {feedItems.length > 0 && (
-        <div className="flex justify-center mt-8">
-          <Button
-            onClick={onRefresh}
-            className="bg-purple-600 hover:bg-purple-700 text-white"
-          >
-            <RotateCcw className="w-4 h-4 mr-2" />
-            Load More
           </Button>
         </div>
       )}
