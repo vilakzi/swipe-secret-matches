@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -9,6 +8,7 @@ import AuthHeader from '@/components/auth/AuthHeader';
 import AuthToggle from '@/components/auth/AuthToggle';
 import AuthForm from '@/components/auth/AuthForm';
 import AuthFooter from '@/components/auth/AuthFooter';
+import { validateEmail } from '@/utils/emailValidation';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -26,6 +26,17 @@ const Auth = () => {
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
+    
+    // Validate email before proceeding
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
+      toast({
+        title: "Invalid email",
+        description: emailValidation.error,
+        variant: "destructive",
+      });
+      return;
+    }
     
     setLoading(true);
 
@@ -80,9 +91,20 @@ const Auth = () => {
       }
       navigate('/');
     } catch (error: any) {
+      // Handle specific email-related errors
+      let errorMessage = error.message || "An error occurred. Please try again.";
+      
+      if (error.message?.includes('Invalid login credentials')) {
+        errorMessage = "Invalid email or password. Please check your credentials and try again.";
+      } else if (error.message?.includes('User already registered')) {
+        errorMessage = "An account with this email already exists. Please sign in instead.";
+      } else if (error.message?.includes('email')) {
+        errorMessage = "Please check your email address and try again.";
+      }
+      
       toast({
         title: "Error",
-        description: error.message || "An error occurred. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -91,6 +113,17 @@ const Auth = () => {
   }, [isLogin, email, password, displayName, userType, isAdmin, loading, signIn, signUp, navigate]);
 
   const handleForgotPassword = useCallback(async (resetEmail: string) => {
+    // Validate email before sending reset
+    const emailValidation = validateEmail(resetEmail);
+    if (!emailValidation.isValid) {
+      toast({
+        title: "Invalid email",
+        description: emailValidation.error,
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
         redirectTo: `${window.location.origin}/auth`,
@@ -103,9 +136,15 @@ const Auth = () => {
         description: "Check your email for a password reset link.",
       });
     } catch (error: any) {
+      let errorMessage = error.message || "Failed to send reset link. Please try again.";
+      
+      if (error.message?.includes('email')) {
+        errorMessage = "Please check your email address and try again.";
+      }
+      
       toast({
         title: "Error",
-        description: error.message || "Failed to send reset link. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -148,14 +187,17 @@ const Auth = () => {
             onEmailChange={setEmail}
             onPasswordChange={setPassword}
             onDisplayNameChange={setDisplayName}
-            onUserTypeChange={handleUserTypeChange}
-            onAdminToggle={handleAdminToggle}
-            onPasswordToggle={togglePasswordVisibility}
+            onUserTypeChange={(newUserType) => {
+              setUserType(newUserType);
+              setIsAdmin(false);
+            }}
+            onAdminToggle={() => setIsAdmin(!isAdmin)}
+            onPasswordToggle={() => setShowPassword(!showPassword)}
             onSubmit={handleSubmit}
             onForgotPassword={() => setShowForgotPassword(true)}
           />
 
-          <AuthFooter isLogin={isLogin} onToggle={toggleAuthMode} />
+          <AuthFooter isLogin={isLogin} onToggle={() => setIsLogin(!isLogin)} />
         </div>
       </div>
 
