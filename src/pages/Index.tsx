@@ -6,6 +6,7 @@ import { Heart, RotateCcw, User, LogOut, Settings, Briefcase, Shield } from 'luc
 import { useNavigate } from 'react-router-dom';
 import OnlineStatus from '@/components/OnlineStatus';
 import InstagramFeed from '@/components/InstagramFeed';
+import ProfileCompletionPrompt from '@/components/onboarding/ProfileCompletionPrompt';
 import { usePresence } from '@/hooks/usePresence';
 import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from '@/hooks/use-toast';
@@ -192,12 +193,15 @@ const Index = () => {
           </div>
         ) : (
           // Regular User/Admin View - Instagram-style Feed
-          <InstagramFeed 
-            onLike={handleLike}
-            onContact={handleContact}
-            onRefresh={handleRefresh}
-            likedItems={likedItems}
-          />
+          <div className="max-w-md mx-auto px-4">
+            <ProfileCompletionPrompt />
+            <InstagramFeed 
+              onLike={handleLike}
+              onContact={handleContact}
+              onRefresh={handleRefresh}
+              likedItems={likedItems}
+            />
+          </div>
         )}
       </main>
     </div>

@@ -36,6 +36,7 @@ const Auth = () => {
           title: "Welcome back!",
           description: "You've been signed in successfully.",
         });
+        navigate('/');
       } else {
         if (!displayName.trim()) {
           toast({
@@ -70,8 +71,12 @@ const Auth = () => {
 
         toast({
           title: "Account created!",
-          description: `Welcome ${isAdmin ? 'Administrator' : userType === 'service_provider' ? 'Service Provider' : 'User'}! You can now start using the app.`,
+          description: `Welcome ${isAdmin ? 'Administrator' : userType === 'service_provider' ? 'Service Provider' : 'User'}! Let's set up your profile.`,
         });
+
+        // Redirect to onboarding for new users
+        navigate('/onboarding');
+        return;
       }
       navigate('/');
     } catch (error: any) {
