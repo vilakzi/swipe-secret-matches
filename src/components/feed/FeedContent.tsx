@@ -2,6 +2,8 @@
 import { Button } from '@/components/ui/button';
 import ProfileCard from './ProfileCard';
 import PostCard from './PostCard';
+import ProviderProfileCard from './ProviderProfileCard';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface Profile {
   id: number;
@@ -12,6 +14,13 @@ interface Profile {
   whatsapp: string;
   location: string;
   gender?: 'male' | 'female';
+  userType?: 'user' | 'service_provider';
+  serviceCategory?: string;
+  portfolio?: string[];
+  rating?: number;
+  reviewCount?: number;
+  isAvailable?: boolean;
+  services?: string[];
   liked?: boolean;
   posts?: string[];
 }
@@ -45,20 +54,43 @@ const FeedContent = ({
   onRefresh,
   setFilterGender
 }: FeedContentProps) => {
+  const { isUser } = useUserRole();
+
+  const renderProfileCard = (item: FeedItem) => {
+    // Use enhanced provider card for service providers when viewed by users
+    if (isUser && item.profile.userType === 'service_provider') {
+      return (
+        <ProviderProfileCard
+          key={item.id}
+          item={item}
+          likedItems={likedItems}
+          isSubscribed={isSubscribed}
+          onLike={onLike}
+          onContact={onContact}
+        />
+      );
+    }
+
+    // Use regular profile card for other cases
+    return (
+      <ProfileCard
+        key={item.id}
+        item={item}
+        likedItems={likedItems}
+        isSubscribed={isSubscribed}
+        onLike={onLike}
+        onContact={onContact}
+      />
+    );
+  };
+
   return (
     <div className="pb-20">
       {feedItems.length > 0 ? (
         <div className="space-y-4">
           {feedItems.map(item => 
             item.type === 'profile' ? (
-              <ProfileCard
-                key={item.id}
-                item={item}
-                likedItems={likedItems}
-                isSubscribed={isSubscribed}
-                onLike={onLike}
-                onContact={onContact}
-              />
+              renderProfileCard(item)
             ) : (
               <PostCard
                 key={item.id}
