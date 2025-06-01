@@ -16,7 +16,7 @@ const OptimizedImage = ({
   src, 
   alt, 
   className = '', 
-  fallback = '/placeholder.svg',
+  fallback = 'https://picsum.photos/400/600?random=999',
   loading = 'lazy',
   onLoad,
   onError

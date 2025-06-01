@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Heart, MessageCircle, MapPin, Share, Lock } from 'lucide-react';
 import OnlineStatus from '@/components/OnlineStatus';
 import { usePresence } from '@/hooks/usePresence';
+import OptimizedImage from '@/components/ui/OptimizedImage';
 
 interface Profile {
   id: number;
@@ -43,10 +44,10 @@ const ProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact }: Prof
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div className="relative">
-            <img
+            <OptimizedImage
               src={item.profile.image}
               alt={item.profile.name}
-              className="w-12 h-12 rounded-full object-cover"
+              className="w-12 h-12 rounded-full"
             />
             <OnlineStatus 
               isOnline={isUserOnline(item.profile.id.toString())} 
@@ -74,10 +75,10 @@ const ProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact }: Prof
 
       {/* Profile Image */}
       <div className="relative">
-        <img
+        <OptimizedImage
           src={item.profile.image}
           alt={item.profile.name}
-          className="w-full h-80 object-cover"
+          className="w-full h-80"
         />
       </div>
 
