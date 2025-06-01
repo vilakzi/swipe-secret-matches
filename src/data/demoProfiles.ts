@@ -23,10 +23,7 @@ export const demoProfiles: Profile[] = [
     location: "Johannesburg, Gauteng",
     gender: 'female' as const,
     userType: 'user' as const,
-    posts: [
-      "/lovable-uploads/a47c94f5-4caa-440f-a3a5-96cf72617433.png", 
-      "/lovable-uploads/06107441-afdf-4e5a-a284-daf50c0d3816.png"
-    ]
+    posts: []
   },
   {
     id: 2,
@@ -38,7 +35,7 @@ export const demoProfiles: Profile[] = [
     location: "Pretoria, Gauteng",
     gender: 'female' as const,
     userType: 'user' as const,
-    posts: ["/lovable-uploads/fd167397-4f70-4b29-92c9-10c373970912.png"]
+    posts: []
   },
   {
     id: 3,
@@ -50,10 +47,7 @@ export const demoProfiles: Profile[] = [
     location: "Sandton, Gauteng",
     gender: 'female' as const,
     userType: 'user' as const,
-    posts: [
-      "/lovable-uploads/b13cab85-67d6-4d3c-8114-0653acecba3f.png",
-      "/lovable-uploads/a5eeb907-4974-443e-8d49-33ec325223c7.png"
-    ]
+    posts: []
   },
   {
     id: 4,
@@ -65,7 +59,7 @@ export const demoProfiles: Profile[] = [
     location: "Vosloorus, Gauteng",
     gender: 'female' as const,
     userType: 'user' as const,
-    posts: ["/lovable-uploads/ff0b1c28-2b37-4b20-b7c0-589627c4b494.png"]
+    posts: []
   },
   {
     id: 5,
@@ -77,10 +71,7 @@ export const demoProfiles: Profile[] = [
     location: "Secunda, Mpumalanga",
     gender: 'female' as const,
     userType: 'user' as const,
-    posts: [
-      "/lovable-uploads/edfa4e3e-1870-4ac8-8dda-4b518536741c.png",
-      "/lovable-uploads/a47c94f5-4caa-440f-a3a5-96cf72617433.png"
-    ]
+    posts: []
   },
   {
     id: 6,
@@ -92,7 +83,7 @@ export const demoProfiles: Profile[] = [
     location: "Johannesburg, Gauteng",
     gender: 'female' as const,
     userType: 'user' as const,
-    posts: ["/lovable-uploads/06107441-afdf-4e5a-a284-daf50c0d3816.png"]
+    posts: []
   },
   {
     id: 7,
@@ -104,21 +95,6 @@ export const demoProfiles: Profile[] = [
     location: "Pretoria, Gauteng",
     gender: 'female' as const,
     userType: 'user' as const,
-    posts: ["/lovable-uploads/b13cab85-67d6-4d3c-8114-0653acecba3f.png"]
-  },
-  {
-    id: 8,
-    name: "Sibongile",
-    age: 23,
-    image: "/lovable-uploads/b13cab85-67d6-4d3c-8114-0653acecba3f.png",
-    bio: "Sandton socialite 🌶️ Sweet but spicy, let's vibe together",
-    whatsapp: "+27123456788",
-    location: "Sandton, Gauteng",
-    gender: 'female' as const,
-    userType: 'user' as const,
-    posts: [
-      "/lovable-uploads/fd167397-4f70-4b29-92c9-10c373970912.png",
-      "/lovable-uploads/a5eeb907-4974-443e-8d49-33ec325223c7.png"
-    ]
+    posts: []
   }
 ];
