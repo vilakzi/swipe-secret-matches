@@ -12,6 +12,7 @@ import PhotoUploadStep from './steps/PhotoUploadStep';
 import BioStep from './steps/BioStep';
 import PersonalInfoStep from './steps/PersonalInfoStep';
 import InterestsStep from './steps/InterestsStep';
+import PrivacySettingsStep from './steps/PrivacySettingsStep';
 import ReviewStep from './steps/ReviewStep';
 
 interface ProfileData {
@@ -20,6 +21,14 @@ interface ProfileData {
   age: number | null;
   location: string;
   interests: string[];
+  privacySettings: {
+    showOnlineStatus: boolean;
+    showLastSeen: boolean;
+    showLocation: boolean;
+    showContact: boolean;
+    allowMessages: boolean;
+    profileVisibility: 'public' | 'friends' | 'private';
+  };
 }
 
 const ProfileSetupWizard = () => {
@@ -32,10 +41,18 @@ const ProfileSetupWizard = () => {
     bio: '',
     age: null,
     location: '',
-    interests: []
+    interests: [],
+    privacySettings: {
+      showOnlineStatus: true,
+      showLastSeen: true,
+      showLocation: true,
+      showContact: false,
+      allowMessages: true,
+      profileVisibility: 'public'
+    }
   });
 
-  const totalSteps = 5;
+  const totalSteps = 6;
   const progress = (currentStep / totalSteps) * 100;
 
   const steps = [
@@ -43,6 +60,7 @@ const ProfileSetupWizard = () => {
     { title: 'Add Bio', component: BioStep },
     { title: 'Personal Info', component: PersonalInfoStep },
     { title: 'Select Interests', component: InterestsStep },
+    { title: 'Privacy Settings', component: PrivacySettingsStep },
     { title: 'Review Profile', component: ReviewStep }
   ];
 
@@ -80,13 +98,20 @@ const ProfileSetupWizard = () => {
           bio: profileData.bio,
           age: profileData.age,
           location: profileData.location,
+          interests: profileData.interests,
+          privacy_settings: profileData.privacySettings,
+          verifications: {
+            emailVerified: true,
+            phoneVerified: false,
+            photoVerified: false,
+            locationVerified: false,
+            premiumUser: false
+          },
           updated_at: new Date().toISOString()
         });
 
       if (error) throw error;
 
-      // Store interests separately if needed (you might want to create an interests table)
-      
       toast({
         title: "Profile completed!",
         description: "Welcome to Connect! Your profile is now live.",
@@ -114,7 +139,8 @@ const ProfileSetupWizard = () => {
       case 2: return profileData.bio.trim().length > 0;
       case 3: return profileData.age !== null && profileData.location.trim().length > 0;
       case 4: return profileData.interests.length > 0;
-      case 5: return true;
+      case 5: return true; // Privacy settings are optional
+      case 6: return true;
       default: return false;
     }
   };

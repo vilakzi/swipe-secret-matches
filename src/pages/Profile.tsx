@@ -3,13 +3,13 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Camera, Save, ArrowLeft, Upload } from 'lucide-react';
+import { ArrowLeft, Edit, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import ProfileEditor from '@/components/ProfileEditor';
+import VerificationBadges from '@/components/VerificationBadges';
 
 interface ProfileData {
   display_name: string;
@@ -18,20 +18,54 @@ interface ProfileData {
   location: string;
   whatsapp: string;
   profile_image_url: string | null;
+  profile_images: string[];
+  interests: string[];
+  privacySettings: {
+    showOnlineStatus: boolean;
+    showLastSeen: boolean;
+    showLocation: boolean;
+    showContact: boolean;
+    allowMessages: boolean;
+    profileVisibility: 'public' | 'friends' | 'private';
+  };
+  verifications: {
+    emailVerified: boolean;
+    phoneVerified: boolean;
+    photoVerified: boolean;
+    locationVerified: boolean;
+    premiumUser: boolean;
+  };
 }
 
 const Profile = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData>({
     display_name: '',
     age: null,
     bio: '',
     location: '',
     whatsapp: '',
-    profile_image_url: null
+    profile_image_url: null,
+    profile_images: [],
+    interests: [],
+    privacySettings: {
+      showOnlineStatus: true,
+      showLastSeen: true,
+      showLocation: true,
+      showContact: false,
+      allowMessages: true,
+      profileVisibility: 'public'
+    },
+    verifications: {
+      emailVerified: true,
+      phoneVerified: false,
+      photoVerified: false,
+      locationVerified: false,
+      premiumUser: false
+    }
   });
 
   useEffect(() => {
@@ -61,7 +95,24 @@ const Profile = () => {
           bio: data.bio || '',
           location: data.location || '',
           whatsapp: data.whatsapp || '',
-          profile_image_url: data.profile_image_url
+          profile_image_url: data.profile_image_url,
+          profile_images: data.profile_images || [],
+          interests: data.interests || [],
+          privacySettings: data.privacy_settings || {
+            showOnlineStatus: true,
+            showLastSeen: true,
+            showLocation: true,
+            showContact: false,
+            allowMessages: true,
+            profileVisibility: 'public'
+          },
+          verifications: data.verifications || {
+            emailVerified: true,
+            phoneVerified: false,
+            photoVerified: false,
+            locationVerified: false,
+            premiumUser: false
+          }
         });
       }
     } catch (error: any) {
@@ -73,54 +124,7 @@ const Profile = () => {
     }
   };
 
-  const handleInputChange = (field: keyof ProfileData, value: string | number) => {
-    setProfileData(prev => ({
-      ...prev,
-      [field]: field === 'age' ? (value === '' ? null : Number(value)) : value
-    }));
-  };
-
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !user) return;
-
-    setUploading(true);
-
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/profile.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('profiles')
-        .upload(fileName, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('profiles')
-        .getPublicUrl(fileName);
-
-      setProfileData(prev => ({
-        ...prev,
-        profile_image_url: publicUrl
-      }));
-
-      toast({
-        title: "Photo uploaded!",
-        description: "Your profile photo has been updated."
-      });
-    } catch (error: any) {
-      toast({
-        title: "Upload failed",
-        description: error.message,
-        variant: "destructive"
-      });
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleSave = async () => {
+  const handleSave = async (data: ProfileData) => {
     if (!user) return;
 
     setLoading(true);
@@ -130,23 +134,28 @@ const Profile = () => {
         .from('profiles')
         .upsert({
           id: user.id,
-          display_name: profileData.display_name,
-          age: profileData.age,
-          bio: profileData.bio,
-          location: profileData.location,
-          whatsapp: profileData.whatsapp,
-          profile_image_url: profileData.profile_image_url,
+          display_name: data.display_name,
+          age: data.age,
+          bio: data.bio,
+          location: data.location,
+          whatsapp: data.whatsapp,
+          profile_image_url: data.profile_image_url,
+          profile_images: data.profile_images,
+          interests: data.interests,
+          privacy_settings: data.privacySettings,
+          verifications: data.verifications,
           updated_at: new Date().toISOString()
         });
 
       if (error) throw error;
 
+      setProfileData(data);
+      setEditing(false);
+
       toast({
         title: "Profile saved!",
         description: "Your profile has been updated successfully."
       });
-
-      navigate('/');
     } catch (error: any) {
       toast({
         title: "Error saving profile",
@@ -158,148 +167,140 @@ const Profile = () => {
     }
   };
 
+  if (editing) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 text-white p-4">
+        <ProfileEditor
+          profileData={profileData}
+          onSave={handleSave}
+          onCancel={() => setEditing(false)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 text-white p-4">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="flex items-center mb-6">
+        <div className="flex items-center justify-between mb-6">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => navigate('/')}
-            className="text-white hover:bg-white/10 mr-4"
+            className="text-white hover:bg-white/10"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
-          <h1 className="text-2xl font-bold">Edit Profile</h1>
+          <div className="flex space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setEditing(true)}
+              className="text-white border-gray-600 hover:bg-white/10"
+            >
+              <Edit className="w-4 h-4 mr-2" />
+              Edit Profile
+            </Button>
+          </div>
         </div>
 
         <Card className="bg-black/20 backdrop-blur-md border-gray-700">
           <CardHeader>
-            <CardTitle className="text-white">Profile Information</CardTitle>
+            <CardTitle className="text-white">Profile</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Profile Photo */}
+            {/* Profile Photo and Basic Info */}
             <div className="flex flex-col items-center space-y-4">
-              <div className="relative">
-                <Avatar className="w-32 h-32">
-                  <AvatarImage 
-                    src={profileData.profile_image_url || ''} 
-                    className="object-cover"
-                  />
-                  <AvatarFallback className="bg-gray-600 text-white text-2xl">
-                    {profileData.display_name ? profileData.display_name[0].toUpperCase() : 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <label className="absolute bottom-0 right-0 bg-purple-600 hover:bg-purple-700 p-2 rounded-full cursor-pointer transition-colors">
-                  <Camera className="w-4 h-4" />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                    disabled={uploading}
-                  />
-                </label>
-              </div>
-              {uploading && (
-                <p className="text-sm text-gray-400 flex items-center">
-                  <Upload className="w-4 h-4 mr-2 animate-spin" />
-                  Uploading photo...
-                </p>
-              )}
-            </div>
-
-            {/* Form Fields */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Display Name *
-                </label>
-                <Input
-                  value={profileData.display_name}
-                  onChange={(e) => handleInputChange('display_name', e.target.value)}
-                  className="bg-gray-800 border-gray-600 text-white"
-                  placeholder="Your display name"
-                  required
+              <Avatar className="w-32 h-32">
+                <AvatarImage 
+                  src={profileData.profile_image_url || ''} 
+                  className="object-cover"
                 />
+                <AvatarFallback className="bg-gray-600 text-white text-2xl">
+                  {profileData.display_name ? profileData.display_name[0].toUpperCase() : 'U'}
+                </AvatarFallback>
+              </Avatar>
+              
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-white">{profileData.display_name}</h2>
+                {profileData.age && (
+                  <p className="text-gray-400">{profileData.age} years old</p>
+                )}
+                {profileData.location && (
+                  <p className="text-gray-400">{profileData.location}</p>
+                )}
+                
+                <div className="mt-2">
+                  <VerificationBadges verifications={profileData.verifications} size="md" />
+                </div>
               </div>
+            </div>
 
+            {/* Bio */}
+            {profileData.bio && (
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Age
-                </label>
-                <Input
-                  type="number"
-                  value={profileData.age || ''}
-                  onChange={(e) => handleInputChange('age', e.target.value)}
-                  className="bg-gray-800 border-gray-600 text-white"
-                  placeholder="Your age"
-                  min="18"
-                  max="100"
-                />
+                <h3 className="text-white font-semibold mb-2">About</h3>
+                <p className="text-gray-300">{profileData.bio}</p>
+              </div>
+            )}
+
+            {/* Interests */}
+            {profileData.interests.length > 0 && (
+              <div>
+                <h3 className="text-white font-semibold mb-2">Interests</h3>
+                <div className="flex flex-wrap gap-2">
+                  {profileData.interests.map((interest) => (
+                    <span
+                      key={interest}
+                      className="bg-purple-600/20 text-purple-300 px-3 py-1 rounded-full text-sm"
+                    >
+                      {interest}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Additional Photos */}
+            {profileData.profile_images && profileData.profile_images.length > 1 && (
+              <div>
+                <h3 className="text-white font-semibold mb-2">Photos</h3>
+                <div className="grid grid-cols-3 gap-2">
+                  {profileData.profile_images.slice(1).map((image, index) => (
+                    <img
+                      key={index}
+                      src={image}
+                      alt={`Profile ${index + 2}`}
+                      className="w-full h-24 object-cover rounded"
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Privacy Status */}
+            <div className="bg-gray-800/50 rounded-lg p-4">
+              <h3 className="text-white font-semibold mb-2 flex items-center">
+                <Settings className="w-4 h-4 mr-2" />
+                Privacy Settings
+              </h3>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="text-gray-400">
+                  Profile: <span className="text-white capitalize">{profileData.privacySettings.profileVisibility}</span>
+                </div>
+                <div className="text-gray-400">
+                  Messages: <span className="text-white">{profileData.privacySettings.allowMessages ? 'Enabled' : 'Disabled'}</span>
+                </div>
+                <div className="text-gray-400">
+                  Online Status: <span className="text-white">{profileData.privacySettings.showOnlineStatus ? 'Visible' : 'Hidden'}</span>
+                </div>
+                <div className="text-gray-400">
+                  Location: <span className="text-white">{profileData.privacySettings.showLocation ? 'Visible' : 'Hidden'}</span>
+                </div>
               </div>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Location
-              </label>
-              <Input
-                value={profileData.location}
-                onChange={(e) => handleInputChange('location', e.target.value)}
-                className="bg-gray-800 border-gray-600 text-white"
-                placeholder="Your location"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                WhatsApp Number
-              </label>
-              <Input
-                value={profileData.whatsapp}
-                onChange={(e) => handleInputChange('whatsapp', e.target.value)}
-                className="bg-gray-800 border-gray-600 text-white"
-                placeholder="Your WhatsApp number"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Bio
-              </label>
-              <Textarea
-                value={profileData.bio}
-                onChange={(e) => handleInputChange('bio', e.target.value)}
-                className="bg-gray-800 border-gray-600 text-white min-h-[100px]"
-                placeholder="Tell us about yourself..."
-                maxLength={500}
-              />
-              <p className="text-xs text-gray-400 mt-1">
-                {profileData.bio.length}/500 characters
-              </p>
-            </div>
-
-            {/* Save Button */}
-            <Button
-              onClick={handleSave}
-              disabled={loading || !profileData.display_name.trim()}
-              className="w-full bg-purple-600 hover:bg-purple-700"
-            >
-              {loading ? (
-                <>
-                  <Upload className="w-4 h-4 mr-2 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4 mr-2" />
-                  Save Profile
-                </>
-              )}
-            </Button>
           </CardContent>
         </Card>
       </div>
