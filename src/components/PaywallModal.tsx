@@ -1,178 +1,97 @@
 
+import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Crown, Heart, MessageCircle, Zap, X, Check, Clock, Users, Shield } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { useState } from 'react';
-import { toast } from '@/hooks/use-toast';
+import { Crown, Heart, MessageCircle, Zap, X } from 'lucide-react';
 
 interface PaywallModalProps {
   isOpen: boolean;
   onClose: () => void;
-  trigger: 'interaction' | 'scroll_limit' | 'initial';
-  remainingScrolls?: number;
+  feature: 'super_likes' | 'unlimited_swipes' | 'premium_features';
+  onUpgrade: () => void;
 }
 
-const PaywallModal = ({ isOpen, onClose, trigger, remainingScrolls = 0 }: PaywallModalProps) => {
-  const { session } = useAuth();
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  const handleSubscribe = async () => {
-    if (!session) return;
-
-    setIsProcessing(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-subscription', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (error) throw error;
-
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    } catch (error) {
-      console.error('Error creating subscription:', error);
-      toast({
-        title: "Error",
-        description: "Failed to start subscription process. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const getModalContent = () => {
-    switch (trigger) {
-      case 'scroll_limit':
+const PaywallModal = ({ isOpen, onClose, feature, onUpgrade }: PaywallModalProps) => {
+  const getFeatureDetails = () => {
+    switch (feature) {
+      case 'super_likes':
         return {
-          title: "Daily Limit Reached",
-          subtitle: `You've used all 5 free profile views today!`,
-          description: "Subscribe to get unlimited access and connect with more people."
+          icon: <Heart className="w-12 h-12 text-yellow-500" />,
+          title: 'Out of Super Likes',
+          description: 'Get unlimited super likes and stand out from the crowd',
+          benefits: ['Unlimited super likes', '5x more matches', 'Priority in discovery']
         };
-      case 'interaction':
+      case 'unlimited_swipes':
         return {
-          title: "Premium Feature",
-          subtitle: "Unlock interactions with premium subscription",
-          description: "Like, message, and connect with unlimited profiles."
+          icon: <Zap className="w-12 h-12 text-blue-500" />,
+          title: 'Daily Limit Reached',
+          description: 'Upgrade to premium for unlimited swipes',
+          benefits: ['Unlimited daily swipes', 'See who liked you', 'Advanced filters']
         };
-      default:
+      case 'premium_features':
         return {
-          title: "Welcome to Premium",
-          subtitle: "Get unlimited access for just R99/year",
-          description: "Connect with unlimited profiles and unlock all features."
+          icon: <Crown className="w-12 h-12 text-purple-500" />,
+          title: 'Premium Feature',
+          description: 'Unlock all premium features for the best experience',
+          benefits: ['All premium features', 'Ad-free experience', 'Priority support']
         };
     }
   };
 
-  const content = getModalContent();
-
-  const features = [
-    { icon: Heart, text: "Unlimited likes & interactions" },
-    { icon: MessageCircle, text: "Send unlimited messages" },
-    { icon: Users, text: "View unlimited profiles daily" },
-    { icon: Zap, text: "Priority profile visibility" },
-    { icon: Shield, text: "Advanced privacy controls" },
-    { icon: Crown, text: "Premium member badge" },
-  ];
+  const details = getFeatureDetails();
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gradient-to-br from-gray-900 to-purple-900 border-purple-500/20 text-white max-w-md">
+      <DialogContent className="sm:max-w-md bg-gray-900 border-gray-700">
         <DialogHeader>
-          <div className="flex justify-between items-center">
-            <DialogTitle className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-              {content.title}
-            </DialogTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-white hover:bg-white/10"
-              onClick={onClose}
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-          <p className="text-gray-300 text-sm">{content.subtitle}</p>
-        </DialogHeader>
-
-        <div className="space-y-6">
-          {/* Usage Counter for scroll limit */}
-          {trigger === 'scroll_limit' && (
-            <Card className="bg-red-500/20 border-red-500/30 p-4 text-center">
-              <div className="text-lg font-semibold text-red-300">
-                {remainingScrolls}/5 free views used today
-              </div>
-              <div className="text-sm text-red-400">
-                Resets at midnight
-              </div>
-            </Card>
-          )}
-
-          {/* Features Grid */}
-          <div className="grid grid-cols-2 gap-3">
-            {features.map((feature, index) => (
-              <Card key={index} className="bg-white/5 border-white/10 p-3">
-                <div className="flex items-center space-x-2">
-                  <feature.icon className="w-5 h-5 text-purple-400" />
-                  <span className="text-sm text-white">{feature.text}</span>
-                </div>
-              </Card>
-            ))}
-          </div>
-
-          {/* Pricing */}
-          <Card className="bg-gradient-to-r from-purple-600 to-pink-600 border-none p-6 text-center">
-            <div className="space-y-2">
-              <div className="text-3xl font-bold">R99</div>
-              <div className="text-sm opacity-90">per year</div>
-              <div className="text-xs opacity-75">Just R8.25 per month!</div>
-            </div>
-          </Card>
-
-          {/* Subscribe Button */}
-          <Button
-            onClick={handleSubscribe}
-            disabled={isProcessing}
-            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3"
+          <button
+            onClick={onClose}
+            className="absolute right-4 top-4 text-gray-400 hover:text-white"
           >
-            {isProcessing ? (
-              <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Processing...</span>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-2">
-                <Crown className="w-5 h-5" />
-                <span>Subscribe for R99/year</span>
-              </div>
-            )}
-          </Button>
-
-          {/* Value Proposition */}
-          <div className="text-center space-y-2">
-            <div className="flex items-center justify-center space-x-2 text-green-400">
-              <Check className="w-4 h-4" />
-              <span className="text-sm">Cancel anytime</span>
+            <X className="w-5 h-5" />
+          </button>
+          <div className="text-center">
+            <div className="flex justify-center mb-4">
+              {details.icon}
             </div>
-            <p className="text-xs text-gray-400">
-              {content.description}
+            <DialogTitle className="text-white text-xl mb-2">
+              {details.title}
+            </DialogTitle>
+            <p className="text-gray-400 text-sm">
+              {details.description}
             </p>
           </div>
+        </DialogHeader>
 
-          {/* Free tier reminder */}
-          {trigger !== 'scroll_limit' && (
-            <Card className="bg-gray-800/50 border-gray-600 p-3">
-              <div className="text-xs text-gray-400 text-center">
-                Free users get 5 profile views per day
-              </div>
-            </Card>
-          )}
+        <div className="space-y-4">
+          <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+            <h4 className="text-white font-medium mb-3">Premium Benefits:</h4>
+            <ul className="space-y-2">
+              {details.benefits.map((benefit, index) => (
+                <li key={index} className="flex items-center text-gray-300 text-sm">
+                  <Crown className="w-4 h-4 text-yellow-500 mr-2 flex-shrink-0" />
+                  {benefit}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="space-y-3">
+            <Button
+              onClick={onUpgrade}
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold"
+            >
+              <Crown className="w-4 h-4 mr-2" />
+              Upgrade to Premium
+            </Button>
+            <Button
+              onClick={onClose}
+              variant="outline"
+              className="w-full border-gray-600 text-gray-300 hover:bg-gray-800"
+            >
+              Maybe Later
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

@@ -9,6 +9,27 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      blocked_users: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string | null
+          id: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string | null
+          id?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
       daily_usage: {
         Row: {
           created_at: string | null
@@ -42,21 +63,93 @@ export type Database = {
       matches: {
         Row: {
           created_at: string
+          expires_at: string | null
           id: string
+          is_super_like: boolean | null
           user1_id: string
           user2_id: string
         }
         Insert: {
           created_at?: string
+          expires_at?: string | null
           id?: string
+          is_super_like?: boolean | null
           user1_id: string
           user2_id: string
         }
         Update: {
           created_at?: string
+          expires_at?: string | null
           id?: string
+          is_super_like?: boolean | null
           user1_id?: string
           user2_id?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          message_type: string | null
+          read_at: string | null
+          receiver_id: string
+          sender_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          message_type?: string | null
+          read_at?: string | null
+          receiver_id: string
+          sender_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          message_type?: string | null
+          read_at?: string | null
+          receiver_id?: string
+          sender_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string | null
+          data: Json | null
+          id: string
+          message: string
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          message: string
+          read_at?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          message?: string
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -170,7 +263,10 @@ export type Database = {
           gender: string | null
           id: string
           interests: string[] | null
+          is_blocked: boolean | null
+          last_active: string | null
           location: string | null
+          photo_verified: boolean | null
           privacy_settings: Json | null
           profile_image_url: string | null
           profile_images: string[] | null
@@ -188,7 +284,10 @@ export type Database = {
           gender?: string | null
           id: string
           interests?: string[] | null
+          is_blocked?: boolean | null
+          last_active?: string | null
           location?: string | null
+          photo_verified?: boolean | null
           privacy_settings?: Json | null
           profile_image_url?: string | null
           profile_images?: string[] | null
@@ -206,7 +305,10 @@ export type Database = {
           gender?: string | null
           id?: string
           interests?: string[] | null
+          is_blocked?: boolean | null
+          last_active?: string | null
           location?: string | null
+          photo_verified?: boolean | null
           privacy_settings?: Json | null
           profile_image_url?: string | null
           profile_images?: string[] | null
@@ -254,6 +356,27 @@ export type Database = {
         }
         Relationships: []
       }
+      super_likes: {
+        Row: {
+          created_at: string | null
+          id: string
+          target_user_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          target_user_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          target_user_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       swipes: {
         Row: {
           created_at: string
@@ -275,6 +398,69 @@ export type Database = {
           liked?: boolean
           target_user_id?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_preferences: {
+        Row: {
+          id: string
+          location_enabled: boolean | null
+          max_age: number | null
+          max_distance: number | null
+          min_age: number | null
+          show_me: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          location_enabled?: boolean | null
+          max_age?: number | null
+          max_distance?: number | null
+          min_age?: number | null
+          show_me?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          location_enabled?: boolean | null
+          max_age?: number | null
+          max_distance?: number | null
+          min_age?: number | null
+          show_me?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_reports: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          reason: string
+          reported_id: string
+          reporter_id: string
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          reason: string
+          reported_id: string
+          reporter_id: string
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          reason?: string
+          reported_id?: string
+          reporter_id?: string
+          status?: string | null
         }
         Relationships: []
       }
@@ -307,6 +493,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_matches: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]

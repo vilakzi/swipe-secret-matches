@@ -1,66 +1,48 @@
 
-import { Card } from '@/components/ui/card';
-import { Eye, Crown } from 'lucide-react';
+import React from 'react';
+import { Progress } from '@/components/ui/progress';
+import { Zap } from 'lucide-react';
 
 interface UsageCounterProps {
-  scrollsToday: number;
-  remainingScrolls: number;
-  isSubscribed: boolean;
+  currentUsage: number;
+  maxUsage: number;
+  type: 'swipes' | 'super_likes';
 }
 
-const UsageCounter = ({ scrollsToday, remainingScrolls, isSubscribed }: UsageCounterProps) => {
-  if (isSubscribed) {
-    return (
-      <Card className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-purple-500/30 p-3">
-        <div className="flex items-center justify-center space-x-2 text-purple-300">
-          <Crown className="w-4 h-4" />
-          <span className="text-sm font-medium">Premium - Unlimited Access</span>
-        </div>
-      </Card>
-    );
-  }
-
-  const percentage = (scrollsToday / 5) * 100;
-  const isNearLimit = remainingScrolls <= 1;
+const UsageCounter = ({ currentUsage, maxUsage, type }: UsageCounterProps) => {
+  const percentage = (currentUsage / maxUsage) * 100;
+  const remaining = maxUsage - currentUsage;
 
   return (
-    <Card className={`border p-3 ${
-      isNearLimit 
-        ? 'bg-red-500/10 border-red-500/30' 
-        : 'bg-gray-800/50 border-gray-600'
-    }`}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Eye className={`w-4 h-4 ${isNearLimit ? 'text-red-400' : 'text-gray-400'}`} />
-          <span className={`text-sm ${isNearLimit ? 'text-red-300' : 'text-gray-300'}`}>
-            Daily Views
+    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center">
+          <Zap className="w-4 h-4 text-yellow-500 mr-2" />
+          <span className="text-white font-medium">
+            {type === 'swipes' ? 'Daily Swipes' : 'Super Likes'}
           </span>
         </div>
-        <div className={`text-sm font-medium ${isNearLimit ? 'text-red-300' : 'text-gray-300'}`}>
-          {scrollsToday}/5
-        </div>
+        <span className="text-gray-400 text-sm">
+          {remaining} left
+        </span>
       </div>
       
-      {/* Progress Bar */}
-      <div className="mt-2 w-full bg-gray-700 rounded-full h-2">
-        <div 
-          className={`h-2 rounded-full transition-all duration-300 ${
-            isNearLimit 
-              ? 'bg-gradient-to-r from-red-500 to-red-600' 
-              : 'bg-gradient-to-r from-purple-500 to-pink-500'
-          }`}
-          style={{ width: `${Math.min(percentage, 100)}%` }}
-        />
+      <Progress 
+        value={percentage} 
+        className="h-2 mb-2"
+      />
+      
+      <div className="flex justify-between text-xs text-gray-400">
+        <span>{currentUsage} used</span>
+        <span>{maxUsage} total</span>
       </div>
       
-      {remainingScrolls === 0 && (
-        <div className="mt-2 text-center">
-          <span className="text-xs text-red-400">
-            Limit reached - Subscribe for unlimited access
-          </span>
-        </div>
+      {remaining === 0 && (
+        <p className="text-yellow-500 text-xs mt-2">
+          {type === 'swipes' ? 'Daily limit reached. Come back tomorrow!' : 'Out of super likes!'}
+        </p>
       )}
-    </Card>
+    </div>
   );
 };
 
