@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import OnlineStatus from '@/components/OnlineStatus';
 import { usePresence } from '@/hooks/usePresence';
+import { demoProfiles } from '@/data/demoProfiles';
 
 interface ProviderData {
   id: string;
@@ -55,19 +56,44 @@ const ProviderProfile = () => {
         .from('profiles')
         .select('*')
         .eq('id', providerId)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
 
-      // Mock additional service provider data for demo
-      setProvider({
-        ...data,
-        serviceCategory: 'Beauty & Wellness',
-        services: ['Massage Therapy', 'Facial Treatment', 'Body Therapy', 'Aromatherapy'],
-        rating: 4.8,
-        reviewCount: 127,
-        isAvailable: Math.random() > 0.3
-      });
+      if (data) {
+        // Real provider from database
+        setProvider({
+          ...data,
+          serviceCategory: 'Beauty & Wellness',
+          services: ['Massage Therapy', 'Facial Treatment', 'Body Therapy', 'Aromatherapy'],
+          rating: 4.8,
+          reviewCount: 127,
+          isAvailable: Math.random() > 0.3
+        });
+      } else {
+        // Fall back to demo data
+        const demoProvider = demoProfiles.find(profile => profile.id === providerId);
+        if (demoProvider) {
+          setProvider({
+            id: demoProvider.id,
+            display_name: demoProvider.name,
+            bio: demoProvider.bio,
+            location: demoProvider.location,
+            whatsapp: demoProvider.whatsapp,
+            profile_image_url: demoProvider.image,
+            profile_images: demoProvider.portfolio || [demoProvider.image],
+            serviceCategory: demoProvider.serviceCategory,
+            services: demoProvider.services,
+            rating: demoProvider.rating,
+            reviewCount: demoProvider.reviewCount,
+            isAvailable: demoProvider.isAvailable
+          });
+        } else {
+          throw new Error('Provider not found');
+        }
+      }
     } catch (error: any) {
       toast({
         title: "Error loading profile",
@@ -86,9 +112,29 @@ const ProviderProfile = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setPosts(data || []);
+      
+      // If no posts from database, check demo data
+      if (!data || data.length === 0) {
+        const demoProvider = demoProfiles.find(profile => profile.id === providerId);
+        if (demoProvider && demoProvider.posts) {
+          // Convert demo posts to Post format
+          const demoPosts: Post[] = demoProvider.posts.map((postUrl, index) => ({
+            id: `demo-post-${demoProvider.id}-${index}`,
+            content_url: postUrl,
+            post_type: 'image',
+            created_at: new Date().toISOString(),
+            promotion_type: 'free_2h'
+          }));
+          setPosts(demoPosts);
+        } else {
+          setPosts([]);
+        }
+      } else {
+        setPosts(data || []);
+      }
     } catch (error: any) {
       console.error('Error fetching posts:', error);
+      setPosts([]);
     } finally {
       setLoading(false);
     }
