@@ -1,3 +1,4 @@
+
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -66,11 +67,11 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
       {/* Provider Header */}
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="relative">
+          <div className="relative cursor-pointer" onClick={handleProfileClick}>
             <img
               src={item.profile.image}
               alt={item.profile.name}
-              className="w-12 h-12 rounded-full object-cover"
+              className="w-12 h-12 rounded-full object-cover hover:opacity-80 transition-opacity"
             />
             <OnlineStatus 
               isOnline={isUserOnline(item.profile.id.toString())} 
@@ -80,7 +81,12 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <h3 className="font-semibold text-white">{item.profile.name}</h3>
+              <h3 
+                className="font-semibold text-white cursor-pointer hover:text-purple-400 transition-colors"
+                onClick={handleProfileClick}
+              >
+                {item.profile.name}
+              </h3>
               <Badge variant="secondary" className="bg-purple-600 text-white">
                 Provider
               </Badge>
@@ -158,7 +164,7 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
         <img
           src={item.profile.image}
           alt={item.profile.name}
-          className="w-full h-80 object-cover"
+          className="w-full h-80 object-cover hover:opacity-95 transition-opacity"
         />
         
         {/* Portfolio Button Overlay */}
