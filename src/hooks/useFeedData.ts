@@ -1,6 +1,7 @@
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { demoProfiles, type Profile } from '@/data/demoProfiles';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface FeedItem {
   id: string;
@@ -26,14 +27,71 @@ export const useFeedData = (itemsPerPage: number = 6) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [shuffleKey, setShuffleKey] = useState(0);
+  const [realProfiles, setRealProfiles] = useState<Profile[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  console.log('Total demo profiles:', demoProfiles.length);
+  // Fetch real user profiles from Supabase
+  useEffect(() => {
+    const fetchRealProfiles = async () => {
+      try {
+        console.log('Fetching real user profiles from Supabase...');
+        const { data: profiles, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('is_blocked', false);
+
+        if (error) {
+          console.error('Error fetching real profiles:', error);
+          return;
+        }
+
+        if (profiles && profiles.length > 0) {
+          console.log(`Found ${profiles.length} real user profiles`);
+          
+          // Transform Supabase profiles to match our Profile interface
+          const transformedProfiles: Profile[] = profiles.map(profile => ({
+            id: profile.id,
+            name: profile.display_name || 'Anonymous',
+            age: profile.age || 25,
+            image: profile.profile_image_url || '/placeholder.svg',
+            bio: profile.bio || 'No bio available',
+            whatsapp: profile.whatsapp || '',
+            location: profile.location || 'Unknown location',
+            gender: profile.gender as 'male' | 'female' || 'male',
+            posts: profile.profile_images || [],
+            userType: profile.user_type as 'user' | 'service_provider' || 'user'
+          }));
+
+          setRealProfiles(transformedProfiles);
+        } else {
+          console.log('No real user profiles found');
+          setRealProfiles([]);
+        }
+      } catch (error) {
+        console.error('Error in fetchRealProfiles:', error);
+        setRealProfiles([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRealProfiles();
+  }, []);
+
+  // Combine real profiles with demo profiles
+  const allProfiles = useMemo(() => {
+    const combined = [...realProfiles, ...demoProfiles];
+    console.log(`Total profiles: ${combined.length} (${realProfiles.length} real + ${demoProfiles.length} demo)`);
+    return combined;
+  }, [realProfiles]);
+
+  console.log('Total combined profiles:', allProfiles.length);
   console.log('Filter gender:', filterGender);
   console.log('Filter name:', filterName);
 
-  // Apply gender and name filters directly to all demo profiles
+  // Apply gender and name filters to combined profiles
   const filteredProfiles = useMemo(() => {
-    let profiles = demoProfiles;
+    let profiles = allProfiles;
 
     console.log('Starting with all profiles:', profiles.length);
 
@@ -53,7 +111,7 @@ export const useFeedData = (itemsPerPage: number = 6) => {
 
     console.log('Final filtered profiles:', profiles.length);
     return profiles;
-  }, [filterGender, filterName]);
+  }, [allProfiles, filterGender, filterName]);
 
   // Create all feed items
   const allFeedItems = useMemo(() => {
@@ -143,7 +201,7 @@ export const useFeedData = (itemsPerPage: number = 6) => {
   return {
     displayedItems,
     hasMoreItems,
-    isLoadingMore,
+    isLoadingMore: isLoadingMore || loading,
     filterGender,
     filterName,
     handleLoadMore,
