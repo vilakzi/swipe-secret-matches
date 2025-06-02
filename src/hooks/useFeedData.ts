@@ -10,11 +10,22 @@ export interface FeedItem {
   caption?: string;
 }
 
+// Fisher-Yates shuffle algorithm for randomizing array order
+const shuffleArray = <T>(array: T[]): T[] => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
 export const useFeedData = (itemsPerPage: number = 6) => {
   const [filterGender, setFilterGender] = useState<'male' | 'female' | null>(null);
   const [filterName, setFilterName] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [shuffleKey, setShuffleKey] = useState(0); // Key to trigger re-shuffle
 
   // Apply role-based filtering
   const filteredProfiles = useMemo(() => {
@@ -35,7 +46,7 @@ export const useFeedData = (itemsPerPage: number = 6) => {
     return profiles;
   }, [filterGender, filterName]);
 
-  // Create all feed items
+  // Create all feed items with dynamic shuffling
   const allFeedItems = useMemo(() => {
     const items: FeedItem[] = [];
     
@@ -61,8 +72,9 @@ export const useFeedData = (itemsPerPage: number = 6) => {
       }
     });
     
-    return items;
-  }, [filteredProfiles]);
+    // Shuffle the items dynamically based on shuffleKey
+    return shuffleArray(items);
+  }, [filteredProfiles, shuffleKey]);
 
   // Get items for current page
   const displayedItems = useMemo(() => {
@@ -86,15 +98,21 @@ export const useFeedData = (itemsPerPage: number = 6) => {
   const handleFilterChange = useCallback((gender: 'male' | 'female' | null) => {
     setFilterGender(gender);
     setCurrentPage(1);
+    // Trigger re-shuffle when filter changes
+    setShuffleKey(prev => prev + 1);
   }, []);
 
   const handleNameFilterChange = useCallback((name: string) => {
     setFilterName(name);
     setCurrentPage(1);
+    // Trigger re-shuffle when name filter changes
+    setShuffleKey(prev => prev + 1);
   }, []);
 
   const handleRefresh = useCallback(() => {
     setCurrentPage(1);
+    // Trigger re-shuffle on refresh for dynamic order
+    setShuffleKey(prev => prev + 1);
   }, []);
 
   return {
