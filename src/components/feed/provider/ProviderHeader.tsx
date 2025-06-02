@@ -5,7 +5,7 @@ import { MapPin, Clock, User, Lock } from 'lucide-react';
 import OnlineStatus from '@/components/OnlineStatus';
 
 interface Profile {
-  id: number;
+  id: string;
   name: string;
   age: number;
   image: string;
