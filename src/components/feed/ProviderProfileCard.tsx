@@ -1,12 +1,14 @@
 
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Heart, MessageCircle, MapPin, Share, Lock, Star, Clock, Phone, Images, User } from 'lucide-react';
-import OnlineStatus from '@/components/OnlineStatus';
 import { usePresence } from '@/hooks/usePresence';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ProviderHeader from './provider/ProviderHeader';
+import ProviderRating from './provider/ProviderRating';
+import ProviderServices from './provider/ProviderServices';
+import ProviderImage from './provider/ProviderImage';
+import ProviderPortfolio from './provider/ProviderPortfolio';
+import ProviderActions from './provider/ProviderActions';
 
 interface Profile {
   id: number;
@@ -76,220 +78,50 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
     setShowPortfolio(!showPortfolio);
   };
 
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, index) => (
-      <Star
-        key={index}
-        className={`w-4 h-4 ${
-          index < Math.floor(rating) ? 'text-yellow-400 fill-current' : 'text-gray-400'
-        }`}
-      />
-    ));
-  };
-
   return (
     <Card className="bg-gray-800 border-gray-700 mb-4">
-      {/* Provider Header */}
-      <div className="p-4 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div 
-            className="relative cursor-pointer" 
-            onClick={handleProfileClick}
-          >
-            <img
-              src={item.profile.image}
-              alt={item.profile.name}
-              className="w-12 h-12 rounded-full object-cover hover:opacity-80 transition-opacity"
-            />
-            <OnlineStatus 
-              isOnline={isUserOnline(item.profile.id.toString())} 
-              size="sm"
-              className="absolute -bottom-1 -right-1"
-            />
-          </div>
-          <div>
-            <div className="flex items-center space-x-2">
-              <h3 
-                className="font-semibold text-white cursor-pointer hover:text-purple-400 transition-colors"
-                onClick={handleProfileClick}
-              >
-                {item.profile.name}
-              </h3>
-              <Badge variant="secondary" className="bg-purple-600 text-white">
-                Provider
-              </Badge>
-            </div>
-            <div className="flex items-center text-gray-400 text-sm">
-              <MapPin className="w-3 h-3 mr-1" />
-              {item.profile.location}
-              {item.profile.isAvailable && (
-                <div className="flex items-center ml-2 text-green-400">
-                  <Clock className="w-3 h-3 mr-1" />
-                  Available
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button
-            onClick={handleProfileClick}
-            variant="ghost"
-            size="sm"
-            className="text-purple-400 hover:bg-purple-600/20"
-          >
-            <User className="w-4 h-4 mr-1" />
-            View Profile
-          </Button>
-          {!isSubscribed && (
-            <Lock className="w-4 h-4 text-yellow-500" />
-          )}
-        </div>
-      </div>
+      <ProviderHeader
+        profile={item.profile}
+        isOnline={isUserOnline(item.profile.id.toString())}
+        isSubscribed={isSubscribed}
+        onProfileClick={handleProfileClick}
+      />
 
-      {/* Service Category */}
-      {item.profile.serviceCategory && (
-        <div className="px-4 pb-2">
-          <Badge className="bg-blue-600 text-white">
-            {item.profile.serviceCategory}
-          </Badge>
-        </div>
-      )}
+      <ProviderServices
+        serviceCategory={item.profile.serviceCategory}
+        services={item.profile.services}
+      />
 
-      {/* Rating */}
       {item.profile.rating && (
-        <div className="px-4 pb-2 flex items-center space-x-2">
-          <div className="flex items-center">
-            {renderStars(item.profile.rating)}
-          </div>
-          <span className="text-yellow-400 font-semibold">{item.profile.rating.toFixed(1)}</span>
-          {item.profile.reviewCount && (
-            <span className="text-gray-400 text-sm">({item.profile.reviewCount} reviews)</span>
-          )}
-        </div>
-      )}
-
-      {/* Services */}
-      {item.profile.services && item.profile.services.length > 0 && (
-        <div className="px-4 pb-2">
-          <div className="flex flex-wrap gap-1">
-            {item.profile.services.slice(0, 3).map((service, index) => (
-              <Badge key={index} variant="outline" className="text-xs border-gray-600 text-gray-300">
-                {service}
-              </Badge>
-            ))}
-            {item.profile.services.length > 3 && (
-              <Badge variant="outline" className="text-xs border-gray-600 text-gray-400">
-                +{item.profile.services.length - 3} more
-              </Badge>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Profile Image - Clickable */}
-      <div className="relative">
-        <img
-          src={item.profile.image}
-          alt={item.profile.name}
-          className="w-full h-80 object-cover hover:opacity-95 transition-opacity cursor-pointer"
-          onClick={handleProfileClick}
+        <ProviderRating
+          rating={item.profile.rating}
+          reviewCount={item.profile.reviewCount}
         />
-        
-        {/* Portfolio Button Overlay */}
-        {item.profile.portfolio && item.profile.portfolio.length > 0 && (
-          <Button
-            variant="secondary"
-            size="sm"
-            className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white z-10"
-            onClick={handlePortfolioToggle}
-          >
-            <Images className="w-4 h-4 mr-1" />
-            Portfolio ({item.profile.portfolio.length})
-          </Button>
-        )}
-
-        {/* Click to view profile overlay */}
-        <div 
-          className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 hover:opacity-100 cursor-pointer z-5"
-          onClick={handleProfileClick}
-        >
-          <Button className="bg-purple-600 hover:bg-purple-700">
-            <User className="w-4 h-4 mr-2" />
-            View Full Profile
-          </Button>
-        </div>
-      </div>
-
-      {/* Portfolio Gallery */}
-      {showPortfolio && item.profile.portfolio && (
-        <div className="p-4 border-t border-gray-700">
-          <h4 className="text-white font-semibold mb-2">Portfolio</h4>
-          <div className="grid grid-cols-3 gap-2">
-            {item.profile.portfolio.map((image, index) => (
-              <img
-                key={index}
-                src={image}
-                alt={`Portfolio ${index + 1}`}
-                className="w-full h-20 object-cover rounded cursor-pointer hover:opacity-80"
-                onClick={handleProfileClick}
-              />
-            ))}
-          </div>
-        </div>
       )}
 
-      {/* Actions */}
-      <div className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`p-0 ${likedItems.has(item.id) ? 'text-red-500' : 'text-white'}`}
-              onClick={handleLike}
-            >
-              <Heart className={`w-6 h-6 ${likedItems.has(item.id) ? 'fill-current' : ''}`} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-white p-0"
-              onClick={handleContact}
-            >
-              <MessageCircle className="w-6 h-6" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-white p-0"
-              onClick={handlePhoneClick}
-            >
-              <Phone className="w-6 h-6" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-white p-0"
-            >
-              <Share className="w-6 h-6" />
-            </Button>
-          </div>
-          <div className="flex items-center space-x-2">
-            {item.profile.isAvailable ? (
-              <Badge className="bg-green-600 text-white">Available</Badge>
-            ) : (
-              <Badge variant="outline" className="border-gray-600 text-gray-400">Busy</Badge>
-            )}
-          </div>
-        </div>
+      <ProviderImage
+        image={item.profile.image}
+        name={item.profile.name}
+        portfolio={item.profile.portfolio}
+        onProfileClick={handleProfileClick}
+        onPortfolioToggle={handlePortfolioToggle}
+      />
 
-        {/* Bio */}
-        <div className="text-white">
-          <span className="font-semibold">{item.profile.name}</span>
-          <span className="ml-2 text-gray-300">{item.profile.bio}</span>
-        </div>
-      </div>
+      {showPortfolio && item.profile.portfolio && (
+        <ProviderPortfolio
+          portfolio={item.profile.portfolio}
+          onImageClick={handleProfileClick}
+        />
+      )}
+
+      <ProviderActions
+        profile={item.profile}
+        itemId={item.id}
+        likedItems={likedItems}
+        onLike={handleLike}
+        onContact={handleContact}
+        onPhoneClick={handlePhoneClick}
+      />
     </Card>
   );
 };
