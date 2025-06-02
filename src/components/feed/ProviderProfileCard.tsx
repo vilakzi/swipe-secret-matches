@@ -1,3 +1,4 @@
+
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -46,42 +47,30 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
   const navigate = useNavigate();
   const [showPortfolio, setShowPortfolio] = useState(false);
 
-  const handleProfileClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('Profile click triggered for provider:', item.profile.id);
-    console.log('Navigate function:', typeof navigate);
-    try {
-      navigate(`/provider/${item.profile.id}`);
-      console.log('Navigation completed successfully');
-    } catch (error) {
-      console.error('Navigation error:', error);
-    }
+  const handleProfileClick = () => {
+    console.log('Navigating to provider profile:', item.profile.id);
+    navigate(`/provider/${item.profile.id}`);
   };
 
   const handleLike = (e: React.MouseEvent) => {
-    e.preventDefault();
     e.stopPropagation();
     console.log('Like clicked for item:', item.id);
     onLike(item.id, item.profile.id);
   };
 
   const handleContact = (e: React.MouseEvent) => {
-    e.preventDefault();
     e.stopPropagation();
     console.log('Contact clicked for provider:', item.profile.name);
     onContact(item.profile);
   };
 
   const handlePhoneClick = (e: React.MouseEvent) => {
-    e.preventDefault();
     e.stopPropagation();
     console.log('Phone clicked for provider:', item.profile.whatsapp);
     window.open(`tel:${item.profile.whatsapp}`, '_self');
   };
 
   const handlePortfolioToggle = (e: React.MouseEvent) => {
-    e.preventDefault();
     e.stopPropagation();
     console.log('Portfolio toggle clicked');
     setShowPortfolio(!showPortfolio);
@@ -105,11 +94,7 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
         <div className="flex items-center space-x-3">
           <div 
             className="relative cursor-pointer" 
-            onClick={(e) => {
-              console.log('Profile image clicked');
-              handleProfileClick(e);
-            }}
-            style={{ pointerEvents: 'auto' }}
+            onClick={handleProfileClick}
           >
             <img
               src={item.profile.image}
@@ -119,18 +104,14 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
             <OnlineStatus 
               isOnline={isUserOnline(item.profile.id.toString())} 
               size="sm"
-              className="absolute -bottom-1 -right-1 pointer-events-none"
+              className="absolute -bottom-1 -right-1"
             />
           </div>
           <div>
             <div className="flex items-center space-x-2">
               <h3 
                 className="font-semibold text-white cursor-pointer hover:text-purple-400 transition-colors"
-                onClick={(e) => {
-                  console.log('Profile name clicked');
-                  handleProfileClick(e);
-                }}
-                style={{ pointerEvents: 'auto' }}
+                onClick={handleProfileClick}
               >
                 {item.profile.name}
               </h3>
@@ -152,14 +133,10 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
         </div>
         <div className="flex items-center space-x-2">
           <Button
-            onClick={(e) => {
-              console.log('View Profile button clicked');
-              handleProfileClick(e);
-            }}
+            onClick={handleProfileClick}
             variant="ghost"
             size="sm"
             className="text-purple-400 hover:bg-purple-600/20"
-            style={{ pointerEvents: 'auto' }}
           >
             <User className="w-4 h-4 mr-1" />
             View Profile
@@ -216,11 +193,7 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
           src={item.profile.image}
           alt={item.profile.name}
           className="w-full h-80 object-cover hover:opacity-95 transition-opacity cursor-pointer"
-          onClick={(e) => {
-            console.log('Main profile image clicked');
-            handleProfileClick(e);
-          }}
-          style={{ pointerEvents: 'auto' }}
+          onClick={handleProfileClick}
         />
         
         {/* Portfolio Button Overlay */}
@@ -228,9 +201,8 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
           <Button
             variant="secondary"
             size="sm"
-            className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white"
+            className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white z-10"
             onClick={handlePortfolioToggle}
-            style={{ pointerEvents: 'auto' }}
           >
             <Images className="w-4 h-4 mr-1" />
             Portfolio ({item.profile.portfolio.length})
@@ -239,10 +211,10 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
 
         {/* Click to view profile overlay */}
         <div 
-          className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 hover:opacity-100 cursor-pointer"
+          className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 hover:opacity-100 cursor-pointer z-5"
           onClick={handleProfileClick}
         >
-          <Button className="bg-purple-600 hover:bg-purple-700 pointer-events-none">
+          <Button className="bg-purple-600 hover:bg-purple-700">
             <User className="w-4 h-4 mr-2" />
             View Full Profile
           </Button>
@@ -260,11 +232,7 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
                 src={image}
                 alt={`Portfolio ${index + 1}`}
                 className="w-full h-20 object-cover rounded cursor-pointer hover:opacity-80"
-                onClick={(e) => {
-                  console.log('Portfolio image clicked');
-                  handleProfileClick(e);
-                }}
-                style={{ pointerEvents: 'auto' }}
+                onClick={handleProfileClick}
               />
             ))}
           </div>
@@ -280,7 +248,6 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
               size="sm"
               className={`p-0 ${likedItems.has(item.id) ? 'text-red-500' : 'text-white'}`}
               onClick={handleLike}
-              style={{ pointerEvents: 'auto' }}
             >
               <Heart className={`w-6 h-6 ${likedItems.has(item.id) ? 'fill-current' : ''}`} />
             </Button>
@@ -289,7 +256,6 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
               size="sm"
               className="text-white p-0"
               onClick={handleContact}
-              style={{ pointerEvents: 'auto' }}
             >
               <MessageCircle className="w-6 h-6" />
             </Button>
@@ -298,7 +264,6 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
               size="sm"
               className="text-white p-0"
               onClick={handlePhoneClick}
-              style={{ pointerEvents: 'auto' }}
             >
               <Phone className="w-6 h-6" />
             </Button>
@@ -306,7 +271,6 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
               variant="ghost"
               size="sm"
               className="text-white p-0"
-              style={{ pointerEvents: 'auto' }}
             >
               <Share className="w-6 h-6" />
             </Button>
