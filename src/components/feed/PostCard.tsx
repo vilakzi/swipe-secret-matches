@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Heart, MessageCircle, Share, Lock } from 'lucide-react';
 import OnlineStatus from '@/components/OnlineStatus';
 import { usePresence } from '@/hooks/usePresence';
+import { useNavigate } from 'react-router-dom';
 import OptimizedImage from '@/components/ui/OptimizedImage';
 
 interface Profile {
@@ -37,17 +38,33 @@ interface PostCardProps {
 
 const PostCard = ({ item, likedItems, isSubscribed, onLike, onContact }: PostCardProps) => {
   const { isUserOnline } = usePresence();
+  const navigate = useNavigate();
+
+  const handleProfileClick = () => {
+    console.log('Navigating to profile:', item.profile.id);
+    navigate(`/profile/${item.profile.id}`);
+  };
+
+  const handleLike = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onLike(item.id, item.profile.id);
+  };
+
+  const handleContact = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onContact(item.profile);
+  };
 
   return (
     <Card className="bg-gray-800 border-gray-700 mb-4">
       {/* Post Header */}
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="relative">
+          <div className="relative cursor-pointer" onClick={handleProfileClick}>
             <OptimizedImage
               src={item.profile.image}
               alt={item.profile.name}
-              className="w-10 h-10 rounded-full"
+              className="w-10 h-10 rounded-full hover:opacity-80 transition-opacity"
             />
             <OnlineStatus 
               isOnline={isUserOnline(item.profile.id.toString())} 
@@ -56,7 +73,12 @@ const PostCard = ({ item, likedItems, isSubscribed, onLike, onContact }: PostCar
             />
           </div>
           <div>
-            <h4 className="font-semibold text-white text-sm">{item.profile.name}</h4>
+            <h4 
+              className="font-semibold text-white text-sm cursor-pointer hover:text-purple-400 transition-colors"
+              onClick={handleProfileClick}
+            >
+              {item.profile.name}
+            </h4>
             <p className="text-gray-400 text-xs">{item.profile.location}</p>
           </div>
         </div>
@@ -66,12 +88,14 @@ const PostCard = ({ item, likedItems, isSubscribed, onLike, onContact }: PostCar
       </div>
 
       {/* Post Image */}
-      <div className="relative">
+      <div className="relative cursor-pointer" onClick={handleProfileClick}>
         <OptimizedImage
           src={item.postImage || ''}
           alt="Post"
-          className="w-full h-72"
+          className="w-full h-72 hover:opacity-95 transition-opacity"
         />
+        {/* Click overlay */}
+        <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors" />
       </div>
 
       {/* Post Actions */}
@@ -82,7 +106,7 @@ const PostCard = ({ item, likedItems, isSubscribed, onLike, onContact }: PostCar
               variant="ghost"
               size="sm"
               className={`p-0 ${likedItems.has(item.id) ? 'text-red-500' : 'text-white'}`}
-              onClick={() => onLike(item.id, item.profile.id)}
+              onClick={handleLike}
             >
               <Heart className={`w-6 h-6 ${likedItems.has(item.id) ? 'fill-current' : ''}`} />
             </Button>
@@ -90,7 +114,7 @@ const PostCard = ({ item, likedItems, isSubscribed, onLike, onContact }: PostCar
               variant="ghost"
               size="sm"
               className="text-white p-0"
-              onClick={() => onContact(item.profile)}
+              onClick={handleContact}
             >
               <MessageCircle className="w-6 h-6" />
             </Button>
@@ -106,7 +130,12 @@ const PostCard = ({ item, likedItems, isSubscribed, onLike, onContact }: PostCar
 
         {/* Caption */}
         <div className="text-white">
-          <span className="font-semibold">{item.profile.name}</span>
+          <span 
+            className="font-semibold cursor-pointer hover:text-purple-400 transition-colors"
+            onClick={handleProfileClick}
+          >
+            {item.profile.name}
+          </span>
           <span className="ml-2 text-gray-300">{item.caption}</span>
         </div>
       </div>
