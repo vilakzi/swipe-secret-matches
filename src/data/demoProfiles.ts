@@ -1,7 +1,26 @@
 
-export const demoProfiles = [
+export interface Profile {
+  id: string;
+  name: string;
+  age: number;
+  image: string;
+  bio: string;
+  whatsapp: string;
+  location: string;
+  gender: 'male' | 'female';
+  posts?: string[];
+  userType?: 'user' | 'service_provider';
+  serviceCategory?: string;
+  services?: string[];
+  rating?: number;
+  reviewCount?: number;
+  isAvailable?: boolean;
+  portfolio?: string[];
+}
+
+export const demoProfiles: Profile[] = [
   {
-    id: "550e8400-e29b-41d4-a716-446655440001", // Using UUID format instead of 1
+    id: "550e8400-e29b-41d4-a716-446655440001",
     name: "Emma",
     age: 24,
     image: "/lovable-uploads/a47c94f5-4caa-440f-a3a5-96cf72617433.png",
@@ -12,7 +31,7 @@ export const demoProfiles = [
     posts: ["/lovable-uploads/b13cab85-67d6-4d3c-8114-0653acecba3f.png"]
   },
   {
-    id: "550e8400-e29b-41d4-a716-446655440002", // Using UUID format instead of 2
+    id: "550e8400-e29b-41d4-a716-446655440002",
     name: "Sarah",
     age: 26,
     image: "/lovable-uploads/edfa4e3e-1870-4ac8-8dda-4b518536741c.png",
@@ -23,7 +42,7 @@ export const demoProfiles = [
     posts: ["/lovable-uploads/ff0b1c28-2b37-4b20-b7c0-589627c4b494.png"]
   },
   {
-    id: "550e8400-e29b-41d4-a716-446655440003", // Using UUID format instead of 3
+    id: "550e8400-e29b-41d4-a716-446655440003",
     name: "Mike",
     age: 28,
     image: "/lovable-uploads/a5eeb907-4974-443e-8d49-33ec325223c7.png",
@@ -43,7 +62,7 @@ export const demoProfiles = [
     ]
   },
   {
-    id: "550e8400-e29b-41d4-a716-446655440004", // Using UUID format instead of 4
+    id: "550e8400-e29b-41d4-a716-446655440004",
     name: "Jessica",
     age: 23,
     image: "/lovable-uploads/a47c94f5-4caa-440f-a3a5-96cf72617433.png",
@@ -53,7 +72,7 @@ export const demoProfiles = [
     gender: "female" as const
   },
   {
-    id: "550e8400-e29b-41d4-a716-446655440005", // Using UUID format instead of 5
+    id: "550e8400-e29b-41d4-a716-446655440005",
     name: "David",
     age: 30,
     image: "/lovable-uploads/a5eeb907-4974-443e-8d49-33ec325223c7.png",
