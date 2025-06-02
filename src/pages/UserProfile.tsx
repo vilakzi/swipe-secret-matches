@@ -87,6 +87,10 @@ const UserProfile = () => {
     }
   };
 
+  const handleBack = () => {
+    navigate(-1);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center">
@@ -100,8 +104,8 @@ const UserProfile = () => {
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center">
         <div className="text-center text-white">
           <h2 className="text-2xl font-bold mb-4">User not found</h2>
-          <Button onClick={() => navigate('/')} className="bg-purple-600 hover:bg-purple-700">
-            Back to Feed
+          <Button onClick={handleBack} className="bg-purple-600 hover:bg-purple-700">
+            Go Back
           </Button>
         </div>
       </div>
@@ -114,7 +118,7 @@ const UserProfile = () => {
       <div className="sticky top-0 z-10 bg-black/80 backdrop-blur-md border-b border-gray-700">
         <div className="flex items-center justify-between p-4 max-w-4xl mx-auto">
           <Button
-            onClick={() => navigate('/')}
+            onClick={handleBack}
             variant="ghost"
             className="text-white hover:bg-white/10"
           >
