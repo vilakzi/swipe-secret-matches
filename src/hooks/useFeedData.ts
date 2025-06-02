@@ -46,19 +46,47 @@ export const useFeedData = (itemsPerPage: number = 6) => {
     return profiles;
   }, [filterGender, filterName]);
 
-  // Create all feed items with dynamic shuffling
+  // Create all feed items with service provider posts always under their profiles
   const allFeedItems = useMemo(() => {
     const items: FeedItem[] = [];
     
-    filteredProfiles.forEach((profile) => {
-      // Add profile card
+    // Separate service providers and regular users
+    const serviceProviders = filteredProfiles.filter(profile => profile.userType === 'service_provider');
+    const regularUsers = filteredProfiles.filter(profile => profile.userType !== 'service_provider');
+    
+    // Process service providers first - always show posts under their profiles
+    serviceProviders.forEach((profile) => {
+      // Add service provider profile card
       items.push({
         id: `profile-${profile.id}`,
         type: 'profile',
         profile: profile
       });
       
-      // Add posts for this profile
+      // Always add posts immediately after service provider profile
+      if (profile.posts && profile.posts.length > 0) {
+        profile.posts.forEach((postImage, postIndex) => {
+          items.push({
+            id: `post-${profile.id}-${postIndex}`,
+            type: 'post',
+            profile: profile,
+            postImage: postImage,
+            caption: `Professional services showcase 💼`
+          });
+        });
+      }
+    });
+    
+    // Process regular users
+    regularUsers.forEach((profile) => {
+      // Add regular user profile card
+      items.push({
+        id: `profile-${profile.id}`,
+        type: 'profile',
+        profile: profile
+      });
+      
+      // Add posts for regular users
       if (profile.posts && profile.posts.length > 0) {
         profile.posts.forEach((postImage, postIndex) => {
           items.push({
@@ -72,8 +100,41 @@ export const useFeedData = (itemsPerPage: number = 6) => {
       }
     });
     
-    // Shuffle the items dynamically based on shuffleKey
-    return shuffleArray(items);
+    // Only shuffle the groups, not individual items within groups
+    // This maintains the profile -> posts order for service providers
+    const serviceProviderItems = items.filter(item => 
+      item.profile.userType === 'service_provider'
+    );
+    const regularUserItems = items.filter(item => 
+      item.profile.userType !== 'service_provider'
+    );
+    
+    // Shuffle the two groups separately but maintain internal order
+    const shuffledServiceProviders = shuffleArray(
+      serviceProviderItems.reduce((acc, item, index, arr) => {
+        if (item.type === 'profile') {
+          const profileIndex = index;
+          const posts = [];
+          let nextIndex = profileIndex + 1;
+          
+          // Collect all posts for this profile
+          while (nextIndex < arr.length && 
+                 arr[nextIndex].type === 'post' && 
+                 arr[nextIndex].profile.id === item.profile.id) {
+            posts.push(arr[nextIndex]);
+            nextIndex++;
+          }
+          
+          acc.push([item, ...posts]);
+        }
+        return acc;
+      }, [] as FeedItem[][])
+    ).flat();
+    
+    const shuffledRegularUsers = shuffleArray(regularUserItems);
+    
+    // Combine with service providers first to ensure visibility
+    return [...shuffledServiceProviders, ...shuffledRegularUsers];
   }, [filteredProfiles, shuffleKey]);
 
   // Get items for current page
