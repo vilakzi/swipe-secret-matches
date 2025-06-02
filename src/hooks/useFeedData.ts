@@ -1,3 +1,4 @@
+
 import { useState, useMemo, useCallback } from 'react';
 import { demoProfiles, type Profile } from '@/data/demoProfiles';
 import { useProfileFiltering } from './useProfileFiltering';
