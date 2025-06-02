@@ -274,11 +274,17 @@ const ServiceProviderDashboard = () => {
                 <Card key={post.id} className="bg-black/20 backdrop-blur-md border-gray-700 p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      <div className="w-16 h-16 bg-gray-700 rounded-lg flex items-center justify-center">
+                      <div className="w-16 h-16 bg-gray-700 rounded-lg overflow-hidden">
                         {post.post_type === 'image' ? (
-                          <Image className="w-8 h-8 text-gray-400" />
+                          <img 
+                            src={post.content_url} 
+                            alt="Post content" 
+                            className="w-full h-full object-cover"
+                          />
                         ) : (
-                          <Video className="w-8 h-8 text-gray-400" />
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Video className="w-8 h-8 text-gray-400" />
+                          </div>
                         )}
                       </div>
                       <div>

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Camera, X, Upload, ArrowUp, ArrowDown, Crop, Filter } from 'lucide-react';
+import { Camera, X, Upload, ArrowUp, ArrowDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -29,15 +29,12 @@ const PhotoUploadStep = ({ profileData, updateProfileData }: PhotoUploadStepProp
       for (let i = 0; i < Math.min(files.length, maxPhotos - profileData.photos.length); i++) {
         const file = files[i];
         
-        // Basic image optimization
-        const optimizedFile = await optimizeImage(file);
-        
-        const fileExt = optimizedFile.name.split('.').pop();
+        const fileExt = file.name.split('.').pop();
         const fileName = `${user.id}/profile_${Date.now()}_${i}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
           .from('profiles')
-          .upload(fileName, optimizedFile);
+          .upload(fileName, file);
 
         if (uploadError) throw uploadError;
 
@@ -65,55 +62,31 @@ const PhotoUploadStep = ({ profileData, updateProfileData }: PhotoUploadStepProp
     }
   };
 
-  const optimizeImage = (file: File): Promise<File> => {
-    return new Promise((resolve) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
+  const removePhoto = async (index: number) => {
+    try {
+      const photoUrl = profileData.photos[index];
       
-      img.onload = () => {
-        const maxWidth = 1080;
-        const maxHeight = 1080;
-        let { width, height } = img;
+      // Extract file path from URL for deletion
+      if (photoUrl.includes('supabase.co')) {
+        const urlParts = photoUrl.split('/');
+        const fileName = urlParts[urlParts.length - 1];
+        const filePath = `${user?.id}/${fileName}`;
         
-        if (width > height) {
-          if (width > maxWidth) {
-            height = (height * maxWidth) / width;
-            width = maxWidth;
-          }
-        } else {
-          if (height > maxHeight) {
-            width = (width * maxHeight) / height;
-            height = maxHeight;
-          }
-        }
-        
-        canvas.width = width;
-        canvas.height = height;
-        
-        ctx?.drawImage(img, 0, 0, width, height);
-        
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const optimizedFile = new File([blob], file.name, {
-              type: 'image/jpeg',
-              lastModified: Date.now(),
-            });
-            resolve(optimizedFile);
-          } else {
-            resolve(file);
-          }
-        }, 'image/jpeg', 0.85);
-      };
+        await supabase.storage
+          .from('profiles')
+          .remove([filePath]);
+      }
       
-      img.src = URL.createObjectURL(file);
-    });
-  };
-
-  const removePhoto = (index: number) => {
-    const newPhotos = profileData.photos.filter((_, i) => i !== index);
-    updateProfileData({ photos: newPhotos });
-    setSelectedPhoto(null);
+      const newPhotos = profileData.photos.filter((_, i) => i !== index);
+      updateProfileData({ photos: newPhotos });
+      setSelectedPhoto(null);
+    } catch (error) {
+      console.error('Error removing photo:', error);
+      // Still remove from UI even if storage deletion fails
+      const newPhotos = profileData.photos.filter((_, i) => i !== index);
+      updateProfileData({ photos: newPhotos });
+      setSelectedPhoto(null);
+    }
   };
 
   const movePhoto = (index: number, direction: 'up' | 'down') => {
@@ -253,7 +226,7 @@ const PhotoUploadStep = ({ profileData, updateProfileData }: PhotoUploadStepProp
       {uploading && (
         <div className="flex items-center justify-center text-gray-400">
           <Upload className="w-4 h-4 mr-2 animate-spin" />
-          Uploading and optimizing photos...
+          Uploading photos...
         </div>
       )}
 
@@ -267,7 +240,7 @@ const PhotoUploadStep = ({ profileData, updateProfileData }: PhotoUploadStepProp
           <ul className="text-blue-300 text-sm space-y-1">
             <li>• Click on a photo to reorder or set as main</li>
             <li>• Your first photo appears as your profile picture</li>
-            <li>• Photos are automatically optimized for mobile</li>
+            <li>• Photos are automatically stored securely</li>
           </ul>
         </div>
       )}

@@ -1,8 +1,11 @@
+
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Upload, Camera, X, Plus } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface PhotoUploadProps {
   photos: string[];
@@ -11,12 +14,13 @@ interface PhotoUploadProps {
 }
 
 const PhotoUpload = ({ photos, onPhotosChange, maxPhotos = 6 }: PhotoUploadProps) => {
+  const { user } = useAuth();
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (!files) return;
+    if (!files || !user) return;
 
     if (photos.length + files.length > maxPhotos) {
       toast({
@@ -33,14 +37,21 @@ const PhotoUpload = ({ photos, onPhotosChange, maxPhotos = 6 }: PhotoUploadProps
       
       for (const file of Array.from(files)) {
         if (file.type.startsWith('image/')) {
-          // Convert to base64 for demo purposes
-          // In a real app, you'd upload to a cloud storage service
-          const reader = new FileReader();
-          const result = await new Promise<string>((resolve) => {
-            reader.onload = () => resolve(reader.result as string);
-            reader.readAsDataURL(file);
-          });
-          newPhotos.push(result);
+          // Upload to Supabase Storage
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${user.id}/profile_${Date.now()}_${Math.random()}.${fileExt}`;
+          
+          const { error: uploadError } = await supabase.storage
+            .from('profiles')
+            .upload(fileName, file);
+
+          if (uploadError) throw uploadError;
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('profiles')
+            .getPublicUrl(fileName);
+
+          newPhotos.push(publicUrl);
         }
       }
 
@@ -49,10 +60,10 @@ const PhotoUpload = ({ photos, onPhotosChange, maxPhotos = 6 }: PhotoUploadProps
         title: "Photos uploaded",
         description: `${newPhotos.length} photo(s) added successfully`
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Upload failed",
-        description: "Failed to upload photos. Please try again.",
+        description: error.message || "Failed to upload photos. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -63,9 +74,29 @@ const PhotoUpload = ({ photos, onPhotosChange, maxPhotos = 6 }: PhotoUploadProps
     }
   };
 
-  const removePhoto = (index: number) => {
-    const newPhotos = photos.filter((_, i) => i !== index);
-    onPhotosChange(newPhotos);
+  const removePhoto = async (index: number) => {
+    try {
+      const photoUrl = photos[index];
+      
+      // Extract file path from URL for deletion
+      if (photoUrl.includes('supabase.co')) {
+        const urlParts = photoUrl.split('/');
+        const fileName = urlParts[urlParts.length - 1];
+        const filePath = `${user?.id}/${fileName}`;
+        
+        await supabase.storage
+          .from('profiles')
+          .remove([filePath]);
+      }
+      
+      const newPhotos = photos.filter((_, i) => i !== index);
+      onPhotosChange(newPhotos);
+    } catch (error) {
+      console.error('Error removing photo:', error);
+      // Still remove from UI even if storage deletion fails
+      const newPhotos = photos.filter((_, i) => i !== index);
+      onPhotosChange(newPhotos);
+    }
   };
 
   const triggerFileSelect = () => {
