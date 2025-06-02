@@ -43,13 +43,13 @@ export const demoProfiles: Profile[] = [
   },
   {
     id: "550e8400-e29b-41d4-a716-446655440003",
-    name: "Mike",
+    name: "Zinhle",
     age: 28,
     image: "/lovable-uploads/a5eeb907-4974-443e-8d49-33ec325223c7.png",
     bio: "Fitness enthusiast 💪",
     whatsapp: "+27123456791",
     location: "Durban",
-    gender: "male" as const,
+    gender: "female" as const,
     userType: "service_provider" as const,
     serviceCategory: "Personal Trainer",
     services: ["Weight Training", "Cardio", "Nutrition"],
@@ -73,13 +73,13 @@ export const demoProfiles: Profile[] = [
   },
   {
     id: "550e8400-e29b-41d4-a716-446655440005",
-    name: "David",
+    name: "Anele",
     age: 30,
     image: "/lovable-uploads/a5eeb907-4974-443e-8d49-33ec325223c7.png",
     bio: "Tech entrepreneur and travel lover ✈️",
     whatsapp: "+27123456793",
     location: "Johannesburg",
-    gender: "male" as const,
+    gender: "female" as const,
     posts: ["/lovable-uploads/b13cab85-67d6-4d3c-8114-0653acecba3f.png"]
   }
 ];
