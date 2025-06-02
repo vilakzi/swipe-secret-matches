@@ -2,24 +2,7 @@
 import { useMemo } from 'react';
 import { useUserRole } from './useUserRole';
 import { useAuth } from '@/contexts/AuthContext';
-
-interface Profile {
-  id: number | string;
-  name: string;
-  age: number;
-  image: string;
-  bio: string;
-  whatsapp: string;
-  location: string;
-  gender?: 'male' | 'female';
-  userType?: 'user' | 'service_provider';
-  serviceCategory?: string;
-  portfolio?: string[];
-  rating?: number;
-  reviewCount?: number;
-  isAvailable?: boolean;
-  services?: string[];
-}
+import { Profile } from '@/data/demoProfiles';
 
 export const useProfileFiltering = (allProfiles: Profile[]) => {
   const { role, isAdmin, isServiceProvider, isUser } = useUserRole();
