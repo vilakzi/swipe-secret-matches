@@ -21,8 +21,10 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
     hasMoreItems,
     isLoadingMore,
     filterGender,
+    filterName,
     handleLoadMore,
     handleFilterChange,
+    handleNameFilterChange,
     handleRefresh
   } = useFeedData(6);
 
@@ -39,6 +41,8 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
         setShowFilters={setShowFilters}
         filterGender={filterGender}
         setFilterGender={handleFilterChange}
+        filterName={filterName}
+        setFilterName={handleNameFilterChange}
       />
       
       <div className="max-w-md mx-auto">

@@ -12,6 +12,7 @@ export interface FeedItem {
 
 export const useFeedData = (itemsPerPage: number = 6) => {
   const [filterGender, setFilterGender] = useState<'male' | 'female' | null>(null);
+  const [filterName, setFilterName] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
@@ -24,8 +25,15 @@ export const useFeedData = (itemsPerPage: number = 6) => {
       profiles = profiles.filter(profile => profile.gender === filterGender);
     }
 
+    // Apply name filter
+    if (filterName.trim()) {
+      profiles = profiles.filter(profile => 
+        profile.name.toLowerCase().includes(filterName.toLowerCase().trim())
+      );
+    }
+
     return profiles;
-  }, [filterGender]);
+  }, [filterGender, filterName]);
 
   // Create all feed items
   const allFeedItems = useMemo(() => {
@@ -80,6 +88,11 @@ export const useFeedData = (itemsPerPage: number = 6) => {
     setCurrentPage(1);
   }, []);
 
+  const handleNameFilterChange = useCallback((name: string) => {
+    setFilterName(name);
+    setCurrentPage(1);
+  }, []);
+
   const handleRefresh = useCallback(() => {
     setCurrentPage(1);
   }, []);
@@ -89,8 +102,10 @@ export const useFeedData = (itemsPerPage: number = 6) => {
     hasMoreItems,
     isLoadingMore,
     filterGender,
+    filterName,
     handleLoadMore,
     handleFilterChange,
+    handleNameFilterChange,
     handleRefresh
   };
 };
