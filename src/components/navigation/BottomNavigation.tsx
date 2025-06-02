@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Heart, MessageCircle, User, Compass, Settings } from 'lucide-react';
+import { Heart, MessageCircle, User, Compass, Settings, Briefcase } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 
@@ -34,6 +34,13 @@ const BottomNavigation = () => {
       icon: MessageCircle,
       path: '/messages',
       show: true
+    },
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      icon: Briefcase,
+      path: '/dashboard',
+      show: isServiceProvider
     },
     {
       id: 'profile',

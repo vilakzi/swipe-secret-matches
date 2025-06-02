@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -154,37 +153,16 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="pt-20">
-        {isServiceProvider ? (
-          // Service Provider View
-          <div className="text-center p-4">
-            <div className="max-w-md mx-auto">
-              <div className="bg-black/20 backdrop-blur-md rounded-lg p-8 border border-gray-700">
-                <Briefcase className="w-16 h-16 text-purple-500 mx-auto mb-4" />
-                <h2 className="text-2xl font-bold text-white mb-4">Service Provider Dashboard</h2>
-                <p className="text-gray-400 mb-6">
-                  Manage your posts, promotions, and reach more customers.
-                </p>
-                <Button
-                  onClick={handleDashboard}
-                  className="w-full bg-purple-600 hover:bg-purple-700"
-                >
-                  Go to Dashboard
-                </Button>
-              </div>
-            </div>
-          </div>
-        ) : (
-          // Regular User/Admin View - Instagram-style Feed
-          <div className="max-w-md mx-auto px-4">
-            <ProfileCompletionPrompt />
-            <InstagramFeed 
-              onLike={handleLike}
-              onContact={handleContact}
-              onRefresh={handleRefresh}
-              likedItems={likedItems}
-            />
-          </div>
-        )}
+        {/* Show Instagram-style Feed for all users including service providers */}
+        <div className="max-w-md mx-auto px-4">
+          <ProfileCompletionPrompt />
+          <InstagramFeed 
+            onLike={handleLike}
+            onContact={handleContact}
+            onRefresh={handleRefresh}
+            likedItems={likedItems}
+          />
+        </div>
       </main>
     </div>
   );

@@ -1,16 +1,17 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Upload, Image, Video, Clock, Crown } from 'lucide-react';
+import { Upload, Image, Video, Clock, Crown, Home, ArrowLeft } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 import PaymentModal from '@/components/PaymentModal';
 
 const ServiceProviderDashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [posts, setPosts] = useState<any[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [promotionType, setPromotionType] = useState<'free_2h' | 'paid_8h' | 'paid_12h'>('free_2h');
@@ -175,12 +176,37 @@ const ServiceProviderDashboard = () => {
     }
   };
 
+  const handleBackToFeed = () => {
+    navigate('/');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 p-4">
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Service Provider Dashboard</h1>
-          <p className="text-gray-400">Manage your posts and promotions</p>
+        {/* Header with navigation */}
+        <div className="flex items-center justify-between mb-8">
+          <Button
+            onClick={handleBackToFeed}
+            variant="ghost"
+            className="text-white hover:bg-white/10 flex items-center space-x-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Feed</span>
+          </Button>
+          
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-white mb-2">Service Provider Dashboard</h1>
+            <p className="text-gray-400">Manage your posts and promotions</p>
+          </div>
+          
+          <Button
+            onClick={handleBackToFeed}
+            variant="outline"
+            className="border-purple-500 text-purple-400 hover:bg-purple-500/20 flex items-center space-x-2"
+          >
+            <Home className="w-4 h-4" />
+            <span>View Feed</span>
+          </Button>
         </div>
 
         {/* Upload Section */}
