@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import OnlineStatus from '@/components/OnlineStatus';
 import { usePresence } from '@/hooks/usePresence';
+import { demoProfiles } from '@/data/demoProfiles';
 
 interface UserData {
   id: string;
@@ -38,15 +39,37 @@ const UserProfile = () => {
 
   const fetchUserData = async () => {
     try {
+      // First try to get from Supabase
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
-      setUser(data);
+      if (data) {
+        setUser(data);
+      } else {
+        // If not found in Supabase, check demo profiles
+        const demoProfile = demoProfiles.find(profile => profile.id === userId);
+        if (demoProfile) {
+          setUser({
+            id: demoProfile.id,
+            display_name: demoProfile.name,
+            bio: demoProfile.bio,
+            location: demoProfile.location,
+            whatsapp: demoProfile.whatsapp,
+            profile_image_url: demoProfile.image,
+            profile_images: demoProfile.posts || [],
+            age: demoProfile.age,
+            gender: demoProfile.gender || '',
+            interests: []
+          });
+        } else {
+          throw new Error('User not found');
+        }
+      }
     } catch (error: any) {
+      console.error('Error loading profile:', error);
       toast({
         title: "Error loading profile",
         description: error.message,
