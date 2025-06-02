@@ -50,24 +50,23 @@ export const useFeedData = (itemsPerPage: number = 6) => {
     return profiles;
   }, [filteredProfiles, filterGender, filterName]);
 
-  // Create all feed items with service provider posts always under their profiles
+  // Create all feed items - simplified approach
   const allFeedItems = useMemo(() => {
     const items: FeedItem[] = [];
     
-    // Separate service providers and regular users
-    const serviceProviders = finalFilteredProfiles.filter(profile => profile.userType === 'service_provider');
-    const regularUsers = finalFilteredProfiles.filter(profile => profile.userType !== 'service_provider');
+    // Shuffle profiles first to randomize order
+    const shuffledProfiles = shuffleArray(finalFilteredProfiles);
     
-    // Process service providers first - always show posts under their profiles
-    serviceProviders.forEach((profile) => {
-      // Add service provider profile card
+    // Generate feed items for each profile
+    shuffledProfiles.forEach((profile) => {
+      // Add profile card
       items.push({
         id: `profile-${profile.id}`,
         type: 'profile',
         profile: profile
       });
       
-      // Always add posts immediately after service provider profile
+      // Add posts if they exist
       if (profile.posts && profile.posts.length > 0) {
         profile.posts.forEach((postImage, postIndex) => {
           items.push({
@@ -75,70 +74,15 @@ export const useFeedData = (itemsPerPage: number = 6) => {
             type: 'post',
             profile: profile,
             postImage: postImage,
-            caption: `Professional services showcase 💼`
+            caption: profile.userType === 'service_provider' 
+              ? `Professional services showcase 💼` 
+              : `Feeling good tonight 💫`
           });
         });
       }
     });
     
-    // Process regular users
-    regularUsers.forEach((profile) => {
-      // Add regular user profile card
-      items.push({
-        id: `profile-${profile.id}`,
-        type: 'profile',
-        profile: profile
-      });
-      
-      // Add posts for regular users
-      if (profile.posts && profile.posts.length > 0) {
-        profile.posts.forEach((postImage, postIndex) => {
-          items.push({
-            id: `post-${profile.id}-${postIndex}`,
-            type: 'post',
-            profile: profile,
-            postImage: postImage,
-            caption: `Feeling good tonight 💫`
-          });
-        });
-      }
-    });
-    
-    // Only shuffle the groups, not individual items within groups
-    // This maintains the profile -> posts order for service providers
-    const serviceProviderItems = items.filter(item => 
-      item.profile.userType === 'service_provider'
-    );
-    const regularUserItems = items.filter(item => 
-      item.profile.userType !== 'service_provider'
-    );
-    
-    // Shuffle the two groups separately but maintain internal order
-    const shuffledServiceProviders = shuffleArray(
-      serviceProviderItems.reduce((acc, item, index, arr) => {
-        if (item.type === 'profile') {
-          const profileIndex = index;
-          const posts = [];
-          let nextIndex = profileIndex + 1;
-          
-          // Collect all posts for this profile
-          while (nextIndex < arr.length && 
-                 arr[nextIndex].type === 'post' && 
-                 arr[nextIndex].profile.id === item.profile.id) {
-            posts.push(arr[nextIndex]);
-            nextIndex++;
-          }
-          
-          acc.push([item, ...posts]);
-        }
-        return acc;
-      }, [] as FeedItem[][])
-    ).flat();
-    
-    const shuffledRegularUsers = shuffleArray(regularUserItems);
-    
-    // Combine with service providers first to ensure visibility
-    return [...shuffledServiceProviders, ...shuffledRegularUsers];
+    return items;
   }, [finalFilteredProfiles, shuffleKey]);
 
   // Get items for current page
