@@ -1,11 +1,11 @@
-
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, MessageCircle, MapPin, Share, Lock, Star, Clock, Phone, Images } from 'lucide-react';
+import { Heart, MessageCircle, MapPin, Share, Lock, Star, Clock, Phone, Images, User } from 'lucide-react';
 import OnlineStatus from '@/components/OnlineStatus';
 import { usePresence } from '@/hooks/usePresence';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface Profile {
   id: number;
@@ -43,7 +43,12 @@ interface ProviderProfileCardProps {
 
 const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact }: ProviderProfileCardProps) => {
   const { isUserOnline } = usePresence();
+  const navigate = useNavigate();
   const [showPortfolio, setShowPortfolio] = useState(false);
+
+  const handleProfileClick = () => {
+    navigate(`/provider/${item.profile.id}`);
+  };
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, index) => (
@@ -92,9 +97,20 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
             </div>
           </div>
         </div>
-        {!isSubscribed && (
-          <Lock className="w-4 h-4 text-yellow-500" />
-        )}
+        <div className="flex items-center space-x-2">
+          <Button
+            onClick={handleProfileClick}
+            variant="ghost"
+            size="sm"
+            className="text-purple-400 hover:bg-purple-600/20"
+          >
+            <User className="w-4 h-4 mr-1" />
+            View Profile
+          </Button>
+          {!isSubscribed && (
+            <Lock className="w-4 h-4 text-yellow-500" />
+          )}
+        </div>
       </div>
 
       {/* Service Category */}
@@ -138,7 +154,7 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
       )}
 
       {/* Profile Image */}
-      <div className="relative">
+      <div className="relative cursor-pointer" onClick={handleProfileClick}>
         <img
           src={item.profile.image}
           alt={item.profile.name}
@@ -151,12 +167,23 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
             variant="secondary"
             size="sm"
             className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white"
-            onClick={() => setShowPortfolio(!showPortfolio)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowPortfolio(!showPortfolio);
+            }}
           >
             <Images className="w-4 h-4 mr-1" />
             Portfolio ({item.profile.portfolio.length})
           </Button>
         )}
+
+        {/* Click to view profile overlay */}
+        <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
+          <Button className="bg-purple-600 hover:bg-purple-700">
+            <User className="w-4 h-4 mr-2" />
+            View Full Profile
+          </Button>
+        </div>
       </div>
 
       {/* Portfolio Gallery */}
@@ -169,7 +196,8 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
                 key={index}
                 src={image}
                 alt={`Portfolio ${index + 1}`}
-                className="w-full h-20 object-cover rounded"
+                className="w-full h-20 object-cover rounded cursor-pointer hover:opacity-80"
+                onClick={handleProfileClick}
               />
             ))}
           </div>

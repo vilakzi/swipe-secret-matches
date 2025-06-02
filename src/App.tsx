@@ -16,6 +16,7 @@ import Messages from "./pages/Messages";
 import Settings from "./pages/Settings";
 import Onboarding from "./pages/Onboarding";
 import ServiceProviderDashboard from "./pages/ServiceProviderDashboard";
+import ProviderProfile from "./pages/ProviderProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -55,6 +56,13 @@ const App = () => (
               <ProtectedRoute>
                 <AppLayout>
                   <Profile />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/provider/:providerId" element={
+              <ProtectedRoute>
+                <AppLayout showBottomNav={false}>
+                  <ProviderProfile />
                 </AppLayout>
               </ProtectedRoute>
             } />
