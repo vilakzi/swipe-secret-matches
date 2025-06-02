@@ -11,6 +11,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
+import UserProfile from "./pages/UserProfile";
 import Matches from "./pages/Matches";
 import Messages from "./pages/Messages";
 import Settings from "./pages/Settings";
@@ -56,6 +57,13 @@ const App = () => (
               <ProtectedRoute>
                 <AppLayout>
                   <Profile />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/profile/:userId" element={
+              <ProtectedRoute>
+                <AppLayout showBottomNav={false}>
+                  <UserProfile />
                 </AppLayout>
               </ProtectedRoute>
             } />
