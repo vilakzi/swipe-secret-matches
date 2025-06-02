@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Heart, MessageCircle, Phone, Share } from 'lucide-react';
 
 interface Profile {
-  id: number;
+  id: string;
   name: string;
   bio: string;
   isAvailable?: boolean;
