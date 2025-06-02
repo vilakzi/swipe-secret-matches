@@ -1,9 +1,10 @@
 
 import { useMemo } from 'react';
 import { useUserRole } from './useUserRole';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Profile {
-  id: number;
+  id: number | string;
   name: string;
   age: number;
   image: string;
@@ -22,6 +23,7 @@ interface Profile {
 
 export const useProfileFiltering = (allProfiles: Profile[]) => {
   const { role, isAdmin, isServiceProvider, isUser } = useUserRole();
+  const { user } = useAuth();
 
   const filteredProfiles = useMemo(() => {
     // Admin sees all profiles
@@ -34,19 +36,23 @@ export const useProfileFiltering = (allProfiles: Profile[]) => {
       return allProfiles.filter(profile => profile.userType === 'service_provider');
     }
 
-    // Service providers see user profiles
+    // Service providers see user profiles AND their own profile
     if (isServiceProvider) {
-      return allProfiles.filter(profile => profile.userType === 'user');
+      return allProfiles.filter(profile => 
+        profile.userType === 'user' || 
+        (profile.userType === 'service_provider' && profile.id.toString() === user?.id)
+      );
     }
 
     // Default: return empty array for safety
     return [];
-  }, [allProfiles, role, isAdmin, isServiceProvider, isUser]);
+  }, [allProfiles, role, isAdmin, isServiceProvider, isUser, user?.id]);
 
   return {
     filteredProfiles,
     canSeeAllProfiles: isAdmin,
     canSeeProviders: isUser || isAdmin,
-    canSeeUsers: isServiceProvider || isAdmin
+    canSeeUsers: isServiceProvider || isAdmin,
+    canSeeOwnPosts: isServiceProvider
   };
 };

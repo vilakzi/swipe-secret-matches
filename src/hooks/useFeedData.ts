@@ -1,6 +1,6 @@
-
 import { useState, useMemo, useCallback } from 'react';
 import { demoProfiles, type Profile } from '@/data/demoProfiles';
+import { useProfileFiltering } from './useProfileFiltering';
 
 export interface FeedItem {
   id: string;
@@ -25,11 +25,14 @@ export const useFeedData = (itemsPerPage: number = 6) => {
   const [filterName, setFilterName] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [shuffleKey, setShuffleKey] = useState(0); // Key to trigger re-shuffle
+  const [shuffleKey, setShuffleKey] = useState(0);
 
-  // Apply role-based filtering
-  const filteredProfiles = useMemo(() => {
-    let profiles = demoProfiles;
+  // Use the enhanced profile filtering
+  const { filteredProfiles } = useProfileFiltering(demoProfiles);
+
+  // Apply additional gender and name filters
+  const finalFilteredProfiles = useMemo(() => {
+    let profiles = filteredProfiles;
 
     // Apply gender filter
     if (filterGender) {
@@ -44,15 +47,15 @@ export const useFeedData = (itemsPerPage: number = 6) => {
     }
 
     return profiles;
-  }, [filterGender, filterName]);
+  }, [filteredProfiles, filterGender, filterName]);
 
   // Create all feed items with service provider posts always under their profiles
   const allFeedItems = useMemo(() => {
     const items: FeedItem[] = [];
     
     // Separate service providers and regular users
-    const serviceProviders = filteredProfiles.filter(profile => profile.userType === 'service_provider');
-    const regularUsers = filteredProfiles.filter(profile => profile.userType !== 'service_provider');
+    const serviceProviders = finalFilteredProfiles.filter(profile => profile.userType === 'service_provider');
+    const regularUsers = finalFilteredProfiles.filter(profile => profile.userType !== 'service_provider');
     
     // Process service providers first - always show posts under their profiles
     serviceProviders.forEach((profile) => {
@@ -135,7 +138,7 @@ export const useFeedData = (itemsPerPage: number = 6) => {
     
     // Combine with service providers first to ensure visibility
     return [...shuffledServiceProviders, ...shuffledRegularUsers];
-  }, [filteredProfiles, shuffleKey]);
+  }, [finalFilteredProfiles, shuffleKey]);
 
   // Get items for current page
   const displayedItems = useMemo(() => {
