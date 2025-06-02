@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import ProfileCard from './ProfileCard';
 import PostCard from './PostCard';
@@ -6,7 +5,7 @@ import ProviderProfileCard from './ProviderProfileCard';
 import { useUserRole } from '@/hooks/useUserRole';
 
 interface Profile {
-  id: number;
+  id: string;
   name: string;
   age: number;
   image: string;
@@ -38,7 +37,7 @@ interface FeedContentProps {
   likedItems: Set<string>;
   isSubscribed: boolean;
   filterGender: 'male' | 'female' | null;
-  onLike: (itemId: string, profileId: number) => void;
+  onLike: (itemId: string, profileId: string) => void;
   onContact: (profile: Profile) => void;
   onRefresh: () => void;
   setFilterGender: (gender: 'male' | 'female' | null) => void;

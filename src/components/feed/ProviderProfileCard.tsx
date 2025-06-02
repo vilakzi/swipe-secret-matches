@@ -1,4 +1,3 @@
-
 import { Card } from '@/components/ui/card';
 import { usePresence } from '@/hooks/usePresence';
 import { useState } from 'react';
@@ -11,7 +10,7 @@ import ProviderPortfolio from './provider/ProviderPortfolio';
 import ProviderActions from './provider/ProviderActions';
 
 interface Profile {
-  id: number;
+  id: string;
   name: string;
   age: number;
   image: string;
@@ -40,7 +39,7 @@ interface ProviderProfileCardProps {
   item: FeedItem;
   likedItems: Set<string>;
   isSubscribed: boolean;
-  onLike: (itemId: string, profileId: number) => void;
+  onLike: (itemId: string, profileId: string) => void;
   onContact: (profile: Profile) => void;
 }
 

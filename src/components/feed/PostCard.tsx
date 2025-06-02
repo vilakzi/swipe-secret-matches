@@ -1,4 +1,3 @@
-
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Heart, MessageCircle, Share, Lock } from 'lucide-react';
@@ -8,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import OptimizedImage from '@/components/ui/OptimizedImage';
 
 interface Profile {
-  id: number;
+  id: string;
   name: string;
   age: number;
   image: string;
@@ -32,7 +31,7 @@ interface PostCardProps {
   item: FeedItem;
   likedItems: Set<string>;
   isSubscribed: boolean;
-  onLike: (itemId: string, profileId: number) => void;
+  onLike: (itemId: string, profileId: string) => void;
   onContact: (profile: Profile) => void;
 }
 

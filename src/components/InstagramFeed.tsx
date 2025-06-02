@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import FeedHeader from './feed/FeedHeader';
 import FeedContent from './feed/FeedContent';
@@ -7,7 +6,7 @@ import InfiniteScroll from './feed/InfiniteScroll';
 import { useFeedData } from '@/hooks/useFeedData';
 
 interface InstagramFeedProps {
-  onLike: (itemId: string, profileId: number) => void;
+  onLike: (itemId: string, profileId: string) => void;
   onContact: (profile: any) => void;
   onRefresh: () => void;
   likedItems: Set<string>;
