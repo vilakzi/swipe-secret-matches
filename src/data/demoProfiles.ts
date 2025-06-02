@@ -21,7 +21,7 @@ export interface Profile {
 export const demoProfiles: Profile[] = [
   {
     id: "550e8400-e29b-41d4-a716-446655440001",
-    name: "Emma",
+    name: "Thandi",
     age: 24,
     image: "/lovable-uploads/a47c94f5-4caa-440f-a3a5-96cf72617433.png",
     bio: "Love hiking and coffee ☕️",
@@ -32,7 +32,7 @@ export const demoProfiles: Profile[] = [
   },
   {
     id: "550e8400-e29b-41d4-a716-446655440002",
-    name: "Sarah",
+    name: "Lerato",
     age: 26,
     image: "/lovable-uploads/edfa4e3e-1870-4ac8-8dda-4b518536741c.png",
     bio: "Artist and dreamer 🎨",
@@ -63,7 +63,7 @@ export const demoProfiles: Profile[] = [
   },
   {
     id: "550e8400-e29b-41d4-a716-446655440004",
-    name: "Jessica",
+    name: "Nomsa",
     age: 23,
     image: "/lovable-uploads/a47c94f5-4caa-440f-a3a5-96cf72617433.png",
     bio: "Yoga instructor and wellness coach 🧘‍♀️",
