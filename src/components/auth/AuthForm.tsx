@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import UserTypeSelector from './UserTypeSelector';
 import { validateEmail } from '@/utils/emailValidation';
 
@@ -45,6 +45,7 @@ const AuthForm: React.FC<AuthFormProps> = ({
 }) => {
   const [emailError, setEmailError] = useState<string | null>(null);
   const [emailTouched, setEmailTouched] = useState(false);
+  const [buttonPressed, setButtonPressed] = useState<string | null>(null);
 
   // Validate email on change
   useEffect(() => {
@@ -69,6 +70,33 @@ const AuthForm: React.FC<AuthFormProps> = ({
     setEmailTouched(true);
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setButtonPressed(isLogin ? 'signin' : 'signup');
+    onSubmit(e);
+  };
+
+  const handleForgotPasswordClick = () => {
+    setButtonPressed('forgot');
+    onForgotPassword();
+    // Reset button state after a brief moment
+    setTimeout(() => setButtonPressed(null), 1000);
+  };
+
+  const handlePasswordToggle = () => {
+    setButtonPressed('toggle-password');
+    onPasswordToggle();
+    // Reset button state immediately for toggle
+    setTimeout(() => setButtonPressed(null), 200);
+  };
+
+  // Reset button state when loading changes
+  useEffect(() => {
+    if (!loading) {
+      setButtonPressed(null);
+    }
+  }, [loading]);
+
   const isFormValid = () => {
     const emailValidation = validateEmail(email);
     return emailValidation.isValid && 
@@ -77,7 +105,7 @@ const AuthForm: React.FC<AuthFormProps> = ({
   };
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       {!isLogin && (
         <>
           <UserTypeSelector
@@ -95,7 +123,7 @@ const AuthForm: React.FC<AuthFormProps> = ({
               type="text"
               value={displayName}
               onChange={(e) => onDisplayNameChange(e.target.value)}
-              className="bg-gray-800 border-gray-600 text-white"
+              className="bg-gray-800 border-gray-600 text-white focus:border-purple-500 focus:ring-purple-500"
               placeholder="Enter your display name"
               required={!isLogin}
             />
@@ -112,7 +140,7 @@ const AuthForm: React.FC<AuthFormProps> = ({
           value={email}
           onChange={(e) => handleEmailChange(e.target.value)}
           onBlur={handleEmailBlur}
-          className={`bg-gray-800 border-gray-600 text-white ${
+          className={`bg-gray-800 border-gray-600 text-white focus:border-purple-500 focus:ring-purple-500 ${
             emailError ? 'border-red-500 focus:border-red-500' : ''
           }`}
           placeholder="Enter your email address"
@@ -135,7 +163,7 @@ const AuthForm: React.FC<AuthFormProps> = ({
             type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => onPasswordChange(e.target.value)}
-            className="bg-gray-800 border-gray-600 text-white pr-10"
+            className="bg-gray-800 border-gray-600 text-white pr-10 focus:border-purple-500 focus:ring-purple-500"
             placeholder="Enter your password"
             required
           />
@@ -143,10 +171,18 @@ const AuthForm: React.FC<AuthFormProps> = ({
             type="button"
             variant="ghost"
             size="sm"
-            className="absolute right-0 top-0 h-full px-3 text-gray-400 hover:text-white"
-            onClick={onPasswordToggle}
+            className={`absolute right-0 top-0 h-full px-3 text-gray-400 hover:text-white transition-all duration-200 ${
+              buttonPressed === 'toggle-password' ? 'bg-purple-600/20 text-purple-400' : ''
+            }`}
+            onClick={handlePasswordToggle}
           >
-            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            {buttonPressed === 'toggle-password' ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : showPassword ? (
+              <EyeOff className="w-4 h-4" />
+            ) : (
+              <Eye className="w-4 h-4" />
+            )}
           </Button>
         </div>
         {password && password.length < 6 && (
@@ -160,20 +196,36 @@ const AuthForm: React.FC<AuthFormProps> = ({
             type="button"
             variant="ghost"
             size="sm"
-            className="text-purple-400 hover:text-purple-300 p-0 h-auto"
-            onClick={onForgotPassword}
+            className={`text-purple-400 hover:text-purple-300 p-0 h-auto transition-all duration-200 ${
+              buttonPressed === 'forgot' ? 'text-purple-300 underline' : ''
+            }`}
+            onClick={handleForgotPasswordClick}
+            disabled={buttonPressed === 'forgot'}
           >
-            Forgot Password?
+            {buttonPressed === 'forgot' ? 'Opening...' : 'Forgot Password?'}
           </Button>
         </div>
       )}
 
       <Button
         type="submit"
-        className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50"
+        className={`w-full transition-all duration-200 ${
+          buttonPressed === (isLogin ? 'signin' : 'signup')
+            ? 'bg-purple-700 scale-95 shadow-lg'
+            : 'bg-purple-600 hover:bg-purple-700'
+        } disabled:opacity-50 disabled:cursor-not-allowed`}
         disabled={loading || !isFormValid()}
       >
-        {loading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
+        {loading ? (
+          <div className="flex items-center justify-center">
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            {isLogin ? "Signing in..." : "Creating account..."}
+          </div>
+        ) : (
+          <span className="font-medium">
+            {isLogin ? "Sign In" : "Create Account"}
+          </span>
+        )}
       </Button>
     </form>
   );

@@ -1,31 +1,36 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
 
 interface AuthToggleProps {
   isLogin: boolean;
   onToggle: (isLogin: boolean) => void;
 }
 
-const AuthToggle: React.FC<AuthToggleProps> = ({ isLogin, onToggle }) => {
+const AuthToggle = ({ isLogin, onToggle }: AuthToggleProps) => {
   return (
-    <div className="flex mb-6">
-      <Button
+    <div className="flex mb-6 bg-gray-800/50 rounded-lg p-1">
+      <button
         type="button"
-        variant={isLogin ? "default" : "ghost"}
-        className="flex-1 mr-2"
+        className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
+          isLogin
+            ? 'bg-purple-600 text-white shadow-md transform scale-105'
+            : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+        }`}
         onClick={() => onToggle(true)}
       >
         Sign In
-      </Button>
-      <Button
+      </button>
+      <button
         type="button"
-        variant={!isLogin ? "default" : "ghost"}
-        className="flex-1 ml-2"
+        className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
+          !isLogin
+            ? 'bg-purple-600 text-white shadow-md transform scale-105'
+            : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+        }`}
         onClick={() => onToggle(false)}
       >
         Sign Up
-      </Button>
+      </button>
     </div>
   );
 };
