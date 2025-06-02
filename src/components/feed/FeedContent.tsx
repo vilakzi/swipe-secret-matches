@@ -2,7 +2,6 @@ import { Button } from '@/components/ui/button';
 import ProfileCard from './ProfileCard';
 import PostCard from './PostCard';
 import ProviderProfileCard from './ProviderProfileCard';
-import { useUserRole } from '@/hooks/useUserRole';
 
 interface Profile {
   id: string;
@@ -53,11 +52,10 @@ const FeedContent = ({
   onRefresh,
   setFilterGender
 }: FeedContentProps) => {
-  const { isUser } = useUserRole();
 
   const renderProfileCard = (item: FeedItem) => {
-    // Use enhanced provider card for service providers when viewed by users
-    if (isUser && item.profile.userType === 'service_provider') {
+    // Use enhanced provider card for service providers
+    if (item.profile.userType === 'service_provider') {
       return (
         <ProviderProfileCard
           key={item.id}

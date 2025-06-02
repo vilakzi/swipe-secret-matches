@@ -1,7 +1,6 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { demoProfiles, type Profile } from '@/data/demoProfiles';
-import { useProfileFiltering } from './useProfileFiltering';
 
 export interface FeedItem {
   id: string;
@@ -28,20 +27,15 @@ export const useFeedData = (itemsPerPage: number = 6) => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [shuffleKey, setShuffleKey] = useState(0);
 
-  // Use the enhanced profile filtering
-  const { filteredProfiles } = useProfileFiltering(demoProfiles);
-
-  // Debug logging
   console.log('Total demo profiles:', demoProfiles.length);
-  console.log('Filtered profiles from useProfileFiltering:', filteredProfiles.length);
   console.log('Filter gender:', filterGender);
   console.log('Filter name:', filterName);
 
-  // Apply additional gender and name filters
-  const finalFilteredProfiles = useMemo(() => {
-    let profiles = filteredProfiles;
+  // Apply gender and name filters directly to all demo profiles
+  const filteredProfiles = useMemo(() => {
+    let profiles = demoProfiles;
 
-    console.log('Starting with profiles:', profiles.length);
+    console.log('Starting with all profiles:', profiles.length);
 
     // Apply gender filter
     if (filterGender) {
@@ -59,16 +53,16 @@ export const useFeedData = (itemsPerPage: number = 6) => {
 
     console.log('Final filtered profiles:', profiles.length);
     return profiles;
-  }, [filteredProfiles, filterGender, filterName]);
+  }, [filterGender, filterName]);
 
-  // Create all feed items - simplified approach
+  // Create all feed items
   const allFeedItems = useMemo(() => {
     const items: FeedItem[] = [];
     
-    console.log('Creating feed items from profiles:', finalFilteredProfiles.length);
+    console.log('Creating feed items from profiles:', filteredProfiles.length);
     
     // Shuffle profiles first to randomize order
-    const shuffledProfiles = shuffleArray(finalFilteredProfiles);
+    const shuffledProfiles = shuffleArray(filteredProfiles);
     
     // Generate feed items for each profile
     shuffledProfiles.forEach((profile, index) => {
@@ -100,7 +94,7 @@ export const useFeedData = (itemsPerPage: number = 6) => {
     
     console.log('Total feed items created:', items.length);
     return items;
-  }, [finalFilteredProfiles, shuffleKey]);
+  }, [filteredProfiles, shuffleKey]);
 
   // Get items for current page
   const displayedItems = useMemo(() => {
