@@ -65,7 +65,7 @@ export const demoProfiles: Profile[] = [
     id: "550e8400-e29b-41d4-a716-446655440004",
     name: "Nomsa",
     age: 23,
-    image: "/lovable-uploads/a47c94f5-4caa-440f-a3a5-96cf72617433.png",
+    image: "/lovable-uploads/ff0b1c28-2b37-4b20-b7c0-589627c4b494.png",
     bio: "Yoga instructor and wellness coach 🧘‍♀️",
     whatsapp: "+27123456792",
     location: "Cape Town",
