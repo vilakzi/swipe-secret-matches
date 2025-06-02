@@ -47,8 +47,39 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
   const navigate = useNavigate();
   const [showPortfolio, setShowPortfolio] = useState(false);
 
-  const handleProfileClick = () => {
+  const handleProfileClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Profile click triggered for provider:', item.profile.id);
     navigate(`/provider/${item.profile.id}`);
+  };
+
+  const handleLike = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Like clicked for item:', item.id);
+    onLike(item.id, item.profile.id);
+  };
+
+  const handleContact = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Contact clicked for provider:', item.profile.name);
+    onContact(item.profile);
+  };
+
+  const handlePhoneClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Phone clicked for provider:', item.profile.whatsapp);
+    window.open(`tel:${item.profile.whatsapp}`, '_self');
+  };
+
+  const handlePortfolioToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Portfolio toggle clicked');
+    setShowPortfolio(!showPortfolio);
   };
 
   const renderStars = (rating: number) => {
@@ -67,7 +98,10 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
       {/* Provider Header */}
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="relative cursor-pointer" onClick={handleProfileClick}>
+          <div 
+            className="relative cursor-pointer z-10" 
+            onClick={handleProfileClick}
+          >
             <img
               src={item.profile.image}
               alt={item.profile.name}
@@ -76,13 +110,13 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
             <OnlineStatus 
               isOnline={isUserOnline(item.profile.id.toString())} 
               size="sm"
-              className="absolute -bottom-1 -right-1"
+              className="absolute -bottom-1 -right-1 pointer-events-none"
             />
           </div>
           <div>
             <div className="flex items-center space-x-2">
               <h3 
-                className="font-semibold text-white cursor-pointer hover:text-purple-400 transition-colors"
+                className="font-semibold text-white cursor-pointer hover:text-purple-400 transition-colors z-10"
                 onClick={handleProfileClick}
               >
                 {item.profile.name}
@@ -108,7 +142,7 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
             onClick={handleProfileClick}
             variant="ghost"
             size="sm"
-            className="text-purple-400 hover:bg-purple-600/20"
+            className="text-purple-400 hover:bg-purple-600/20 z-10"
           >
             <User className="w-4 h-4 mr-1" />
             View Profile
@@ -160,11 +194,12 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
       )}
 
       {/* Profile Image */}
-      <div className="relative cursor-pointer" onClick={handleProfileClick}>
+      <div className="relative">
         <img
           src={item.profile.image}
           alt={item.profile.name}
-          className="w-full h-80 object-cover hover:opacity-95 transition-opacity"
+          className="w-full h-80 object-cover hover:opacity-95 transition-opacity cursor-pointer"
+          onClick={handleProfileClick}
         />
         
         {/* Portfolio Button Overlay */}
@@ -172,11 +207,8 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
           <Button
             variant="secondary"
             size="sm"
-            className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white"
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowPortfolio(!showPortfolio);
-            }}
+            className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white z-20"
+            onClick={handlePortfolioToggle}
           >
             <Images className="w-4 h-4 mr-1" />
             Portfolio ({item.profile.portfolio.length})
@@ -184,8 +216,11 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
         )}
 
         {/* Click to view profile overlay */}
-        <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
-          <Button className="bg-purple-600 hover:bg-purple-700">
+        <div 
+          className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 hover:opacity-100 cursor-pointer z-10"
+          onClick={handleProfileClick}
+        >
+          <Button className="bg-purple-600 hover:bg-purple-700 pointer-events-none">
             <User className="w-4 h-4 mr-2" />
             View Full Profile
           </Button>
@@ -217,31 +252,31 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
             <Button
               variant="ghost"
               size="sm"
-              className={`p-0 ${likedItems.has(item.id) ? 'text-red-500' : 'text-white'}`}
-              onClick={() => onLike(item.id, item.profile.id)}
+              className={`p-0 z-10 ${likedItems.has(item.id) ? 'text-red-500' : 'text-white'}`}
+              onClick={handleLike}
             >
               <Heart className={`w-6 h-6 ${likedItems.has(item.id) ? 'fill-current' : ''}`} />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="text-white p-0"
-              onClick={() => onContact(item.profile)}
+              className="text-white p-0 z-10"
+              onClick={handleContact}
             >
               <MessageCircle className="w-6 h-6" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="text-white p-0"
-              onClick={() => window.open(`tel:${item.profile.whatsapp}`, '_self')}
+              className="text-white p-0 z-10"
+              onClick={handlePhoneClick}
             >
               <Phone className="w-6 h-6" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="text-white p-0"
+              className="text-white p-0 z-10"
             >
               <Share className="w-6 h-6" />
             </Button>
