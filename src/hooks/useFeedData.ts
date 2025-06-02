@@ -31,13 +31,22 @@ export const useFeedData = (itemsPerPage: number = 6) => {
   // Use the enhanced profile filtering
   const { filteredProfiles } = useProfileFiltering(demoProfiles);
 
+  // Debug logging
+  console.log('Total demo profiles:', demoProfiles.length);
+  console.log('Filtered profiles from useProfileFiltering:', filteredProfiles.length);
+  console.log('Filter gender:', filterGender);
+  console.log('Filter name:', filterName);
+
   // Apply additional gender and name filters
   const finalFilteredProfiles = useMemo(() => {
     let profiles = filteredProfiles;
 
+    console.log('Starting with profiles:', profiles.length);
+
     // Apply gender filter
     if (filterGender) {
       profiles = profiles.filter(profile => profile.gender === filterGender);
+      console.log('After gender filter:', profiles.length);
     }
 
     // Apply name filter
@@ -45,8 +54,10 @@ export const useFeedData = (itemsPerPage: number = 6) => {
       profiles = profiles.filter(profile => 
         profile.name.toLowerCase().includes(filterName.toLowerCase().trim())
       );
+      console.log('After name filter:', profiles.length);
     }
 
+    console.log('Final filtered profiles:', profiles.length);
     return profiles;
   }, [filteredProfiles, filterGender, filterName]);
 
@@ -54,11 +65,15 @@ export const useFeedData = (itemsPerPage: number = 6) => {
   const allFeedItems = useMemo(() => {
     const items: FeedItem[] = [];
     
+    console.log('Creating feed items from profiles:', finalFilteredProfiles.length);
+    
     // Shuffle profiles first to randomize order
     const shuffledProfiles = shuffleArray(finalFilteredProfiles);
     
     // Generate feed items for each profile
-    shuffledProfiles.forEach((profile) => {
+    shuffledProfiles.forEach((profile, index) => {
+      console.log(`Processing profile ${index + 1}:`, profile.name);
+      
       // Add profile card
       items.push({
         id: `profile-${profile.id}`,
@@ -68,6 +83,7 @@ export const useFeedData = (itemsPerPage: number = 6) => {
       
       // Add posts if they exist
       if (profile.posts && profile.posts.length > 0) {
+        console.log(`Adding ${profile.posts.length} posts for ${profile.name}`);
         profile.posts.forEach((postImage, postIndex) => {
           items.push({
             id: `post-${profile.id}-${postIndex}`,
@@ -82,12 +98,15 @@ export const useFeedData = (itemsPerPage: number = 6) => {
       }
     });
     
+    console.log('Total feed items created:', items.length);
     return items;
   }, [finalFilteredProfiles, shuffleKey]);
 
   // Get items for current page
   const displayedItems = useMemo(() => {
-    return allFeedItems.slice(0, currentPage * itemsPerPage);
+    const items = allFeedItems.slice(0, currentPage * itemsPerPage);
+    console.log('Displayed items:', items.length, 'for page:', currentPage);
+    return items;
   }, [allFeedItems, currentPage, itemsPerPage]);
 
   const hasMoreItems = displayedItems.length < allFeedItems.length;
@@ -105,6 +124,7 @@ export const useFeedData = (itemsPerPage: number = 6) => {
 
   // Reset pagination when filter changes
   const handleFilterChange = useCallback((gender: 'male' | 'female' | null) => {
+    console.log('Filter change - gender:', gender);
     setFilterGender(gender);
     setCurrentPage(1);
     // Trigger re-shuffle when filter changes
@@ -112,6 +132,7 @@ export const useFeedData = (itemsPerPage: number = 6) => {
   }, []);
 
   const handleNameFilterChange = useCallback((name: string) => {
+    console.log('Filter change - name:', name);
     setFilterName(name);
     setCurrentPage(1);
     // Trigger re-shuffle when name filter changes
@@ -119,6 +140,7 @@ export const useFeedData = (itemsPerPage: number = 6) => {
   }, []);
 
   const handleRefresh = useCallback(() => {
+    console.log('Refreshing feed');
     setCurrentPage(1);
     // Trigger re-shuffle on refresh for dynamic order
     setShuffleKey(prev => prev + 1);
