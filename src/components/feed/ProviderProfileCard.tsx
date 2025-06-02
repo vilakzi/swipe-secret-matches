@@ -99,7 +99,7 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div 
-            className="relative cursor-pointer z-10" 
+            className="relative cursor-pointer" 
             onClick={handleProfileClick}
           >
             <img
@@ -116,7 +116,7 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
           <div>
             <div className="flex items-center space-x-2">
               <h3 
-                className="font-semibold text-white cursor-pointer hover:text-purple-400 transition-colors z-10"
+                className="font-semibold text-white cursor-pointer hover:text-purple-400 transition-colors"
                 onClick={handleProfileClick}
               >
                 {item.profile.name}
@@ -142,7 +142,7 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
             onClick={handleProfileClick}
             variant="ghost"
             size="sm"
-            className="text-purple-400 hover:bg-purple-600/20 z-10"
+            className="text-purple-400 hover:bg-purple-600/20"
           >
             <User className="w-4 h-4 mr-1" />
             View Profile
@@ -193,7 +193,7 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
         </div>
       )}
 
-      {/* Profile Image */}
+      {/* Profile Image - Clickable */}
       <div className="relative">
         <img
           src={item.profile.image}
@@ -207,7 +207,7 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
           <Button
             variant="secondary"
             size="sm"
-            className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white z-20"
+            className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white"
             onClick={handlePortfolioToggle}
           >
             <Images className="w-4 h-4 mr-1" />
@@ -217,7 +217,7 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
 
         {/* Click to view profile overlay */}
         <div 
-          className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 hover:opacity-100 cursor-pointer z-10"
+          className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 hover:opacity-100 cursor-pointer"
           onClick={handleProfileClick}
         >
           <Button className="bg-purple-600 hover:bg-purple-700 pointer-events-none">
@@ -252,7 +252,7 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
             <Button
               variant="ghost"
               size="sm"
-              className={`p-0 z-10 ${likedItems.has(item.id) ? 'text-red-500' : 'text-white'}`}
+              className={`p-0 ${likedItems.has(item.id) ? 'text-red-500' : 'text-white'}`}
               onClick={handleLike}
             >
               <Heart className={`w-6 h-6 ${likedItems.has(item.id) ? 'fill-current' : ''}`} />
@@ -260,7 +260,7 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
             <Button
               variant="ghost"
               size="sm"
-              className="text-white p-0 z-10"
+              className="text-white p-0"
               onClick={handleContact}
             >
               <MessageCircle className="w-6 h-6" />
@@ -268,7 +268,7 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
             <Button
               variant="ghost"
               size="sm"
-              className="text-white p-0 z-10"
+              className="text-white p-0"
               onClick={handlePhoneClick}
             >
               <Phone className="w-6 h-6" />
@@ -276,7 +276,7 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
             <Button
               variant="ghost"
               size="sm"
-              className="text-white p-0 z-10"
+              className="text-white p-0"
             >
               <Share className="w-6 h-6" />
             </Button>
