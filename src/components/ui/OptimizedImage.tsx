@@ -10,7 +10,7 @@ interface OptimizedImageProps {
   loading?: 'lazy' | 'eager';
   onLoad?: () => void;
   onError?: () => void;
-  onClick?: () => void;
+  onClick?: (e: React.MouseEvent) => void;
   expandable?: boolean;
 }
 
@@ -59,8 +59,8 @@ const OptimizedImage = ({
     onError?.();
   };
 
-  const handleClick = () => {
-    onClick?.();
+  const handleClick = (e: React.MouseEvent) => {
+    onClick?.(e);
   };
 
   const shouldLoad = loading === 'eager' || isInView;

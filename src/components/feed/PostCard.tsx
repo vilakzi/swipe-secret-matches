@@ -79,6 +79,7 @@ const PostCard = ({ item, likedItems, isSubscribed, onLike, onContact }: PostCar
                 src={item.profile.image}
                 alt={item.profile.name}
                 className="w-10 h-10 rounded-full hover:opacity-80 transition-opacity"
+                onClick={handleAvatarClick}
                 expandable
               />
               <OnlineStatus 

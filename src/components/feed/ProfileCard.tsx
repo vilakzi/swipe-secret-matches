@@ -79,6 +79,7 @@ const ProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact }: Prof
                 src={item.profile.image}
                 alt={item.profile.name}
                 className="w-12 h-12 rounded-full hover:opacity-80 transition-opacity"
+                onClick={handleAvatarClick}
                 expandable
               />
               <OnlineStatus 
