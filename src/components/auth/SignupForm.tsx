@@ -6,8 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { toast } from '@/hooks/use-toast';
+import { useAuthHandlers } from '@/hooks/useAuthHandlers';
 
 const SignupForm = () => {
   const [formData, setFormData] = useState({
@@ -18,47 +17,20 @@ const SignupForm = () => {
     userType: 'user' as 'user' | 'service_provider'
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const { signUp } = useAuth();
+  const { loading, handleSubmit } = useAuthHandlers();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (e: React.FormEvent) => {
     if (!formData.email || !formData.password || !formData.displayName || !formData.phone) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive"
-      });
       return;
     }
 
     // Basic phone validation
     const phoneRegex = /^\+?[\d\s\-\(\)]{10,}$/;
     if (!phoneRegex.test(formData.phone)) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid phone number",
-        variant: "destructive"
-      });
       return;
     }
 
-    setLoading(true);
-    try {
-      await signUp(formData.email, formData.password, formData.displayName, formData.userType, false, formData.phone);
-      toast({
-        title: "Success",
-        description: "Account created successfully!"
-      });
-    } catch (error: any) {
-      toast({
-        title: "Signup failed",
-        description: error.message,
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
+    await handleSubmit(e, false, formData.email, formData.password, formData.displayName, formData.userType, false, formData.phone);
   };
 
   return (
@@ -67,7 +39,7 @@ const SignupForm = () => {
         <CardTitle className="text-white text-center">Create Account</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="space-y-4">
           <div>
             <Label htmlFor="displayName" className="text-gray-300">Display Name</Label>
             <Input

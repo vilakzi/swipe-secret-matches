@@ -56,16 +56,19 @@ export const useAuthHandlers = () => {
           return;
         }
         
-        await signUp(email, password, displayName, userType, isAdmin, phone);
+        // Sign up with basic info
+        await signUp(email, password, displayName, userType, isAdmin);
 
         try {
           const { data: { user } } = await supabase.auth.getUser();
           if (user) {
+            // Update profile with phone number and user type
             const { error } = await supabase
               .from('profiles')
               .update({ 
                 user_type: userType,
-                role: isAdmin ? 'admin' : userType 
+                role: isAdmin ? 'admin' : userType,
+                phone: phone || ''
               })
               .eq('id', user.id);
 
