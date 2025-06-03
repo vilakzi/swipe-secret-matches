@@ -1,3 +1,4 @@
+
 import { Card } from '@/components/ui/card';
 import { usePresence } from '@/hooks/usePresence';
 import { useState } from 'react';
@@ -25,6 +26,7 @@ interface Profile {
   reviewCount?: number;
   isAvailable?: boolean;
   services?: string[];
+  isRealAccount?: boolean;
 }
 
 interface FeedItem {

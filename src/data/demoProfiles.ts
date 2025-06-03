@@ -7,15 +7,17 @@ export interface Profile {
   bio: string;
   whatsapp: string;
   location: string;
-  gender: 'male' | 'female';
-  posts?: string[];
+  gender?: 'male' | 'female';
   userType?: 'user' | 'service_provider';
   serviceCategory?: string;
-  services?: string[];
+  portfolio?: string[];
   rating?: number;
   reviewCount?: number;
   isAvailable?: boolean;
-  portfolio?: string[];
+  services?: string[];
+  liked?: boolean;
+  posts?: string[];
+  isRealAccount?: boolean; // Add this to the interface
 }
 
 export const demoProfiles: Profile[] = [

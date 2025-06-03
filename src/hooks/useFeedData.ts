@@ -48,7 +48,7 @@ export const useFeedData = (itemsPerPage: number = 6) => {
         if (profiles && profiles.length > 0) {
           console.log(`Found ${profiles.length} real user profiles`);
           
-          // Transform Supabase profiles to match our Profile interface
+          // Transform Supabase profiles to match our Profile interface with real account flag
           const transformedProfiles: Profile[] = profiles.map(profile => ({
             id: profile.id,
             name: profile.display_name || 'Anonymous',
@@ -59,7 +59,8 @@ export const useFeedData = (itemsPerPage: number = 6) => {
             location: profile.location || 'Unknown location',
             gender: profile.gender as 'male' | 'female' || 'male',
             posts: profile.profile_images || [],
-            userType: profile.user_type as 'user' | 'service_provider' || 'user'
+            userType: profile.user_type as 'user' | 'service_provider' || 'user',
+            isRealAccount: true // Mark as real account
           }));
 
           setRealProfiles(transformedProfiles);
@@ -80,7 +81,13 @@ export const useFeedData = (itemsPerPage: number = 6) => {
 
   // Combine real profiles with demo profiles
   const allProfiles = useMemo(() => {
-    const combined = [...realProfiles, ...demoProfiles];
+    // Mark demo profiles as not real accounts
+    const demoProfilesWithFlag = demoProfiles.map(profile => ({
+      ...profile,
+      isRealAccount: false
+    }));
+    
+    const combined = [...realProfiles, ...demoProfilesWithFlag];
     console.log(`Total profiles: ${combined.length} (${realProfiles.length} real + ${demoProfiles.length} demo)`);
     return combined;
   }, [realProfiles]);

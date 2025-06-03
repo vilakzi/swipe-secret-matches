@@ -1,6 +1,7 @@
+
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Heart, MessageCircle, MapPin, Share, Lock } from 'lucide-react';
+import { Heart, MessageCircle, MapPin, Share, Lock, BadgeCheck } from 'lucide-react';
 import OnlineStatus from '@/components/OnlineStatus';
 import { usePresence } from '@/hooks/usePresence';
 import { useNavigate } from 'react-router-dom';
@@ -17,6 +18,7 @@ interface Profile {
   gender?: 'male' | 'female';
   liked?: boolean;
   posts?: string[];
+  isRealAccount?: boolean;
 }
 
 interface FeedItem {
@@ -72,12 +74,20 @@ const ProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact }: Prof
             />
           </div>
           <div>
-            <h3 
-              className="font-semibold text-white cursor-pointer hover:text-purple-400 transition-colors"
-              onClick={handleProfileClick}
-            >
-              {item.profile.name}, {item.profile.age}
-            </h3>
+            <div className="flex items-center space-x-2">
+              <h3 
+                className="font-semibold text-white cursor-pointer hover:text-purple-400 transition-colors"
+                onClick={handleProfileClick}
+              >
+                {item.profile.name}, {item.profile.age}
+              </h3>
+              {item.profile.isRealAccount && (
+                <div className="flex items-center bg-gradient-to-r from-blue-500 to-purple-600 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg">
+                  <BadgeCheck className="w-3 h-3 mr-1" />
+                  Real Account
+                </div>
+              )}
+            </div>
             <div className="flex items-center text-gray-400 text-sm">
               <MapPin className="w-3 h-3 mr-1" />
               {item.profile.location}
