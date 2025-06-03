@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 interface PersonalInfoStepProps {
-  profileData: { age: number | null; location: string };
+  profileData: { age: number | null; location: string; phone?: string };
   updateProfileData: (updates: any) => void;
 }
 
@@ -42,10 +42,23 @@ const PersonalInfoStep = ({ profileData, updateProfileData }: PersonalInfoStepPr
         </div>
       </div>
 
+      <div>
+        <Label className="text-gray-300 mb-2">Phone Number</Label>
+        <Input
+          type="tel"
+          value={profileData.phone || ''}
+          onChange={(e) => updateProfileData({ phone: e.target.value })}
+          className="bg-gray-800 border-gray-600 text-white"
+          placeholder="+27 12 345 6789"
+        />
+        <p className="text-xs text-gray-500 mt-1">Include country code for WhatsApp functionality</p>
+      </div>
+
       <div className="bg-gray-800/50 rounded-lg p-4">
         <h4 className="text-white font-medium mb-2">Privacy Note:</h4>
         <p className="text-sm text-gray-400">
           Your exact location is never shared. Only the general area you specify will be visible to others.
+          Your phone number will be used for WhatsApp contact functionality.
         </p>
       </div>
     </div>

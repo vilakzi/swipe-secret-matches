@@ -18,7 +18,8 @@ export const useAuthHandlers = () => {
     password: string,
     displayName: string,
     userType: 'user' | 'service_provider',
-    isAdmin: boolean
+    isAdmin: boolean,
+    phone?: string
   ) => {
     e.preventDefault();
     if (loading) return;
@@ -55,7 +56,7 @@ export const useAuthHandlers = () => {
           return;
         }
         
-        await signUp(email, password, displayName, userType, isAdmin);
+        await signUp(email, password, displayName, userType, isAdmin, phone);
 
         try {
           const { data: { user } } = await supabase.auth.getUser();

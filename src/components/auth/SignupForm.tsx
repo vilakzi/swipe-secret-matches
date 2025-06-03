@@ -14,6 +14,7 @@ const SignupForm = () => {
     email: '',
     password: '',
     displayName: '',
+    phone: '',
     userType: 'user' as 'user' | 'service_provider'
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -22,7 +23,7 @@ const SignupForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.email || !formData.password || !formData.displayName) {
+    if (!formData.email || !formData.password || !formData.displayName || !formData.phone) {
       toast({
         title: "Error",
         description: "Please fill in all fields",
@@ -31,9 +32,20 @@ const SignupForm = () => {
       return;
     }
 
+    // Basic phone validation
+    const phoneRegex = /^\+?[\d\s\-\(\)]{10,}$/;
+    if (!phoneRegex.test(formData.phone)) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid phone number",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      await signUp(formData.email, formData.password, formData.displayName, formData.userType);
+      await signUp(formData.email, formData.password, formData.displayName, formData.userType, false, formData.phone);
       toast({
         title: "Success",
         description: "Account created successfully!"
@@ -77,6 +89,19 @@ const SignupForm = () => {
               className="bg-gray-800/50 border-gray-600 text-white"
               placeholder="Enter your email"
             />
+          </div>
+
+          <div>
+            <Label htmlFor="phone" className="text-gray-300">Phone Number</Label>
+            <Input
+              id="phone"
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+              className="bg-gray-800/50 border-gray-600 text-white"
+              placeholder="+27 12 345 6789"
+            />
+            <p className="text-xs text-gray-500 mt-1">Include country code (e.g., +27 for South Africa)</p>
           </div>
           
           <div>

@@ -5,6 +5,7 @@ export interface ProfileData {
   bio: string;
   location: string;
   whatsapp: string;
+  phone: string;
   profile_image_url: string | null;
   profile_images: string[];
   interests: string[];
