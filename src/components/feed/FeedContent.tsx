@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import ProfileCard from './ProfileCard';
 import PostCard from './PostCard';
 import ProviderProfileCard from './ProviderProfileCard';
+import { FeedItem } from '@/hooks/useFeedData';
 
 interface Profile {
   id: string;
@@ -21,14 +22,6 @@ interface Profile {
   services?: string[];
   liked?: boolean;
   posts?: string[];
-}
-
-interface FeedItem {
-  id: string;
-  type: 'profile' | 'post';
-  profile: Profile;
-  postImage?: string;
-  caption?: string;
 }
 
 interface FeedContentProps {
