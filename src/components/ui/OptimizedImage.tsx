@@ -10,6 +10,8 @@ interface OptimizedImageProps {
   loading?: 'lazy' | 'eager';
   onLoad?: () => void;
   onError?: () => void;
+  onClick?: () => void;
+  expandable?: boolean;
 }
 
 const OptimizedImage = ({ 
@@ -19,7 +21,9 @@ const OptimizedImage = ({
   fallback = 'https://picsum.photos/400/600?random=999',
   loading = 'lazy',
   onLoad,
-  onError
+  onError,
+  onClick,
+  expandable = false
 }: OptimizedImageProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
@@ -55,10 +59,18 @@ const OptimizedImage = ({
     onError?.();
   };
 
+  const handleClick = () => {
+    onClick?.();
+  };
+
   const shouldLoad = loading === 'eager' || isInView;
 
   return (
-    <div className={`relative overflow-hidden ${className}`} ref={imgRef}>
+    <div 
+      className={`relative overflow-hidden ${className} ${expandable || onClick ? 'cursor-pointer' : ''}`} 
+      ref={imgRef}
+      onClick={handleClick}
+    >
       {isLoading && (
         <Skeleton className="absolute inset-0 bg-gray-700" />
       )}
@@ -69,7 +81,7 @@ const OptimizedImage = ({
           alt={alt}
           className={`w-full h-full object-cover transition-opacity duration-300 ${
             isLoading ? 'opacity-0' : 'opacity-100'
-          }`}
+          } ${expandable || onClick ? 'hover:scale-105 transition-transform duration-200' : ''}`}
           onLoad={handleLoad}
           onError={handleError}
           loading={loading}
