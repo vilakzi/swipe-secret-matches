@@ -266,6 +266,7 @@ export type Database = {
           is_blocked: boolean | null
           last_active: string | null
           location: string | null
+          phone: string | null
           photo_verified: boolean | null
           privacy_settings: Json | null
           profile_image_url: string | null
@@ -287,6 +288,7 @@ export type Database = {
           is_blocked?: boolean | null
           last_active?: string | null
           location?: string | null
+          phone?: string | null
           photo_verified?: boolean | null
           privacy_settings?: Json | null
           profile_image_url?: string | null
@@ -308,6 +310,7 @@ export type Database = {
           is_blocked?: boolean | null
           last_active?: string | null
           location?: string | null
+          phone?: string | null
           photo_verified?: boolean | null
           privacy_settings?: Json | null
           profile_image_url?: string | null
