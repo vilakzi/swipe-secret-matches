@@ -12,7 +12,7 @@ interface Comment {
   content: string;
   created_at: string;
   user_id: string;
-  profiles?: {
+  user_profile?: {
     display_name: string;
     profile_image_url: string;
   };
@@ -40,25 +40,45 @@ const PostComments = ({ postId, isOpen, onToggle }: PostCommentsProps) => {
   const fetchComments = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // First, get comments
+      const { data: commentsData, error: commentsError } = await supabase
         .from('post_comments')
-        .select(`
-          id,
-          content,
-          created_at,
-          user_id,
-          profiles!post_comments_user_id_fkey(
-            display_name,
-            profile_image_url
-          )
-        `)
+        .select('id, content, created_at, user_id')
         .eq('post_id', postId.replace('post-', ''))
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
-      setComments(data || []);
+      if (commentsError) throw commentsError;
+
+      if (commentsData && commentsData.length > 0) {
+        // Get unique user IDs
+        const userIds = [...new Set(commentsData.map(comment => comment.user_id))];
+        
+        // Fetch profiles for these users
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, display_name, profile_image_url')
+          .in('id', userIds);
+
+        if (profilesError) {
+          console.error('Error fetching profiles:', profilesError);
+        }
+
+        // Merge comments with profile data
+        const commentsWithProfiles = commentsData.map(comment => ({
+          ...comment,
+          user_profile: profilesData?.find(profile => profile.id === comment.user_id) || {
+            display_name: 'Anonymous',
+            profile_image_url: '/placeholder.svg'
+          }
+        }));
+
+        setComments(commentsWithProfiles);
+      } else {
+        setComments([]);
+      }
     } catch (error: any) {
       console.error('Error fetching comments:', error);
+      setComments([]);
     } finally {
       setLoading(false);
     }
@@ -77,21 +97,27 @@ const PostComments = ({ postId, isOpen, onToggle }: PostCommentsProps) => {
           user_id: user.id,
           content: newComment.trim()
         })
-        .select(`
-          id,
-          content,
-          created_at,
-          user_id,
-          profiles!post_comments_user_id_fkey(
-            display_name,
-            profile_image_url
-          )
-        `)
+        .select('id, content, created_at, user_id')
         .single();
 
       if (error) throw error;
 
-      setComments(prev => [...prev, data]);
+      // Get current user's profile for the new comment
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('display_name, profile_image_url')
+        .eq('id', user.id)
+        .single();
+
+      const newCommentWithProfile = {
+        ...data,
+        user_profile: userProfile || {
+          display_name: 'Anonymous',
+          profile_image_url: '/placeholder.svg'
+        }
+      };
+
+      setComments(prev => [...prev, newCommentWithProfile]);
       setNewComment('');
       
       toast({
@@ -151,14 +177,14 @@ const PostComments = ({ postId, isOpen, onToggle }: PostCommentsProps) => {
             comments.map((comment) => (
               <div key={comment.id} className="flex space-x-2">
                 <img
-                  src={comment.profiles?.profile_image_url || '/placeholder.svg'}
+                  src={comment.user_profile?.profile_image_url || '/placeholder.svg'}
                   alt="User"
                   className="w-6 h-6 rounded-full"
                 />
                 <div className="flex-1">
                   <div className="bg-gray-700 rounded-lg px-3 py-2">
                     <p className="text-white text-sm font-medium">
-                      {comment.profiles?.display_name || 'Anonymous'}
+                      {comment.user_profile?.display_name || 'Anonymous'}
                     </p>
                     <p className="text-gray-300 text-sm">{comment.content}</p>
                   </div>
