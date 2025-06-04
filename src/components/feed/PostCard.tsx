@@ -1,12 +1,15 @@
+
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Heart, MessageCircle, Share, Lock, BadgeCheck } from 'lucide-react';
+import { Heart, Share, Lock, BadgeCheck, Play } from 'lucide-react';
 import OnlineStatus from '@/components/OnlineStatus';
 import { usePresence } from '@/hooks/usePresence';
 import { useNavigate } from 'react-router-dom';
 import OptimizedImage from '@/components/ui/OptimizedImage';
 import ImageModal from '@/components/ui/ImageModal';
 import { useImageModal } from '@/hooks/useImageModal';
+import PostComments from './PostComments';
+import { useState } from 'react';
 
 interface Profile {
   id: string;
@@ -42,6 +45,7 @@ const PostCard = ({ item, likedItems, isSubscribed, onLike, onContact }: PostCar
   const { isUserOnline } = usePresence();
   const navigate = useNavigate();
   const { isOpen, imageSrc, imageAlt, openModal, closeModal } = useImageModal();
+  const [showComments, setShowComments] = useState(false);
 
   const handleProfileClick = () => {
     console.log('Navigating to profile:', item.profile.id);
@@ -67,6 +71,8 @@ const PostCard = ({ item, likedItems, isSubscribed, onLike, onContact }: PostCar
     e.stopPropagation();
     openModal(item.postImage || '', `${item.profile.name}'s post`);
   };
+
+  const isVideo = item.postImage?.includes('.mp4') || item.postImage?.includes('.mov') || item.postImage?.includes('.webm');
 
   return (
     <>
@@ -111,15 +117,31 @@ const PostCard = ({ item, likedItems, isSubscribed, onLike, onContact }: PostCar
           )}
         </div>
 
-        {/* Post Image */}
+        {/* Post Content */}
         <div className="relative">
-          <OptimizedImage
-            src={item.postImage || ''}
-            alt="Post"
-            className="w-full h-72 hover:opacity-95 transition-opacity"
-            onClick={handlePostImageClick}
-            expandable
-          />
+          {isVideo ? (
+            <div className="relative">
+              <video
+                src={item.postImage}
+                className="w-full h-72 object-cover"
+                controls
+                poster={item.postImage?.replace(/\.(mp4|mov|webm)$/, '.jpg')}
+              >
+                Your browser does not support the video tag.
+              </video>
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <Play className="w-12 h-12 text-white opacity-80" />
+              </div>
+            </div>
+          ) : (
+            <OptimizedImage
+              src={item.postImage || ''}
+              alt="Post"
+              className="w-full h-72 hover:opacity-95 transition-opacity"
+              onClick={handlePostImageClick}
+              expandable
+            />
+          )}
           {/* Profile navigation overlay */}
           <div 
             className="absolute top-4 left-4 right-4 h-8 bg-transparent cursor-pointer" 
@@ -139,14 +161,11 @@ const PostCard = ({ item, likedItems, isSubscribed, onLike, onContact }: PostCar
               >
                 <Heart className={`w-6 h-6 ${likedItems.has(item.id) ? 'fill-current' : ''}`} />
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-white p-0"
-                onClick={handleContact}
-              >
-                <MessageCircle className="w-6 h-6" />
-              </Button>
+              <PostComments
+                postId={item.id}
+                isOpen={showComments}
+                onToggle={() => setShowComments(!showComments)}
+              />
               <Button
                 variant="ghost"
                 size="sm"
@@ -155,19 +174,40 @@ const PostCard = ({ item, likedItems, isSubscribed, onLike, onContact }: PostCar
                 <Share className="w-6 h-6" />
               </Button>
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-white p-0"
+              onClick={handleContact}
+            >
+              Contact
+            </Button>
           </div>
 
           {/* Caption */}
-          <div className="text-white">
-            <span 
-              className="font-semibold cursor-pointer hover:text-purple-400 transition-colors"
-              onClick={handleProfileClick}
-            >
-              {item.profile.name}
-            </span>
-            <span className="ml-2 text-gray-300">{item.caption}</span>
-          </div>
+          {item.caption && (
+            <div className="text-white">
+              <span 
+                className="font-semibold cursor-pointer hover:text-purple-400 transition-colors"
+                onClick={handleProfileClick}
+              >
+                {item.profile.name}
+              </span>
+              <span className="ml-2 text-gray-300">{item.caption}</span>
+            </div>
+          )}
         </div>
+
+        {/* Comments Section */}
+        {showComments && (
+          <div className="px-4 pb-4">
+            <PostComments
+              postId={item.id}
+              isOpen={showComments}
+              onToggle={() => setShowComments(!showComments)}
+            />
+          </div>
+        )}
       </Card>
 
       <ImageModal

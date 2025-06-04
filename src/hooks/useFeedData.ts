@@ -1,10 +1,11 @@
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { demoProfiles } from '@/data/demoProfiles';
 import { useRealProfiles } from './useRealProfiles';
 import { useProfileFilters } from './useProfileFilters';
 import { useFeedPagination } from './useFeedPagination';
 import { generateFeedItems, type FeedItem } from '@/utils/feedItemGenerator';
+import { supabase } from '@/integrations/supabase/client';
 
 export type { FeedItem };
 
@@ -12,8 +13,47 @@ export const useFeedData = (itemsPerPage: number = 6) => {
   const [filterGender, setFilterGender] = useState<'male' | 'female' | null>(null);
   const [filterName, setFilterName] = useState<string>('');
   const [shuffleKey, setShuffleKey] = useState(0);
+  const [posts, setPosts] = useState<any[]>([]);
   
   const { realProfiles, loading } = useRealProfiles();
+
+  // Fetch posts from Supabase
+  const fetchPosts = useCallback(async () => {
+    try {
+      const { data: postsData, error } = await supabase
+        .from('posts')
+        .select(`
+          *,
+          profiles!posts_provider_id_fkey(
+            id,
+            display_name,
+            profile_image_url,
+            location,
+            user_type,
+            age,
+            bio,
+            whatsapp,
+            gender
+          )
+        `)
+        .gt('expires_at', new Date().toISOString())
+        .eq('payment_status', 'paid')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching posts:', error);
+        return;
+      }
+
+      setPosts(postsData || []);
+    } catch (error) {
+      console.error('Error in fetchPosts:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
 
   // Combine real profiles with demo profiles
   const allProfiles = useMemo(() => {
@@ -35,10 +75,34 @@ export const useFeedData = (itemsPerPage: number = 6) => {
   // Apply filters
   const filteredProfiles = useProfileFilters(allProfiles, filterGender, filterName);
 
-  // Create all feed items
+  // Create all feed items (including posts)
   const allFeedItems = useMemo(() => {
-    return generateFeedItems(filteredProfiles, shuffleKey);
-  }, [filteredProfiles, shuffleKey]);
+    const profileItems = generateFeedItems(filteredProfiles, shuffleKey);
+    
+    // Convert posts to feed items
+    const postItems: FeedItem[] = posts.map(post => ({
+      id: `post-${post.id}`,
+      type: 'post' as const,
+      profile: {
+        id: post.profiles?.id || post.provider_id,
+        name: post.profiles?.display_name || 'Anonymous',
+        age: post.profiles?.age || 25,
+        image: post.profiles?.profile_image_url || '/placeholder.svg',
+        bio: post.profiles?.bio || '',
+        whatsapp: post.profiles?.whatsapp || '',
+        location: post.profiles?.location || 'Unknown',
+        gender: post.profiles?.gender as 'male' | 'female' || 'male',
+        userType: post.profiles?.user_type as 'user' | 'service_provider' || 'user',
+        isRealAccount: true
+      },
+      postImage: post.content_url,
+      caption: post.caption
+    }));
+
+    // Mix posts with profile items
+    const mixed = [...postItems, ...profileItems].sort(() => Math.random() - 0.5);
+    return mixed;
+  }, [filteredProfiles, posts, shuffleKey]);
 
   // Handle pagination
   const {
@@ -71,9 +135,10 @@ export const useFeedData = (itemsPerPage: number = 6) => {
   const handleRefresh = useCallback(() => {
     console.log('Refreshing feed');
     resetPagination();
+    fetchPosts(); // Refresh posts from database
     // Trigger re-shuffle on refresh for dynamic order
     setShuffleKey(prev => prev + 1);
-  }, [resetPagination]);
+  }, [resetPagination, fetchPosts]);
 
   return {
     displayedItems,

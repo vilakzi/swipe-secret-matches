@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Upload, Clock, Crown } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
@@ -16,6 +17,7 @@ interface PostUploadFormProps {
 const PostUploadForm = ({ onUploadSuccess, onShowPayment }: PostUploadFormProps) => {
   const { user } = useAuth();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [caption, setCaption] = useState('');
   const [promotionType, setPromotionType] = useState<'free_2h' | 'paid_8h' | 'paid_12h'>('free_2h');
   const [uploading, setUploading] = useState(false);
 
@@ -89,6 +91,7 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment }: PostUploadFormProps)
           provider_id: user.id,
           content_url: publicUrl,
           post_type: postType,
+          caption: caption.trim() || null,
           promotion_type: promotionType,
           expires_at: expiresAt.toISOString(),
           is_promoted: promotionType !== 'free_2h',
@@ -110,6 +113,7 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment }: PostUploadFormProps)
       }
 
       setSelectedFile(null);
+      setCaption('');
     } catch (error: any) {
       toast({
         title: "Upload failed",
@@ -150,6 +154,19 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment }: PostUploadFormProps)
           <p className="text-xs text-gray-400 mt-1">
             Images: Any size | Videos: Max 30MB
           </p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Caption/Description (Optional)
+          </label>
+          <Textarea
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
+            placeholder="Write a caption for your post..."
+            className="bg-gray-800 border-gray-600 text-white"
+            rows={3}
+          />
         </div>
 
         <div>

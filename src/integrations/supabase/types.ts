@@ -153,6 +153,41 @@ export type Database = {
         }
         Relationships: []
       }
+      post_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          post_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          post_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_payments: {
         Row: {
           amount: number
@@ -209,6 +244,7 @@ export type Database = {
       }
       posts: {
         Row: {
+          caption: string | null
           content_url: string
           created_at: string | null
           expires_at: string
@@ -221,6 +257,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          caption?: string | null
           content_url: string
           created_at?: string | null
           expires_at: string
@@ -233,6 +270,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          caption?: string | null
           content_url?: string
           created_at?: string | null
           expires_at?: string
