@@ -244,6 +244,13 @@ export type Database = {
             foreignKeyName: "post_payments_provider_id_fkey"
             columns: ["provider_id"]
             isOneToOne: false
+            referencedRelation: "new_joiners_feed"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_payments_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -295,6 +302,13 @@ export type Database = {
             columns: ["provider_id"]
             isOneToOne: false
             referencedRelation: "admin_user_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "new_joiners_feed"
             referencedColumns: ["id"]
           },
           {
@@ -570,6 +584,13 @@ export type Database = {
             foreignKeyName: "post_payments_provider_id_fkey"
             columns: ["provider_id"]
             isOneToOne: false
+            referencedRelation: "new_joiners_feed"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_payments_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -595,6 +616,33 @@ export type Database = {
         }
         Relationships: []
       }
+      new_joiners_feed: {
+        Row: {
+          age: number | null
+          bio: string | null
+          created_at: string | null
+          display_name: string | null
+          gender: string | null
+          id: string | null
+          interests: string[] | null
+          is_blocked: boolean | null
+          is_new_joiner: boolean | null
+          last_active: string | null
+          location: string | null
+          phone: string | null
+          photo_verified: boolean | null
+          privacy_settings: Json | null
+          profile_image_url: string | null
+          profile_images: string[] | null
+          role: Database["public"]["Enums"]["app_role"] | null
+          updated_at: string | null
+          user_created_at: string | null
+          user_type: Database["public"]["Enums"]["user_type"] | null
+          verifications: Json | null
+          whatsapp: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cleanup_expired_matches: {
@@ -610,6 +658,10 @@ export type Database = {
           _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
         }
+        Returns: boolean
+      }
+      is_new_joiner: {
+        Args: { user_created_at: string }
         Returns: boolean
       }
       promote_to_admin: {

@@ -1,4 +1,3 @@
-
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Heart, Share, Lock, BadgeCheck, Play } from 'lucide-react';
@@ -142,7 +141,6 @@ const PostCard = ({ item, likedItems, isSubscribed, onLike, onContact }: PostCar
               expandable
             />
           )}
-          {/* Profile navigation overlay */}
           <div 
             className="absolute top-4 left-4 right-4 h-8 bg-transparent cursor-pointer" 
             onClick={handleProfileClick}
@@ -196,18 +194,16 @@ const PostCard = ({ item, likedItems, isSubscribed, onLike, onContact }: PostCar
               <span className="ml-2 text-gray-300">{item.caption}</span>
             </div>
           )}
-        </div>
 
-        {/* Comments Section */}
-        {showComments && (
-          <div className="px-4 pb-4">
+          {/* Comments Section - Single instance */}
+          {showComments && (
             <PostComments
               postId={item.id}
               isOpen={showComments}
               onToggle={() => setShowComments(!showComments)}
             />
-          </div>
-        )}
+          )}
+        </div>
       </Card>
 
       <ImageModal

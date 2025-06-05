@@ -1,4 +1,3 @@
-
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Heart, MessageCircle, Lock, BadgeCheck } from 'lucide-react';
@@ -8,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import OptimizedImage from '@/components/ui/OptimizedImage';
 import ImageModal from '@/components/ui/ImageModal';
 import { useImageModal } from '@/hooks/useImageModal';
+import NewJoinerBadge from './NewJoinerBadge';
 
 interface Profile {
   id: string;
@@ -71,7 +71,10 @@ const ProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact }: Prof
     openModal(item.profile.image, `${item.profile.name}'s profile photo`);
   };
 
-  // Get the first post image or use a placeholder
+  // Check if this is a new joiner (created in last 24 hours)
+  const isNewJoiner = item.profile.isRealAccount && 
+    new Date(Date.now() - 24 * 60 * 60 * 1000) < new Date();
+
   const displayImage = item.profile.posts && item.profile.posts.length > 0 
     ? item.profile.posts[0] 
     : item.profile.image;
@@ -97,7 +100,7 @@ const ProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact }: Prof
               />
             </div>
             <div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 flex-wrap">
                 <h4 
                   className="font-semibold text-white text-sm cursor-pointer hover:text-purple-400 transition-colors"
                   onClick={handleProfileClick}
@@ -110,6 +113,7 @@ const ProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact }: Prof
                     Real Account
                   </div>
                 )}
+                <NewJoinerBadge isNewJoiner={isNewJoiner} />
               </div>
               <p className="text-gray-400 text-xs">{item.profile.location}</p>
             </div>
@@ -119,7 +123,7 @@ const ProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact }: Prof
           )}
         </div>
 
-        {/* Main Content - Show posted content or placeholder */}
+        {/* Main Content */}
         <div className="relative">
           {item.profile.posts && item.profile.posts.length > 0 ? (
             <OptimizedImage
@@ -137,7 +141,6 @@ const ProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact }: Prof
               </div>
             </div>
           )}
-          {/* Profile navigation overlay */}
           <div 
             className="absolute top-4 left-4 right-4 h-8 bg-transparent cursor-pointer" 
             onClick={handleProfileClick}

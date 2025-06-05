@@ -2,6 +2,8 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { demoProfiles } from '@/data/demoProfiles';
 import { useRealProfiles } from './useRealProfiles';
+import { useNewJoiners } from './useNewJoiners';
+import { useFilteredFeedData } from './useFilteredFeedData';
 import { useProfileFilters } from './useProfileFilters';
 import { useFeedPagination } from './useFeedPagination';
 import { generateFeedItems, type FeedItem } from '@/utils/feedItemGenerator';
@@ -15,7 +17,8 @@ export const useFeedData = (itemsPerPage: number = 6) => {
   const [shuffleKey, setShuffleKey] = useState(0);
   const [posts, setPosts] = useState<any[]>([]);
   
-  const { realProfiles, loading } = useRealProfiles();
+  const { realProfiles, loading: profilesLoading } = useRealProfiles();
+  const { newJoiners, loading: newJoinersLoading } = useNewJoiners();
 
   // Fetch posts from Supabase
   const fetchPosts = useCallback(async () => {
@@ -57,7 +60,6 @@ export const useFeedData = (itemsPerPage: number = 6) => {
 
   // Combine real profiles with demo profiles
   const allProfiles = useMemo(() => {
-    // Mark demo profiles as not real accounts
     const demoProfilesWithFlag = demoProfiles.map(profile => ({
       ...profile,
       isRealAccount: false
@@ -68,12 +70,11 @@ export const useFeedData = (itemsPerPage: number = 6) => {
     return combined;
   }, [realProfiles]);
 
-  console.log('Total combined profiles:', allProfiles.length);
-  console.log('Filter gender:', filterGender);
-  console.log('Filter name:', filterName);
+  // Apply role-based filtering
+  const roleFilteredProfiles = useFilteredFeedData(allProfiles, newJoiners);
 
-  // Apply filters
-  const filteredProfiles = useProfileFilters(allProfiles, filterGender, filterName);
+  // Apply gender and name filters
+  const filteredProfiles = useProfileFilters(roleFilteredProfiles, filterGender, filterName);
 
   // Create all feed items (including posts)
   const allFeedItems = useMemo(() => {
@@ -113,14 +114,13 @@ export const useFeedData = (itemsPerPage: number = 6) => {
     resetPagination
   } = useFeedPagination(allFeedItems, itemsPerPage);
 
-  const isLoadingMore = paginationLoading || loading;
+  const isLoadingMore = paginationLoading || profilesLoading || newJoinersLoading;
 
   // Reset pagination when filter changes
   const handleFilterChange = useCallback((gender: 'male' | 'female' | null) => {
     console.log('Filter change - gender:', gender);
     setFilterGender(gender);
     resetPagination();
-    // Trigger re-shuffle when filter changes
     setShuffleKey(prev => prev + 1);
   }, [resetPagination]);
 
@@ -128,15 +128,13 @@ export const useFeedData = (itemsPerPage: number = 6) => {
     console.log('Filter change - name:', name);
     setFilterName(name);
     resetPagination();
-    // Trigger re-shuffle when name filter changes
     setShuffleKey(prev => prev + 1);
   }, [resetPagination]);
 
   const handleRefresh = useCallback(() => {
     console.log('Refreshing feed');
     resetPagination();
-    fetchPosts(); // Refresh posts from database
-    // Trigger re-shuffle on refresh for dynamic order
+    fetchPosts();
     setShuffleKey(prev => prev + 1);
   }, [resetPagination, fetchPosts]);
 
