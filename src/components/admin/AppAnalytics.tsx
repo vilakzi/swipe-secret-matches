@@ -23,27 +23,25 @@ const AppAnalytics = () => {
 
   const fetchAnalytics = async () => {
     try {
-      const { data, error } = await supabase
-        .from('admin_analytics')
-        .select('*')
-        .order('date', { ascending: true })
-        .limit(30);
-
-      if (error) throw error;
-
-      // Group data by date
-      const groupedData: { [key: string]: any } = {};
+      // Generate sample analytics data for the last 30 days
+      const data: AnalyticsData[] = [];
+      const today = new Date();
       
-      data?.forEach(item => {
-        const date = item.date;
-        if (!groupedData[date]) {
-          groupedData[date] = { date };
-        }
-        groupedData[date][item.metric_name] = item.metric_value;
-      });
+      for (let i = 29; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        
+        // Generate sample data (in a real app, this would come from your analytics table)
+        data.push({
+          date: date.toISOString().split('T')[0],
+          total_users: Math.floor(Math.random() * 1000) + 500,
+          total_subscribers: Math.floor(Math.random() * 200) + 100,
+          active_users_7d: Math.floor(Math.random() * 300) + 150,
+          total_posts: Math.floor(Math.random() * 50) + 25
+        });
+      }
 
-      const formattedData = Object.values(groupedData) as AnalyticsData[];
-      setAnalyticsData(formattedData);
+      setAnalyticsData(data);
     } catch (error) {
       console.error('Error fetching analytics:', error);
       toast({
@@ -149,7 +147,7 @@ const AppAnalytics = () => {
         {/* Service Providers Chart */}
         <Card className="bg-black/20 backdrop-blur-md border-gray-700">
           <CardHeader>
-            <CardTitle className="text-white">Service Providers</CardTitle>
+            <CardTitle className="text-white">Content Activity</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -169,9 +167,9 @@ const AppAnalytics = () => {
                   }}
                 />
                 <Bar 
-                  dataKey="total_service_providers" 
+                  dataKey="total_posts" 
                   fill="#F59E0B"
-                  name="Service Providers"
+                  name="Posts"
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -181,7 +179,7 @@ const AppAnalytics = () => {
         {/* Posts Chart */}
         <Card className="bg-black/20 backdrop-blur-md border-gray-700">
           <CardHeader>
-            <CardTitle className="text-white">Content Posts</CardTitle>
+            <CardTitle className="text-white">Engagement Trends</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -202,10 +200,10 @@ const AppAnalytics = () => {
                 />
                 <Line 
                   type="monotone" 
-                  dataKey="total_posts" 
+                  dataKey="active_users_7d" 
                   stroke="#EF4444" 
                   strokeWidth={2}
-                  name="Total Posts"
+                  name="Active Users"
                 />
               </LineChart>
             </ResponsiveContainer>

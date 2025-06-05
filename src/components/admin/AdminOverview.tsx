@@ -44,14 +44,36 @@ const AdminOverview = () => {
 
   const fetchOverviewStats = async () => {
     try {
-      // Update daily metrics first
-      await supabase.rpc('update_daily_metrics');
+      // Fetch total users
+      const { count: totalUsers } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
 
-      // Fetch basic metrics from admin_analytics
-      const { data: analyticsData } = await supabase
-        .from('admin_analytics')
-        .select('*')
-        .eq('date', new Date().toISOString().split('T')[0]);
+      // Fetch total subscribers
+      const { count: totalSubscribers } = await supabase
+        .from('subscribers')
+        .select('*', { count: 'exact', head: true })
+        .eq('subscribed', true);
+
+      // Fetch service providers
+      const { count: totalServiceProviders } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_type', 'service_provider');
+
+      // Fetch total posts
+      const { count: totalPosts } = await supabase
+        .from('posts')
+        .select('*', { count: 'exact', head: true });
+
+      // Fetch active users (last 7 days)
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      
+      const { count: activeUsers7d } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .gte('last_active', sevenDaysAgo.toISOString());
 
       // Fetch revenue data
       const { data: revenueData } = await supabase
@@ -69,39 +91,18 @@ const AdminOverview = () => {
         .from('messages')
         .select('*', { count: 'exact', head: true });
 
-      let newStats: OverviewStats = {
-        totalUsers: 0,
-        totalSubscribers: 0,
-        totalServiceProviders: 0,
-        totalPosts: 0,
-        activeUsers7d: 0,
-        totalRevenue: revenueData?.reduce((sum, payment) => sum + payment.amount, 0) || 0,
+      const totalRevenue = revenueData?.reduce((sum, payment) => sum + payment.amount, 0) || 0;
+
+      setStats({
+        totalUsers: totalUsers || 0,
+        totalSubscribers: totalSubscribers || 0,
+        totalServiceProviders: totalServiceProviders || 0,
+        totalPosts: totalPosts || 0,
+        activeUsers7d: activeUsers7d || 0,
+        totalRevenue,
         totalMatches: matchesCount || 0,
         totalMessages: messagesCount || 0
-      };
-
-      // Process analytics data
-      analyticsData?.forEach(metric => {
-        switch (metric.metric_name) {
-          case 'total_users':
-            newStats.totalUsers = metric.metric_value;
-            break;
-          case 'total_subscribers':
-            newStats.totalSubscribers = metric.metric_value;
-            break;
-          case 'total_service_providers':
-            newStats.totalServiceProviders = metric.metric_value;
-            break;
-          case 'total_posts':
-            newStats.totalPosts = metric.metric_value;
-            break;
-          case 'active_users_7d':
-            newStats.activeUsers7d = metric.metric_value;
-            break;
-        }
       });
-
-      setStats(newStats);
     } catch (error) {
       console.error('Error fetching overview stats:', error);
       toast({
