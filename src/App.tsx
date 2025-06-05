@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ServiceProviderRoute from "@/components/ServiceProviderRoute";
+import AdminRoute from "@/components/AdminRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -17,6 +18,7 @@ import Messages from "./pages/Messages";
 import Settings from "./pages/Settings";
 import Onboarding from "./pages/Onboarding";
 import ServiceProviderDashboard from "./pages/ServiceProviderDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import ProviderProfile from "./pages/ProviderProfile";
 import NotFound from "./pages/NotFound";
 
@@ -101,6 +103,13 @@ const App = () => (
                   <ServiceProviderDashboard />
                 </AppLayout>
               </ServiceProviderRoute>
+            } />
+            <Route path="/admin" element={
+              <AdminRoute>
+                <AppLayout showBottomNav={false}>
+                  <AdminDashboard />
+                </AppLayout>
+              </AdminRoute>
             } />
             <Route path="*" element={
               <AppLayout showBottomNav={false}>

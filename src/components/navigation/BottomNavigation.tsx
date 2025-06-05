@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Heart, MessageCircle, User, Compass, Settings, Briefcase } from 'lucide-react';
+import { Heart, MessageCircle, User, Compass, Settings, Briefcase, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 
@@ -9,7 +9,7 @@ const BottomNavigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { isServiceProvider } = useUserRole();
+  const { isServiceProvider, isAdmin } = useUserRole();
 
   if (!user) return null;
 
@@ -26,7 +26,7 @@ const BottomNavigation = () => {
       label: 'Matches',
       icon: Heart,
       path: '/matches',
-      show: !isServiceProvider
+      show: !isServiceProvider && !isAdmin
     },
     {
       id: 'messages',
@@ -40,7 +40,14 @@ const BottomNavigation = () => {
       label: 'Dashboard',
       icon: Briefcase,
       path: '/dashboard',
-      show: isServiceProvider
+      show: isServiceProvider && !isAdmin
+    },
+    {
+      id: 'admin',
+      label: 'Admin',
+      icon: Shield,
+      path: '/admin',
+      show: isAdmin
     },
     {
       id: 'profile',

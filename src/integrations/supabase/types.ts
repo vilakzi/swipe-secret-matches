@@ -237,6 +237,13 @@ export type Database = {
             foreignKeyName: "post_payments_provider_id_fkey"
             columns: ["provider_id"]
             isOneToOne: false
+            referencedRelation: "admin_user_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_payments_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -283,6 +290,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "posts_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "admin_user_overview"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "posts_provider_id_fkey"
             columns: ["provider_id"]
@@ -531,7 +545,56 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      admin_payment_overview: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          currency: string | null
+          display_name: string | null
+          email: string | null
+          id: string | null
+          payment_status: string | null
+          promotion_hours: number | null
+          provider_id: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_payments_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "admin_user_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_payments_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_user_overview: {
+        Row: {
+          created_at: string | null
+          display_name: string | null
+          email: string | null
+          id: string | null
+          is_blocked: boolean | null
+          last_active: string | null
+          phone: string | null
+          role: Database["public"]["Enums"]["app_role"] | null
+          subscribed: boolean | null
+          subscription_end: string | null
+          subscription_tier: string | null
+          total_matches: number | null
+          total_posts: number | null
+          total_swipes: number | null
+          user_type: Database["public"]["Enums"]["user_type"] | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cleanup_expired_matches: {
