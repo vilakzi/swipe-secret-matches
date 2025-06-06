@@ -3,13 +3,14 @@ import { useMemo } from 'react';
 import { useUserRole } from './useUserRole';
 import { Profile } from '@/data/demoProfiles';
 
-export const useFilteredFeedData = (allProfiles: Profile[], newJoiners: any[]) => {
+export const useFilteredFeedData = (allProfiles: Profile[], newJoiners: any[], posts: any[]) => {
   const { role, isAdmin, isServiceProvider, isUser } = useUserRole();
 
   const filteredProfiles = useMemo(() => {
     console.log('Feed filtering - role:', role);
     console.log('All profiles count:', allProfiles.length);
     console.log('New joiners count:', newJoiners.length);
+    console.log('Posts count:', posts.length);
     
     // Admin sees all profiles
     if (isAdmin) {
@@ -17,10 +18,16 @@ export const useFilteredFeedData = (allProfiles: Profile[], newJoiners: any[]) =
       return allProfiles;
     }
 
-    // Regular users see only service providers and new joiners
+    // Regular users see only service providers, new joiners, and users who have posted
     if (isUser) {
       // Get service providers from allProfiles
       const serviceProviders = allProfiles.filter(profile => profile.userType === 'service_provider');
+      
+      // Get users who have posted content
+      const userIdsWithPosts = [...new Set(posts.map(post => post.provider_id))];
+      const usersWithPosts = allProfiles.filter(profile => 
+        profile.userType === 'user' && userIdsWithPosts.includes(profile.id)
+      );
       
       // Convert new joiners to Profile format
       const newJoinerProfiles: Profile[] = newJoiners.map(joiner => ({
@@ -37,14 +44,18 @@ export const useFilteredFeedData = (allProfiles: Profile[], newJoiners: any[]) =
         posts: []
       }));
 
-      const combined = [...serviceProviders, ...newJoinerProfiles];
-      console.log('Regular user - showing service providers and new joiners:', combined.length);
+      const combined = [...serviceProviders, ...usersWithPosts, ...newJoinerProfiles];
+      console.log('Regular user - showing service providers, users with posts, and new joiners:', combined.length);
       return combined;
     }
 
-    // Service providers see user profiles and new joiners (no other service providers)
+    // Service providers see user profiles who have posted and new joiners (no other service providers)
     if (isServiceProvider) {
-      const users = allProfiles.filter(profile => profile.userType === 'user');
+      // Get users who have posted content
+      const userIdsWithPosts = [...new Set(posts.map(post => post.provider_id))];
+      const usersWithPosts = allProfiles.filter(profile => 
+        profile.userType === 'user' && userIdsWithPosts.includes(profile.id)
+      );
       
       const newJoinerProfiles: Profile[] = newJoiners.map(joiner => ({
         id: joiner.id,
@@ -60,15 +71,15 @@ export const useFilteredFeedData = (allProfiles: Profile[], newJoiners: any[]) =
         posts: []
       }));
 
-      const combined = [...users, ...newJoinerProfiles];
-      console.log('Service provider - showing users and new joiners:', combined.length);
+      const combined = [...usersWithPosts, ...newJoinerProfiles];
+      console.log('Service provider - showing users with posts and new joiners:', combined.length);
       return combined;
     }
 
     // Default: return empty array for safety
     console.log('No valid role - returning empty array');
     return [];
-  }, [allProfiles, newJoiners, role, isAdmin, isServiceProvider, isUser]);
+  }, [allProfiles, newJoiners, posts, role, isAdmin, isServiceProvider, isUser]);
 
   return filteredProfiles;
 };

@@ -32,7 +32,13 @@ export const useNewJoiners = () => {
         return;
       }
 
-      setNewJoiners(data || []);
+      // Filter and type-cast the data to ensure gender compatibility
+      const typedData = (data || []).map(joiner => ({
+        ...joiner,
+        gender: (joiner.gender === 'male' || joiner.gender === 'female') ? joiner.gender : 'male'
+      })) as NewJoiner[];
+
+      setNewJoiners(typedData);
     } catch (error) {
       console.error('Error in fetchNewJoiners:', error);
     } finally {

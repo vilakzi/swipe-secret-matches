@@ -70,8 +70,8 @@ export const useFeedData = (itemsPerPage: number = 6) => {
     return combined;
   }, [realProfiles]);
 
-  // Apply role-based filtering
-  const roleFilteredProfiles = useFilteredFeedData(allProfiles, newJoiners);
+  // Apply role-based filtering with posts data
+  const roleFilteredProfiles = useFilteredFeedData(allProfiles, newJoiners, posts);
 
   // Apply gender and name filters
   const filteredProfiles = useProfileFilters(roleFilteredProfiles, filterGender, filterName);
