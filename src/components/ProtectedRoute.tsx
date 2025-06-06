@@ -2,12 +2,14 @@
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
+import SecureAuthWrapper from '@/components/auth/SecureAuthWrapper';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  allowedRoles?: ('user' | 'service_provider' | 'admin')[];
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles = [] }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -22,7 +24,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <Navigate to="/auth" replace />;
   }
 
-  return <>{children}</>;
+  return (
+    <SecureAuthWrapper requireAuth={true} allowedRoles={allowedRoles}>
+      {children}
+    </SecureAuthWrapper>
+  );
 };
 
 export default ProtectedRoute;
