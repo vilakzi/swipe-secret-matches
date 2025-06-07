@@ -73,11 +73,10 @@ const ContentPromoterCard = ({
             <div className="relative">
               <video
                 src={contentUrl}
-                className="w-full h-72 object-cover cursor-pointer"
+                className="w-full h-72 object-cover cursor-pointer max-h-96"
                 controls
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
-                style={{ maxHeight: '400px', objectFit: 'contain' }}
               >
                 Your browser does not support the video tag.
               </video>
@@ -91,8 +90,7 @@ const ContentPromoterCard = ({
             <OptimizedImage
               src={contentUrl}
               alt="Content Promoter Post"
-              className="w-full object-contain cursor-pointer hover:opacity-95 transition-opacity"
-              style={{ maxHeight: '400px' }}
+              className="w-full h-72 object-cover cursor-pointer hover:opacity-95 transition-opacity max-h-96"
               onClick={handleContentClick}
               expandable
             />
