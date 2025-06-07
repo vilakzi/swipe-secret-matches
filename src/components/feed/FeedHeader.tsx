@@ -1,7 +1,7 @@
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Filter, Search } from 'lucide-react';
+import { Filter, Image, Video } from 'lucide-react';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface FeedHeaderProps {
   showFilters: boolean;
@@ -10,6 +10,8 @@ interface FeedHeaderProps {
   setFilterGender: (gender: 'male' | 'female' | null) => void;
   filterName: string;
   setFilterName: (name: string) => void;
+  onImageUpload?: () => void;
+  onVideoUpload?: () => void;
 }
 
 const FeedHeader = ({ 
@@ -17,34 +19,49 @@ const FeedHeader = ({
   setShowFilters, 
   filterGender, 
   setFilterGender,
-  filterName,
-  setFilterName
+  onImageUpload,
+  onVideoUpload
 }: FeedHeaderProps) => {
+  const { isServiceProvider, isAdmin } = useUserRole();
+  const canUpload = isServiceProvider || isAdmin;
+
   return (
     <div className="sticky top-0 z-10 bg-black/80 backdrop-blur-md p-4 border-b border-gray-700">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-white font-semibold">Feed</h2>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-white"
-          onClick={() => setShowFilters(!showFilters)}
-        >
-          <Filter className="w-4 h-4 mr-2" />
-          Filter
-        </Button>
-      </div>
-
-      {/* Search Input */}
-      <div className="relative mb-3">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-        <Input
-          type="text"
-          placeholder="Search by name..."
-          value={filterName}
-          onChange={(e) => setFilterName(e.target.value)}
-          className="pl-10 bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
-        />
+        <div className="flex items-center space-x-2">
+          {canUpload && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-blue-500 text-blue-400 hover:bg-blue-600 hover:text-white"
+                onClick={onImageUpload}
+              >
+                <Image className="w-4 h-4 mr-2" />
+                Photo
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-green-500 text-green-400 hover:bg-green-600 hover:text-white"
+                onClick={onVideoUpload}
+              >
+                <Video className="w-4 h-4 mr-2" />
+                Video
+              </Button>
+            </>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-white"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter className="w-4 h-4 mr-2" />
+            Filter
+          </Button>
+        </div>
       </div>
       
       {showFilters && (

@@ -2,7 +2,9 @@ import { Button } from '@/components/ui/button';
 import ProfileCard from './ProfileCard';
 import PostCard from './PostCard';
 import ProviderProfileCard from './ProviderProfileCard';
+import ContentPromoterCard from './ContentPromoterCard';
 import { FeedItem } from '@/hooks/useFeedData';
+import { useContentPromoter } from '@/hooks/useContentPromoter';
 
 interface Profile {
   id: string;
@@ -45,6 +47,7 @@ const FeedContent = ({
   onRefresh,
   setFilterGender
 }: FeedContentProps) => {
+  const { contentItems, isActive, startContentPromoter, stopContentPromoter } = useContentPromoter();
 
   const renderProfileCard = (item: FeedItem) => {
     // Use enhanced provider card for service providers
@@ -74,24 +77,61 @@ const FeedContent = ({
     );
   };
 
+  // Merge content promoter items with feed items
+  const allItems = [...contentItems.map(item => ({ ...item, isContentPromoter: true })), ...feedItems];
+
   return (
     <div className="pb-20">
-      {feedItems.length > 0 ? (
+      {/* Content Promoter Controls - Only for admins */}
+      <div className="mb-4 p-4 bg-gray-800/50 rounded-lg">
+        <div className="flex items-center justify-between">
+          <span className="text-white font-medium">Content Promoter</span>
+          <Button
+            variant={isActive ? "destructive" : "default"}
+            size="sm"
+            onClick={isActive ? stopContentPromoter : startContentPromoter}
+          >
+            {isActive ? 'Stop' : 'Start'} Auto Posts
+          </Button>
+        </div>
+        {isActive && (
+          <p className="text-gray-400 text-xs mt-1">
+            Posting new content every 40 seconds
+          </p>
+        )}
+      </div>
+
+      {allItems.length > 0 ? (
         <div className="space-y-4">
-          {feedItems.map(item => 
-            item.type === 'profile' ? (
-              renderProfileCard(item)
+          {allItems.map(item => {
+            if ('isContentPromoter' in item && item.isContentPromoter) {
+              return (
+                <ContentPromoterCard
+                  key={item.id}
+                  id={item.id}
+                  contentUrl={item.url}
+                  contentType={item.type}
+                  colorName={item.colorName}
+                  onLike={(itemId) => onLike(itemId, 'content-promoter')}
+                  likedItems={likedItems}
+                />
+              );
+            }
+            
+            const feedItem = item as FeedItem;
+            return feedItem.type === 'profile' ? (
+              renderProfileCard(feedItem)
             ) : (
               <PostCard
-                key={item.id}
-                item={item}
+                key={feedItem.id}
+                item={feedItem}
                 likedItems={likedItems}
                 isSubscribed={isSubscribed}
                 onLike={onLike}
                 onContact={onContact}
               />
-            )
-          )}
+            );
+          })}
         </div>
       ) : (
         <div className="text-center py-8">

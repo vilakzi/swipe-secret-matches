@@ -1,9 +1,11 @@
+
 import React, { useState, useCallback } from 'react';
 import FeedHeader from './feed/FeedHeader';
 import FeedContent from './feed/FeedContent';
 import PullToRefresh from './feed/PullToRefresh';
 import InfiniteScroll from './feed/InfiniteScroll';
 import { useFeedData } from '@/hooks/useFeedData';
+import { toast } from '@/hooks/use-toast';
 
 interface InstagramFeedProps {
   onLike: (itemId: string, profileId: string) => void;
@@ -33,6 +35,42 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
     onRefresh();
   }, [handleRefresh, onRefresh]);
 
+  const handleImageUpload = () => {
+    // Create file input for images
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        toast({
+          title: "Image selected",
+          description: `Selected ${file.name} for upload`,
+        });
+        // TODO: Implement upload logic
+      }
+    };
+    input.click();
+  };
+
+  const handleVideoUpload = () => {
+    // Create file input for videos
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'video/*';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        toast({
+          title: "Video selected",
+          description: `Selected ${file.name} for upload`,
+        });
+        // TODO: Implement upload logic
+      }
+    };
+    input.click();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 overflow-x-hidden">
       <FeedHeader
@@ -42,6 +80,8 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
         setFilterGender={handleFilterChange}
         filterName={filterName}
         setFilterName={handleNameFilterChange}
+        onImageUpload={handleImageUpload}
+        onVideoUpload={handleVideoUpload}
       />
       
       <div className="max-w-md mx-auto">
