@@ -1,5 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ContentItem {
   id: string;
@@ -8,10 +9,12 @@ interface ContentItem {
   colorName: string;
 }
 
-const COLORS = [
-  '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
-  '#DDA0DD', '#F39C12', '#E74C3C', '#9B59B6', '#3498DB'
-];
+interface MegaFile {
+  name: string;
+  url: string;
+  type: 'image' | 'video';
+  timestamp: number;
+}
 
 const COLOR_NAMES = [
   'Coral Red', 'Teal Green', 'Sky Blue', 'Mint Green', 'Vanilla Yellow',
@@ -22,39 +25,64 @@ export const useContentPromoter = () => {
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [currentColorIndex, setCurrentColorIndex] = useState(0);
   const [isActive, setIsActive] = useState(false);
+  const [availableFiles, setAvailableFiles] = useState<MegaFile[]>([]);
+  const [currentFileIndex, setCurrentFileIndex] = useState(0);
 
-  const generateRandomContent = useCallback(() => {
-    // Simulate fetching from MEGA account
-    const mockContent = [
-      { url: 'https://picsum.photos/400/600?random=1', type: 'image' as const },
-      { url: 'https://picsum.photos/400/600?random=2', type: 'image' as const },
-      { url: 'https://picsum.photos/400/600?random=3', type: 'image' as const },
-      // Add mock video URLs when available
-    ];
+  // Fetch available files from MEGA
+  const fetchMegaFiles = useCallback(async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('mega-content-fetcher');
+      
+      if (error) {
+        console.error('Error fetching MEGA files:', error);
+        return;
+      }
 
-    const randomIndex = Math.floor(Math.random() * mockContent.length);
-    const selectedContent = mockContent[randomIndex];
-    
+      if (data?.files) {
+        setAvailableFiles(data.files);
+        console.log('Fetched MEGA files:', data.files.length);
+      }
+    } catch (error) {
+      console.error('Error in fetchMegaFiles:', error);
+    }
+  }, []);
+
+  // Generate content from MEGA files
+  const generateContentFromMega = useCallback(() => {
+    if (availableFiles.length === 0) {
+      console.log('No MEGA files available');
+      return;
+    }
+
+    const selectedFile = availableFiles[currentFileIndex];
     const colorName = COLOR_NAMES[currentColorIndex];
     
     const newItem: ContentItem = {
       id: `content-promoter-${Date.now()}`,
-      url: selectedContent.url,
-      type: selectedContent.type,
+      url: selectedFile.url,
+      type: selectedFile.type,
       colorName
     };
 
     setContentItems(prev => [newItem, ...prev.slice(0, 9)]); // Keep last 10 items
     setCurrentColorIndex(prev => (prev + 1) % COLOR_NAMES.length);
-  }, [currentColorIndex]);
+    setCurrentFileIndex(prev => (prev + 1) % availableFiles.length);
+    
+    console.log('Posted new content:', selectedFile.name, 'with color:', colorName);
+  }, [availableFiles, currentFileIndex, currentColorIndex]);
+
+  // Initialize MEGA files on mount
+  useEffect(() => {
+    fetchMegaFiles();
+  }, [fetchMegaFiles]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
     
-    if (isActive) {
+    if (isActive && availableFiles.length > 0) {
       // Post new content every 40 seconds
       interval = setInterval(() => {
-        generateRandomContent();
+        generateContentFromMega();
       }, 40000);
     }
 
@@ -63,11 +91,14 @@ export const useContentPromoter = () => {
         clearInterval(interval);
       }
     };
-  }, [isActive, generateRandomContent]);
+  }, [isActive, generateContentFromMega, availableFiles.length]);
 
   const startContentPromoter = () => {
+    if (availableFiles.length === 0) {
+      fetchMegaFiles(); // Try to fetch files if not available
+    }
     setIsActive(true);
-    generateRandomContent(); // Post immediately when started
+    generateContentFromMega(); // Post immediately when started
   };
 
   const stopContentPromoter = () => {
@@ -78,6 +109,7 @@ export const useContentPromoter = () => {
     contentItems,
     isActive,
     startContentPromoter,
-    stopContentPromoter
+    stopContentPromoter,
+    availableFiles: availableFiles.length
   };
 };

@@ -47,7 +47,7 @@ const FeedContent = ({
   onRefresh,
   setFilterGender
 }: FeedContentProps) => {
-  const { contentItems, isActive, startContentPromoter, stopContentPromoter } = useContentPromoter();
+  const { contentItems, isActive, startContentPromoter, stopContentPromoter, availableFiles } = useContentPromoter();
 
   const renderProfileCard = (item: FeedItem) => {
     // Use enhanced provider card for service providers
@@ -85,7 +85,12 @@ const FeedContent = ({
       {/* Content Promoter Controls - Only for admins */}
       <div className="mb-4 p-4 bg-gray-800/50 rounded-lg">
         <div className="flex items-center justify-between">
-          <span className="text-white font-medium">Content Promoter</span>
+          <div>
+            <span className="text-white font-medium">Content Promoter</span>
+            <p className="text-gray-400 text-xs">
+              {availableFiles} MEGA files available
+            </p>
+          </div>
           <Button
             variant={isActive ? "destructive" : "default"}
             size="sm"
@@ -96,7 +101,7 @@ const FeedContent = ({
         </div>
         {isActive && (
           <p className="text-gray-400 text-xs mt-1">
-            Posting new content every 40 seconds
+            Posting new content every 40 seconds from MEGA
           </p>
         )}
       </div>
