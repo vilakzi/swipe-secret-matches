@@ -1,5 +1,5 @@
-
 import { supabase } from '@/integrations/supabase/client';
+import { logSensitiveOperation, requireAuth } from '@/utils/authorizationUtils';
 
 export interface ApiError {
   message: string;
@@ -13,18 +13,17 @@ export const handleApiError = (error: any): ApiError => {
   return { message: 'An unexpected error occurred' };
 };
 
-// Helper function to get current user ID
+// Helper function to get current user ID with security validation
 const getCurrentUserId = async (): Promise<string> => {
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user) {
-    throw new Error('User not authenticated');
-  }
-  return user.id;
+  const context = await requireAuth();
+  return context.userId;
 };
 
-// Profile API functions
+// Profile API functions with enhanced security
 export const profileApi = {
   async getProfile(userId: string) {
+    await requireAuth(); // Ensure user is authenticated
+    
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -36,6 +35,16 @@ export const profileApi = {
   },
 
   async updateProfile(userId: string, updates: any) {
+    const context = await requireAuth();
+    
+    // Ensure user can only update their own profile (unless admin)
+    if (context.userId !== userId && context.role !== 'admin') {
+      throw new Error('Unauthorized: Cannot update another user\'s profile');
+    }
+
+    // Log sensitive operation
+    await logSensitiveOperation('profile_update', 'profiles', userId, null, updates);
+    
     const { data, error } = await supabase
       .from('profiles')
       .update(updates)
@@ -76,10 +85,15 @@ export const profileApi = {
   }
 };
 
-// Swipe API functions
+// Swipe API functions with enhanced security
 export const swipeApi = {
   async createSwipe(targetUserId: string, liked: boolean) {
     const userId = await getCurrentUserId();
+    
+    // Prevent self-swiping
+    if (userId === targetUserId) {
+      throw new Error('Cannot swipe on your own profile');
+    }
     
     const { data, error } = await supabase
       .from('swipes')
@@ -98,6 +112,11 @@ export const swipeApi = {
   async createSuperLike(targetUserId: string) {
     const userId = await getCurrentUserId();
     
+    // Prevent self-super-liking
+    if (userId === targetUserId) {
+      throw new Error('Cannot super like your own profile');
+    }
+    
     const { data, error } = await supabase
       .from('super_likes')
       .insert({
@@ -112,9 +131,11 @@ export const swipeApi = {
   }
 };
 
-// Matches API functions
+// Matches API functions with enhanced security
 export const matchApi = {
   async getMatches() {
+    await requireAuth(); // Ensure user is authenticated
+    
     const { data, error } = await supabase
       .from('matches')
       .select(`
@@ -130,10 +151,18 @@ export const matchApi = {
   }
 };
 
-// Block/Report API functions
+// Block/Report API functions with enhanced security
 export const moderationApi = {
   async blockUser(userId: string) {
     const blockerId = await getCurrentUserId();
+    
+    // Prevent self-blocking
+    if (blockerId === userId) {
+      throw new Error('Cannot block yourself');
+    }
+
+    // Log sensitive operation
+    await logSensitiveOperation('user_blocked', 'blocked_users', userId);
     
     const { data, error } = await supabase
       .from('blocked_users')
@@ -150,6 +179,14 @@ export const moderationApi = {
 
   async reportUser(userId: string, reason: string, description?: string) {
     const reporterId = await getCurrentUserId();
+    
+    // Prevent self-reporting
+    if (reporterId === userId) {
+      throw new Error('Cannot report yourself');
+    }
+
+    // Log sensitive operation
+    await logSensitiveOperation('user_reported', 'user_reports', userId, null, { reason, description });
     
     const { data, error } = await supabase
       .from('user_reports')
