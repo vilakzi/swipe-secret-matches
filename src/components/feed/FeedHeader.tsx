@@ -16,6 +16,7 @@ interface FeedHeaderProps {
   setFilterName: (name: string) => void;
   onImageUpload: () => void;
   onVideoUpload: () => void;
+  onRefresh?: () => void;
 }
 
 const FeedHeader = ({
@@ -26,7 +27,8 @@ const FeedHeader = ({
   filterName,
   setFilterName,
   onImageUpload,
-  onVideoUpload
+  onVideoUpload,
+  onRefresh
 }: FeedHeaderProps) => {
   const { user } = useAuth();
 
@@ -85,8 +87,10 @@ const FeedHeader = ({
         description: `Your ${type} has been uploaded and posted to the feed.`,
       });
 
-      // Refresh the page to show the new post
-      window.location.reload();
+      // Trigger refresh without full page reload
+      if (onRefresh) {
+        onRefresh();
+      }
       
     } catch (error: any) {
       console.error('Upload failed:', error);

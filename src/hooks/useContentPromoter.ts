@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -120,6 +121,7 @@ export const useContentPromoter = () => {
     setContentItems(prev => {
       // Add new item to the beginning and keep only MAX_TILES
       const updatedItems = [newItem, ...prev].slice(0, MAX_TILES);
+      console.log(`Added new content item. Total items: ${updatedItems.length}`);
       return updatedItems;
     });
     
@@ -163,7 +165,7 @@ export const useContentPromoter = () => {
     };
   }, [isActive, generateContentFromMega, availableFiles.length]);
 
-  const startContentPromoter = () => {
+  const startContentPromoter = useCallback(() => {
     if (availableFiles.length === 0) {
       toast({
         title: "No content available",
@@ -182,9 +184,9 @@ export const useContentPromoter = () => {
       title: "Content Promoter started",
       description: "Auto-posting content every 40 seconds",
     });
-  };
+  }, [availableFiles.length, fetchMegaFiles]);
 
-  const stopContentPromoter = () => {
+  const stopContentPromoter = useCallback(() => {
     console.log('Stopping Content Promoter...');
     setIsActive(false);
     
@@ -192,7 +194,7 @@ export const useContentPromoter = () => {
       title: "Content Promoter stopped",
       description: "Auto-posting has been disabled",
     });
-  };
+  }, []);
 
   return {
     contentItems,

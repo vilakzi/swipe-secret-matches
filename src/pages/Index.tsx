@@ -17,6 +17,7 @@ const Index = () => {
   const { role, isAdmin, isServiceProvider, loading: roleLoading } = useUserRole();
   const navigate = useNavigate();
   const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Check if user is logged in
   if (!user) {
@@ -91,13 +92,12 @@ const Index = () => {
       return;
     }
 
+    console.log('Refreshing feed from Index component');
+    setRefreshKey(prev => prev + 1);
     toast({
       title: "Feed refreshed",
       description: "Loading new profiles...",
     });
-    
-    // Simple page reload
-    window.location.reload();
   };
 
   const getRoleIcon = () => {
@@ -158,6 +158,7 @@ const Index = () => {
         <div className="max-w-md mx-auto px-4">
           <ProfileCompletionPrompt />
           <InstagramFeed 
+            key={refreshKey}
             onLike={handleLike}
             onContact={handleContact}
             onRefresh={handleRefresh}

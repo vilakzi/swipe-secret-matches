@@ -35,15 +35,14 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
     onRefresh();
   }, [handleRefresh, onRefresh]);
 
-  const handleImageUpload = () => {
-    // This is now handled in FeedHeader component
-    console.log('Image upload initiated from header');
-  };
-
-  const handleVideoUpload = () => {
-    // This is now handled in FeedHeader component
-    console.log('Video upload initiated from header');
-  };
+  const handleFeedRefresh = useCallback(() => {
+    console.log('Feed refresh triggered');
+    handleRefresh();
+    toast({
+      title: "Feed refreshed",
+      description: "Content updated successfully",
+    });
+  }, [handleRefresh]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 overflow-x-hidden">
@@ -54,8 +53,9 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
         setFilterGender={handleFilterChange}
         filterName={filterName}
         setFilterName={handleNameFilterChange}
-        onImageUpload={handleImageUpload}
-        onVideoUpload={handleVideoUpload}
+        onImageUpload={() => console.log('Image upload initiated')}
+        onVideoUpload={() => console.log('Video upload initiated')}
+        onRefresh={handleFeedRefresh}
       />
       
       <div className="max-w-md mx-auto">
