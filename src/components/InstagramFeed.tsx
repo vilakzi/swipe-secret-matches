@@ -38,11 +38,12 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
   const handleFeedRefresh = useCallback(() => {
     console.log('Feed refresh triggered');
     handleRefresh();
+    onRefresh();
     toast({
       title: "Feed refreshed",
       description: "Content updated successfully",
     });
-  }, [handleRefresh]);
+  }, [handleRefresh, onRefresh]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 overflow-x-hidden">

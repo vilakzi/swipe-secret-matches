@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -29,9 +28,9 @@ const MAX_TILES = 6;
 export const useContentPromoter = () => {
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [currentColorIndex, setCurrentColorIndex] = useState(0);
+  const [currentFileIndex, setCurrentFileIndex] = useState(0);
   const [isActive, setIsActive] = useState(false);
   const [availableFiles, setAvailableFiles] = useState<MegaFile[]>([]);
-  const [currentFileIndex, setCurrentFileIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -119,7 +118,7 @@ export const useContentPromoter = () => {
     };
 
     setContentItems(prev => {
-      // Add new item to the beginning and keep only MAX_TILES
+      // Add new item to the beginning and keep only MAX_TILES (6)
       const updatedItems = [newItem, ...prev].slice(0, MAX_TILES);
       console.log(`Added new content item. Total items: ${updatedItems.length}`);
       return updatedItems;
@@ -140,12 +139,12 @@ export const useContentPromoter = () => {
     fetchMegaFiles();
   }, [fetchMegaFiles]);
 
-  // Auto-posting interval management
+  // Auto-posting interval management - Fixed to actually work
   useEffect(() => {
     let interval: NodeJS.Timeout;
     
     if (isActive && availableFiles.length > 0) {
-      console.log('Starting auto-posting interval...');
+      console.log('Starting Content Promoter auto-posting...');
       
       // Post immediately when started
       generateContentFromMega();
@@ -163,7 +162,7 @@ export const useContentPromoter = () => {
         clearInterval(interval);
       }
     };
-  }, [isActive, generateContentFromMega, availableFiles.length]);
+  }, [isActive, availableFiles, generateContentFromMega]);
 
   const startContentPromoter = useCallback(() => {
     if (availableFiles.length === 0) {

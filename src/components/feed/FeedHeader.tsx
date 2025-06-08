@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Filter, Plus, Image, Video, Upload } from 'lucide-react';
+import { Search, Filter, Image, Video, RotateCcw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -42,19 +42,46 @@ const FeedHeader = ({
       return;
     }
 
+    // Validate file size (50MB max)
+    const maxSize = 50 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast({
+        title: "File too large",
+        description: "Maximum file size is 50MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
       
       console.log('Uploading file:', fileName);
       
+      // Upload to Supabase Storage
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('posts')
         .upload(fileName, file);
 
       if (uploadError) {
         console.error('Upload error:', uploadError);
-        throw uploadError;
+        
+        // Check if it's a policy violation
+        if (uploadError.message.includes('row-level security')) {
+          toast({
+            title: "Upload permission denied",
+            description: "You don't have permission to upload files. Please check your account status.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Upload failed",
+            description: uploadError.message,
+            variant: "destructive",
+          });
+        }
+        return;
       }
 
       const { data: { publicUrl } } = supabase.storage
@@ -79,7 +106,21 @@ const FeedHeader = ({
 
       if (postError) {
         console.error('Post creation error:', postError);
-        throw postError;
+        
+        if (postError.message.includes('row-level security')) {
+          toast({
+            title: "Post creation denied",
+            description: "You don't have permission to create posts. Please verify your account.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Post creation failed",
+            description: postError.message,
+            variant: "destructive",
+          });
+        }
+        return;
       }
 
       toast({
@@ -149,6 +190,17 @@ const FeedHeader = ({
           className="text-white hover:bg-white/10"
         >
           <Filter className="w-4 h-4" />
+        </Button>
+        
+        {/* Refresh button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onRefresh}
+          className="text-white hover:bg-white/10"
+          title="Refresh Feed"
+        >
+          <RotateCcw className="w-4 h-4" />
         </Button>
         
         {/* Upload buttons */}
