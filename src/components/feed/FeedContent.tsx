@@ -1,3 +1,4 @@
+
 import { Button } from '@/components/ui/button';
 import ProfileCard from './ProfileCard';
 import PostCard from './PostCard';
@@ -5,6 +6,8 @@ import ProviderProfileCard from './ProviderProfileCard';
 import ContentPromoterCard from './ContentPromoterCard';
 import { FeedItem } from '@/hooks/useFeedData';
 import { useContentPromoter } from '@/hooks/useContentPromoter';
+import { useUserRole } from '@/hooks/useUserRole';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 
 interface Profile {
   id: string;
@@ -47,7 +50,17 @@ const FeedContent = ({
   onRefresh,
   setFilterGender
 }: FeedContentProps) => {
-  const { contentItems, isActive, startContentPromoter, stopContentPromoter, availableFiles } = useContentPromoter();
+  const { isAdmin } = useUserRole();
+  const { 
+    contentItems, 
+    isActive, 
+    startContentPromoter, 
+    stopContentPromoter, 
+    availableFiles, 
+    error, 
+    isLoading, 
+    refreshFiles 
+  } = useContentPromoter();
 
   const renderProfileCard = (item: FeedItem) => {
     // Use enhanced provider card for service providers
@@ -82,29 +95,49 @@ const FeedContent = ({
 
   return (
     <div className="pb-20">
-      {/* Content Promoter Controls - Only for admins */}
-      <div className="mb-4 p-4 bg-gray-800/50 rounded-lg">
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="text-white font-medium">Content Promoter</span>
-            <p className="text-gray-400 text-xs">
-              {availableFiles} MEGA files available
-            </p>
+      {/* Content Promoter Controls - Only for super admins */}
+      {isAdmin && (
+        <div className="mb-4 p-4 bg-gray-800/50 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-white font-medium">Content Promoter (Admin Only)</span>
+              <p className="text-gray-400 text-xs">
+                {isLoading ? 'Loading...' : `${availableFiles} MEGA files available`}
+              </p>
+              {error && (
+                <div className="flex items-center text-red-400 text-xs mt-1">
+                  <AlertCircle className="w-3 h-3 mr-1" />
+                  {error}
+                </div>
+              )}
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={refreshFiles}
+                disabled={isLoading}
+                className="text-gray-400 hover:text-white"
+              >
+                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+              </Button>
+              <Button
+                variant={isActive ? "destructive" : "default"}
+                size="sm"
+                onClick={isActive ? stopContentPromoter : startContentPromoter}
+                disabled={isLoading || (availableFiles === 0 && !error)}
+              >
+                {isActive ? 'Stop' : 'Start'} Auto Posts
+              </Button>
+            </div>
           </div>
-          <Button
-            variant={isActive ? "destructive" : "default"}
-            size="sm"
-            onClick={isActive ? stopContentPromoter : startContentPromoter}
-          >
-            {isActive ? 'Stop' : 'Start'} Auto Posts
-          </Button>
+          {isActive && !error && (
+            <p className="text-gray-400 text-xs mt-1">
+              Posting new content every 40 seconds from MEGA folder
+            </p>
+          )}
         </div>
-        {isActive && (
-          <p className="text-gray-400 text-xs mt-1">
-            Posting new content every 40 seconds from MEGA
-          </p>
-        )}
-      </div>
+      )}
 
       {allItems.length > 0 ? (
         <div className="space-y-4">
