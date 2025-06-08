@@ -1,7 +1,7 @@
 
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Heart, Share, Play } from 'lucide-react';
+import { Heart, Share, Play, Clock } from 'lucide-react';
 import OptimizedImage from '@/components/ui/OptimizedImage';
 import ImageModal from '@/components/ui/ImageModal';
 import { useImageModal } from '@/hooks/useImageModal';
@@ -12,6 +12,8 @@ interface ContentPromoterCardProps {
   contentUrl: string;
   contentType: 'image' | 'video';
   colorName: string;
+  fileName?: string;
+  timestamp?: number;
   onLike: (itemId: string) => void;
   likedItems: Set<string>;
 }
@@ -21,6 +23,8 @@ const ContentPromoterCard = ({
   contentUrl, 
   contentType, 
   colorName, 
+  fileName,
+  timestamp,
   onLike, 
   likedItems 
 }: ContentPromoterCardProps) => {
@@ -39,15 +43,30 @@ const ContentPromoterCard = ({
     }
   };
 
+  const formatTimeAgo = (timestamp: number) => {
+    const now = Date.now();
+    const diff = now - timestamp;
+    const minutes = Math.floor(diff / 60000);
+    
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  };
+
   const isVideo = contentType === 'video';
 
   return (
     <>
-      <Card className="bg-gray-800 border-gray-700 mb-4">
+      <Card className="bg-gray-800 border-gray-700 mb-4 transition-all duration-300 hover:shadow-lg">
         {/* Header */}
         <div className="p-4 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
               <span className="text-white font-bold text-sm">CP</span>
             </div>
             <div>
@@ -62,7 +81,18 @@ const ContentPromoterCard = ({
                   {colorName}
                 </div>
               </div>
-              <p className="text-gray-400 text-xs">Automated Content</p>
+              <div className="flex items-center space-x-2">
+                <p className="text-gray-400 text-xs">Automated Content</p>
+                {timestamp && (
+                  <>
+                    <span className="text-gray-500">•</span>
+                    <div className="flex items-center space-x-1">
+                      <Clock className="w-3 h-3 text-gray-400" />
+                      <span className="text-gray-400 text-xs">{formatTimeAgo(timestamp)}</span>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -73,7 +103,7 @@ const ContentPromoterCard = ({
             <div className="relative">
               <video
                 src={contentUrl}
-                className="w-full h-72 object-cover cursor-pointer max-h-96"
+                className="w-full h-72 object-cover cursor-pointer max-h-96 rounded-sm"
                 controls
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
@@ -82,7 +112,7 @@ const ContentPromoterCard = ({
               </video>
               {!isPlaying && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <Play className="w-12 h-12 text-white opacity-80" />
+                  <Play className="w-12 h-12 text-white opacity-80 drop-shadow-lg" />
                 </div>
               )}
             </div>
@@ -90,7 +120,7 @@ const ContentPromoterCard = ({
             <OptimizedImage
               src={contentUrl}
               alt="Content Promoter Post"
-              className="w-full h-72 object-cover cursor-pointer hover:opacity-95 transition-opacity max-h-96"
+              className="w-full h-72 object-cover cursor-pointer hover:opacity-95 transition-opacity max-h-96 rounded-sm"
               onClick={handleContentClick}
               expandable
             />
@@ -104,7 +134,7 @@ const ContentPromoterCard = ({
               <Button
                 variant="ghost"
                 size="sm"
-                className={`p-0 ${likedItems.has(id) ? 'text-red-500' : 'text-white'}`}
+                className={`p-0 transition-colors ${likedItems.has(id) ? 'text-red-500' : 'text-white hover:text-red-400'}`}
                 onClick={handleLike}
               >
                 <Heart className={`w-6 h-6 ${likedItems.has(id) ? 'fill-current' : ''}`} />
@@ -112,7 +142,7 @@ const ContentPromoterCard = ({
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-white p-0"
+                className="text-white p-0 hover:text-blue-400 transition-colors"
               >
                 <Share className="w-6 h-6" />
               </Button>
@@ -121,7 +151,9 @@ const ContentPromoterCard = ({
 
           <div className="text-white">
             <span className="font-semibold">Content Promoter</span>
-            <p className="text-gray-300 text-sm mt-1">Premium content from our collection</p>
+            <p className="text-gray-300 text-sm mt-1">
+              {fileName ? `${fileName} - ` : ''}Premium content from our collection
+            </p>
           </div>
         </div>
       </Card>

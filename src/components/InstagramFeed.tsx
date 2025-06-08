@@ -36,39 +36,13 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
   }, [handleRefresh, onRefresh]);
 
   const handleImageUpload = () => {
-    // Create file input for images
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) {
-        toast({
-          title: "Image selected",
-          description: `Selected ${file.name} for upload`,
-        });
-        // TODO: Implement upload logic
-      }
-    };
-    input.click();
+    // This is now handled in FeedHeader component
+    console.log('Image upload initiated from header');
   };
 
   const handleVideoUpload = () => {
-    // Create file input for videos
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'video/*';
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) {
-        toast({
-          title: "Video selected",
-          description: `Selected ${file.name} for upload`,
-        });
-        // TODO: Implement upload logic
-      }
-    };
-    input.click();
+    // This is now handled in FeedHeader component
+    console.log('Video upload initiated from header');
   };
 
   return (

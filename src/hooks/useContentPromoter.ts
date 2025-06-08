@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -8,6 +7,8 @@ interface ContentItem {
   url: string;
   type: 'image' | 'video';
   colorName: string;
+  timestamp: number;
+  fileName: string;
 }
 
 interface MegaFile {
@@ -21,6 +22,8 @@ const COLOR_NAMES = [
   'Coral Red', 'Teal Green', 'Sky Blue', 'Mint Green', 'Vanilla Yellow',
   'Lavender Purple', 'Orange Sunset', 'Ruby Red', 'Amethyst Purple', 'Ocean Blue'
 ];
+
+const MAX_TILES = 6;
 
 export const useContentPromoter = () => {
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
@@ -37,6 +40,7 @@ export const useContentPromoter = () => {
       setIsLoading(true);
       setError(null);
       
+      console.log('Fetching MEGA files...');
       const { data, error } = await supabase.functions.invoke('mega-content-fetcher');
       
       if (error) {
@@ -50,9 +54,11 @@ export const useContentPromoter = () => {
         return;
       }
 
+      console.log('MEGA response:', data);
+
       if (data?.files && Array.isArray(data.files)) {
         setAvailableFiles(data.files);
-        console.log('Fetched MEGA files:', data.files.length);
+        console.log('Successfully fetched MEGA files:', data.files.length);
         
         if (data.files.length === 0) {
           setError('No files found in MEGA folder');
@@ -62,6 +68,7 @@ export const useContentPromoter = () => {
             variant: "destructive",
           });
         } else {
+          setError(null);
           toast({
             title: "Content loaded",
             description: `Found ${data.files.length} files in MEGA folder`,
@@ -70,10 +77,16 @@ export const useContentPromoter = () => {
       } else {
         setError('Invalid response format from MEGA');
         console.error('Invalid response format:', data);
+        toast({
+          title: "Invalid response",
+          description: "Invalid response format from MEGA service",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error('Error in fetchMegaFiles:', error);
-      setError(`Network error: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setError(`Network error: ${errorMessage}`);
       toast({
         title: "Network error",
         description: "Failed to connect to content service",
@@ -84,7 +97,7 @@ export const useContentPromoter = () => {
     }
   }, []);
 
-  // Generate content from MEGA files
+  // Generate content from MEGA files with tile management
   const generateContentFromMega = useCallback(() => {
     if (availableFiles.length === 0) {
       console.log('No MEGA files available for posting');
@@ -99,10 +112,17 @@ export const useContentPromoter = () => {
       id: `content-promoter-${Date.now()}`,
       url: selectedFile.url,
       type: selectedFile.type,
-      colorName
+      colorName,
+      timestamp: Date.now(),
+      fileName: selectedFile.name
     };
 
-    setContentItems(prev => [newItem, ...prev.slice(0, 9)]); // Keep last 10 items
+    setContentItems(prev => {
+      // Add new item to the beginning and keep only MAX_TILES
+      const updatedItems = [newItem, ...prev].slice(0, MAX_TILES);
+      return updatedItems;
+    });
+    
     setCurrentColorIndex(prev => (prev + 1) % COLOR_NAMES.length);
     setCurrentFileIndex(prev => (prev + 1) % availableFiles.length);
     
@@ -118,18 +138,26 @@ export const useContentPromoter = () => {
     fetchMegaFiles();
   }, [fetchMegaFiles]);
 
+  // Auto-posting interval management
   useEffect(() => {
     let interval: NodeJS.Timeout;
     
     if (isActive && availableFiles.length > 0) {
-      // Post new content every 40 seconds
+      console.log('Starting auto-posting interval...');
+      
+      // Post immediately when started
+      generateContentFromMega();
+      
+      // Then post every 40 seconds
       interval = setInterval(() => {
+        console.log('Auto-posting content...');
         generateContentFromMega();
       }, 40000);
     }
 
     return () => {
       if (interval) {
+        console.log('Clearing auto-posting interval');
         clearInterval(interval);
       }
     };
@@ -145,8 +173,11 @@ export const useContentPromoter = () => {
       fetchMegaFiles(); // Try to fetch files if not available
       return;
     }
+    
+    console.log('Starting Content Promoter...');
     setIsActive(true);
-    generateContentFromMega(); // Post immediately when started
+    setError(null);
+    
     toast({
       title: "Content Promoter started",
       description: "Auto-posting content every 40 seconds",
@@ -154,7 +185,9 @@ export const useContentPromoter = () => {
   };
 
   const stopContentPromoter = () => {
+    console.log('Stopping Content Promoter...');
     setIsActive(false);
+    
     toast({
       title: "Content Promoter stopped",
       description: "Auto-posting has been disabled",
