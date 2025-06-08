@@ -35,7 +35,7 @@ interface FeedContentProps {
   isSubscribed: boolean;
   filterGender: 'male' | 'female' | null;
   onLike: (itemId: string, profileId: string) => void;
-  onContact: (profile: Profile) => void;
+  onContact: (profile: any) => void;
   onRefresh: () => void;
   setFilterGender: (gender: 'male' | 'female' | null) => void;
 }
@@ -102,7 +102,7 @@ const FeedContent = ({
             <div>
               <span className="text-white font-medium">Content Promoter (Admin Only)</span>
               <p className="text-gray-400 text-xs">
-                {isLoading ? 'Loading...' : `${availableFiles} MEGA files available`}
+                {isLoading ? 'Loading...' : `${availableFiles} demo files available`}
               </p>
               {error && (
                 <div className="flex items-center text-red-400 text-xs mt-1">
@@ -125,7 +125,7 @@ const FeedContent = ({
                 variant={isActive ? "destructive" : "default"}
                 size="sm"
                 onClick={isActive ? stopContentPromoter : startContentPromoter}
-                disabled={isLoading || (availableFiles === 0 && !error)}
+                disabled={isLoading}
               >
                 {isActive ? 'Stop' : 'Start'} Auto Posts
               </Button>
@@ -133,7 +133,7 @@ const FeedContent = ({
           </div>
           {isActive && !error && (
             <p className="text-gray-400 text-xs mt-1">
-              Posting new content every 40 seconds from MEGA folder
+              Posting new demo content every 40 seconds
             </p>
           )}
         </div>
