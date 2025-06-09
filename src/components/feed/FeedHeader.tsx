@@ -53,47 +53,52 @@ const FeedHeader = ({
       return;
     }
 
+    // Validate file type
+    const isValidType = type === 'image' ? file.type.startsWith('image/') : file.type.startsWith('video/');
+    if (!isValidType) {
+      toast({
+        title: "Invalid file type",
+        description: `Please select a valid ${type} file`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      console.log(`Starting ${type} upload for file:`, file.name);
       
-      console.log('Uploading file:', fileName);
-      
-      // Create a simple post without storage upload - just use a demo URL for now
+      // For demo purposes, use a placeholder URL
       const demoUrl = type === 'image' 
         ? `https://picsum.photos/400/600?random=${Date.now()}` 
         : 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4';
 
-      // Create post entry in database with relaxed permissions
-      const { error: postError } = await supabase
+      // Create post entry in database
+      const { data: postData, error: postError } = await supabase
         .from('posts')
         .insert({
           provider_id: user.id,
           content_url: demoUrl,
           post_type: type,
-          caption: `New ${type} post by user`,
+          caption: `New ${type} post`,
           promotion_type: 'free_2h',
           expires_at: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
           is_promoted: false,
           payment_status: 'paid'
-        });
+        })
+        .select()
+        .single();
 
       if (postError) {
         console.error('Post creation error:', postError);
-        
-        // Fallback: Create a local post for demo purposes
-        console.log('Database post failed, creating local demo post');
-        
-        toast({
-          title: "Upload successful!",
-          description: `Your ${type} has been uploaded (demo mode).`,
-        });
-      } else {
-        toast({
-          title: "Upload successful!",
-          description: `Your ${type} has been uploaded and posted to the feed.`,
-        });
+        throw postError;
       }
+
+      console.log('Post created successfully:', postData);
+
+      toast({
+        title: "Upload successful!",
+        description: `Your ${type} has been uploaded and posted to the feed.`,
+      });
 
       // Trigger refresh
       if (onRefresh) {
@@ -102,43 +107,42 @@ const FeedHeader = ({
       
     } catch (error: any) {
       console.error('Upload failed:', error);
-      
-      // Even if upload fails, show success for demo purposes
       toast({
-        title: "Upload successful!",
-        description: `Your ${type} has been processed (demo mode).`,
+        title: "Upload failed",
+        description: error.message || "Something went wrong during upload",
+        variant: "destructive",
       });
-      
-      if (onRefresh) {
-        onRefresh();
-      }
     }
   };
 
-  const handleImageUpload = () => {
+  const createFileInput = (accept: string, onFileSelect: (file: File) => void) => {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
+    input.accept = accept;
+    input.style.display = 'none';
+    
+    const handleChange = (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      const file = target.files?.[0];
       if (file) {
-        handleFileUpload(file, 'image');
+        onFileSelect(file);
       }
+      // Clean up
+      input.removeEventListener('change', handleChange);
+      document.body.removeChild(input);
     };
+    
+    input.addEventListener('change', handleChange);
+    document.body.appendChild(input);
     input.click();
   };
 
+  const handleImageUpload = () => {
+    createFileInput('image/*', (file) => handleFileUpload(file, 'image'));
+  };
+
   const handleVideoUpload = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'video/*';
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) {
-        handleFileUpload(file, 'video');
-      }
-    };
-    input.click();
+    createFileInput('video/*', (file) => handleFileUpload(file, 'video'));
   };
 
   return (
@@ -175,26 +179,30 @@ const FeedHeader = ({
           <RotateCcw className="w-4 h-4" />
         </Button>
         
-        {/* Upload buttons - now available to all logged in users */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleImageUpload}
-          className="text-white hover:bg-white/10"
-          title="Upload Image"
-        >
-          <Image className="w-4 h-4" />
-        </Button>
-        
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleVideoUpload}
-          className="text-white hover:bg-white/10"
-          title="Upload Video"
-        >
-          <Video className="w-4 h-4" />
-        </Button>
+        {/* Upload buttons - available to all logged in users */}
+        {user && (
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleImageUpload}
+              className="text-white hover:bg-white/10"
+              title="Upload Image"
+            >
+              <Image className="w-4 h-4" />
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleVideoUpload}
+              className="text-white hover:bg-white/10"
+              title="Upload Video"
+            >
+              <Video className="w-4 h-4" />
+            </Button>
+          </>
+        )}
       </div>
 
       {/* Filters */}
