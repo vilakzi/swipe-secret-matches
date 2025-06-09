@@ -707,7 +707,7 @@ export type Database = {
         Returns: boolean
       }
       is_new_joiner: {
-        Args: { user_created_at: string }
+        Args: Record<PropertyKey, never> | { user_created_at: string }
         Returns: boolean
       }
       is_service_provider: {

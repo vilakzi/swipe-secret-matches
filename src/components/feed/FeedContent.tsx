@@ -3,11 +3,7 @@ import { Button } from '@/components/ui/button';
 import ProfileCard from './ProfileCard';
 import PostCard from './PostCard';
 import ProviderProfileCard from './ProviderProfileCard';
-import ContentPromoterCard from './ContentPromoterCard';
 import { FeedItem } from '@/hooks/useFeedData';
-import { useContentPromoter } from '@/hooks/useContentPromoter';
-import { useUserRole } from '@/hooks/useUserRole';
-import { AlertCircle, RefreshCw } from 'lucide-react';
 
 interface Profile {
   id: string;
@@ -50,18 +46,6 @@ const FeedContent = ({
   onRefresh,
   setFilterGender
 }: FeedContentProps) => {
-  const { isAdmin } = useUserRole();
-  const { 
-    contentItems, 
-    isActive, 
-    startContentPromoter, 
-    stopContentPromoter, 
-    availableFiles, 
-    error, 
-    isLoading, 
-    refreshFiles 
-  } = useContentPromoter();
-
   const renderProfileCard = (item: FeedItem) => {
     // Use enhanced provider card for service providers
     if (item.profile.userType === 'service_provider') {
@@ -90,79 +74,17 @@ const FeedContent = ({
     );
   };
 
-  // Merge content promoter items with feed items
-  const allItems = [...contentItems.map(item => ({ ...item, isContentPromoter: true })), ...feedItems];
-
   return (
     <div className="pb-20">
-      {/* Content Promoter Controls - Only for super admins */}
-      {isAdmin && (
-        <div className="mb-4 p-4 bg-gray-800/50 rounded-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-white font-medium">Content Promoter (Admin Only)</span>
-              <p className="text-gray-400 text-xs">
-                {isLoading ? 'Loading...' : `${availableFiles} demo files available`}
-              </p>
-              {error && (
-                <div className="flex items-center text-red-400 text-xs mt-1">
-                  <AlertCircle className="w-3 h-3 mr-1" />
-                  {error}
-                </div>
-              )}
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={refreshFiles}
-                disabled={isLoading}
-                className="text-gray-400 hover:text-white"
-              >
-                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-              </Button>
-              <Button
-                variant={isActive ? "destructive" : "default"}
-                size="sm"
-                onClick={isActive ? stopContentPromoter : startContentPromoter}
-                disabled={isLoading}
-              >
-                {isActive ? 'Stop' : 'Start'} Auto Posts
-              </Button>
-            </div>
-          </div>
-          {isActive && !error && (
-            <p className="text-gray-400 text-xs mt-1">
-              Posting new demo content every 40 seconds
-            </p>
-          )}
-        </div>
-      )}
-
-      {allItems.length > 0 ? (
+      {feedItems.length > 0 ? (
         <div className="space-y-4">
-          {allItems.map(item => {
-            if ('isContentPromoter' in item && item.isContentPromoter) {
-              return (
-                <ContentPromoterCard
-                  key={item.id}
-                  id={item.id}
-                  contentUrl={item.url}
-                  contentType={item.type}
-                  colorName={item.colorName}
-                  onLike={(itemId) => onLike(itemId, 'content-promoter')}
-                  likedItems={likedItems}
-                />
-              );
-            }
-            
-            const feedItem = item as FeedItem;
-            return feedItem.type === 'profile' ? (
-              renderProfileCard(feedItem)
+          {feedItems.map(item => {
+            return item.type === 'profile' ? (
+              renderProfileCard(item)
             ) : (
               <PostCard
-                key={feedItem.id}
-                item={feedItem}
+                key={item.id}
+                item={item}
                 likedItems={likedItems}
                 isSubscribed={isSubscribed}
                 onLike={onLike}
