@@ -2,7 +2,7 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { X, Image, Video } from 'lucide-react';
+import { X, Image, Video, CheckCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface FileUploadSectionProps {
@@ -45,6 +45,10 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
 
   const removeFile = () => {
     onFileChange(null);
+    toast({
+      title: "File removed",
+      description: "Please select another file to upload.",
+    });
   };
 
   const formatFileSize = (bytes: number) => {
@@ -68,7 +72,7 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
               type="file"
               accept="image/*,video/*"
               onChange={handleFileChange}
-              className="bg-gray-800 border-gray-600 text-white file:bg-purple-600 file:text-white file:border-0 file:rounded file:px-3 file:py-1 file:mr-3"
+              className="bg-gray-800 border-gray-600 text-white file:bg-purple-600 file:text-white file:border-0 file:rounded file:px-3 file:py-1 file:mr-3 cursor-pointer"
             />
             <p className="text-xs text-gray-400 mt-1">
               Images: Any size | Videos: Max 30MB
@@ -90,9 +94,9 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
                   <p className="text-gray-400 text-sm">
                     {formatFileSize(selectedFile.size)} • {selectedFile.type.startsWith('image/') ? 'Image' : 'Video'}
                   </p>
-                  <div className="flex items-center mt-1">
-                    <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
-                    <span className="text-green-400 text-xs font-medium">Ready for upload</span>
+                  <div className="flex items-center mt-2">
+                    <CheckCircle className="w-4 h-4 text-green-400 mr-2" />
+                    <span className="text-green-400 text-sm font-medium">Ready for upload</span>
                   </div>
                 </div>
               </div>
@@ -125,7 +129,7 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
             <span className="text-green-400 text-sm font-medium">
-              File is ready to upload! Click "Upload Post" to continue.
+              File is ready! Click "Submit & Upload Post" to continue.
             </span>
           </div>
         </div>

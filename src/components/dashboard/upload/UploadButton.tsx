@@ -23,14 +23,15 @@ const UploadButton = ({ selectedFile, uploading, promotionType, onUpload }: Uplo
   };
 
   const isReady = selectedFile && !uploading;
+  const isDisabled = !selectedFile || uploading;
 
   return (
     <div className="space-y-3">
       {selectedFile && !uploading && (
-        <div className="bg-blue-900/20 border border-blue-600/30 rounded-lg p-3">
+        <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-3">
           <div className="flex items-center space-x-2">
-            <CheckCircle className="w-4 h-4 text-blue-400" />
-            <span className="text-blue-400 text-sm">
+            <CheckCircle className="w-4 h-4 text-green-400" />
+            <span className="text-green-400 text-sm font-medium">
               Ready to upload: {selectedFile.name}
             </span>
           </div>
@@ -39,11 +40,11 @@ const UploadButton = ({ selectedFile, uploading, promotionType, onUpload }: Uplo
       
       <Button
         onClick={onUpload}
-        disabled={!selectedFile || uploading}
+        disabled={isDisabled}
         className={`w-full transition-all duration-200 ${
           isReady 
-            ? 'bg-green-600 hover:bg-green-700 shadow-lg shadow-green-600/20' 
-            : 'bg-purple-600 hover:bg-purple-700'
+            ? 'bg-green-600 hover:bg-green-700 shadow-lg shadow-green-600/20 text-white' 
+            : 'bg-gray-600 hover:bg-gray-700 text-gray-300 cursor-not-allowed'
         }`}
       >
         {uploading ? (
