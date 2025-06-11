@@ -23,7 +23,10 @@ export const useAnalytics = () => {
         .rpc('get_content_analytics_summary');
 
       if (error) throw error;
-      setAnalytics(data[0] || null);
+      
+      // The RPC function returns an array, take the first element
+      const result = Array.isArray(data) ? data[0] : data;
+      setAnalytics(result || null);
     } catch (error: any) {
       toast({
         title: "Error",

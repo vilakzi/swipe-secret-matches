@@ -2,13 +2,9 @@
 import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Upload, X, Image, Video, Clock, Eye, Globe } from 'lucide-react';
+import { Upload, X, Image, Video } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
-import { useAdminContent, AdminContent } from '@/hooks/useAdminContent';
+import { useAdminContent } from '@/hooks/useAdminContent';
 
 interface UploadFile {
   file: File;
@@ -52,20 +48,18 @@ const ContentUpload = () => {
     });
   };
 
-  const uploadSingleFile = async (uploadFile: UploadFile, metadata: Partial<AdminContent>) => {
+  const uploadSingleFile = async (uploadFile: UploadFile) => {
     // Simulate file upload - replace with actual storage logic
     const fileUrl = uploadFile.preview; // In real app, upload to Supabase Storage
     
     await createContent({
-      title: metadata.title || uploadFile.file.name,
-      description: metadata.description,
+      title: uploadFile.file.name,
       content_type: uploadFile.type,
       file_url: fileUrl,
       thumbnail_url: uploadFile.type === 'image' ? fileUrl : undefined,
       file_size: uploadFile.file.size,
-      status: metadata.status || 'draft',
-      visibility: metadata.visibility || 'public',
-      scheduled_at: metadata.scheduled_at,
+      status: 'draft',
+      visibility: 'public',
       metadata: {
         originalName: uploadFile.file.name,
         uploadedAt: new Date().toISOString(),
@@ -77,11 +71,7 @@ const ContentUpload = () => {
     setUploading(true);
     try {
       for (const uploadFile of uploadFiles) {
-        await uploadSingleFile(uploadFile, {
-          title: uploadFile.file.name,
-          status: 'draft',
-          visibility: 'public',
-        });
+        await uploadSingleFile(uploadFile);
       }
       
       // Clean up
@@ -173,14 +163,14 @@ const ContentUpload = () => {
                   </div>
                   
                   <div className="absolute bottom-2 left-2">
-                    <Badge variant="secondary" className="text-xs">
+                    <div className="bg-black/70 text-white px-2 py-1 rounded text-xs flex items-center gap-1">
                       {uploadFile.type === 'image' ? (
-                        <Image className="w-3 h-3 mr-1" />
+                        <Image className="w-3 h-3" />
                       ) : (
-                        <Video className="w-3 h-3 mr-1" />
+                        <Video className="w-3 h-3" />
                       )}
                       {uploadFile.type}
-                    </Badge>
+                    </div>
                   </div>
                   
                   <div className="mt-2">

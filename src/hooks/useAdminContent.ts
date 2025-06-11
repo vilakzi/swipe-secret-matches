@@ -2,26 +2,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import type { Database } from '@/integrations/supabase/types';
 
-export type AdminContent = {
-  id: string;
-  title: string;
-  description?: string;
-  content_type: 'image' | 'video';
-  file_url: string;
-  thumbnail_url?: string;
-  file_size?: number;
-  status: 'draft' | 'scheduled' | 'published' | 'archived';
-  visibility: 'public' | 'private' | 'restricted';
-  scheduled_at?: string;
-  published_at?: string;
-  view_count: number;
-  like_count: number;
-  share_count: number;
-  metadata: Record<string, any>;
-  created_at: string;
-  updated_at: string;
-};
+// Use the database type directly to avoid mismatches
+type AdminContentRow = Database['public']['Tables']['admin_content']['Row'];
+type AdminContentInsert = Database['public']['Tables']['admin_content']['Insert'];
+type AdminContentUpdate = Database['public']['Tables']['admin_content']['Update'];
+
+export type AdminContent = AdminContentRow;
 
 export const useAdminContent = () => {
   const [content, setContent] = useState<AdminContent[]>([]);
@@ -48,11 +36,20 @@ export const useAdminContent = () => {
     }
   };
 
-  const createContent = async (contentData: Partial<AdminContent>) => {
+  const createContent = async (contentData: Omit<AdminContentInsert, 'admin_id'>) => {
     try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const insertData: AdminContentInsert = {
+        ...contentData,
+        admin_id: user.id,
+      };
+
       const { data, error } = await supabase
         .from('admin_content')
-        .insert([contentData])
+        .insert(insertData)
         .select()
         .single();
 
@@ -75,7 +72,7 @@ export const useAdminContent = () => {
     }
   };
 
-  const updateContent = async (id: string, updates: Partial<AdminContent>) => {
+  const updateContent = async (id: string, updates: AdminContentUpdate) => {
     try {
       const { data, error } = await supabase
         .from('admin_content')
