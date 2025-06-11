@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import ProfileCard from './ProfileCard';
 import PostCard from './PostCard';
-import ProviderProfileCard from './provider/ProviderProfileCard';
+import ProviderProfileCard from './ProviderProfileCard';
 import { useAuth } from '@/contexts/AuthContext';
 import ContentProfileCard from './ContentProfileCard';
 import { useContentFeed } from '@/hooks/useContentFeed';
@@ -46,9 +47,6 @@ interface FeedContentProps {
   setFilterGender: (gender: string) => void;
 }
 
-import ContentProfileCard from './ContentProfileCard';
-import { useContentFeed } from '@/hooks/useContentFeed';
-
 const FeedContent = ({ 
   feedItems, 
   likedItems, 
@@ -74,8 +72,9 @@ const FeedContent = ({
     ...contentFeedItems.map(item => ({ ...item, isContent: true })),
     ...feedItems.map(item => ({ ...item, isContent: false }))
   ].sort((a, b) => {
-    const dateA = new Date(a.isContent ? a.timestamp : Date.now());
-    const dateB = new Date(b.isContent ? b.timestamp : Date.now());
+    // Handle timestamp for content items vs regular items
+    const dateA = new Date(a.isContent && 'timestamp' in a ? a.timestamp : Date.now());
+    const dateB = new Date(b.isContent && 'timestamp' in b ? b.timestamp : Date.now());
     return dateB.getTime() - dateA.getTime();
   });
 
