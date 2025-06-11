@@ -1,6 +1,5 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { demoProfiles } from '@/data/demoProfiles';
 import { useRealProfiles } from './useRealProfiles';
 import { useNewJoiners } from './useNewJoiners';
 import { useFilteredFeedData } from './useFilteredFeedData';
@@ -58,16 +57,10 @@ export const useFeedData = (itemsPerPage: number = 6) => {
     fetchPosts();
   }, [fetchPosts]);
 
-  // Combine real profiles with demo profiles
+  // Use only real profiles from database
   const allProfiles = useMemo(() => {
-    const demoProfilesWithFlag = demoProfiles.map(profile => ({
-      ...profile,
-      isRealAccount: false
-    }));
-    
-    const combined = [...realProfiles, ...demoProfilesWithFlag];
-    console.log(`Total profiles: ${combined.length} (${realProfiles.length} real + ${demoProfiles.length} demo)`);
-    return combined;
+    console.log(`Total profiles: ${realProfiles.length} (all real accounts)`);
+    return realProfiles;
   }, [realProfiles]);
 
   // Apply role-based filtering with posts data

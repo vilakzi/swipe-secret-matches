@@ -22,7 +22,7 @@ export const shuffleArray = <T>(array: T[]): T[] => {
 export const generateFeedItems = (profiles: Profile[], shuffleKey: number): FeedItem[] => {
   const items: FeedItem[] = [];
   
-  console.log('Creating feed items from profiles:', profiles.length);
+  console.log('Creating feed items from real profiles:', profiles.length);
   
   // Shuffle profiles first to randomize order
   const shuffledProfiles = shuffleArray(profiles);
@@ -55,6 +55,6 @@ export const generateFeedItems = (profiles: Profile[], shuffleKey: number): Feed
     }
   });
   
-  console.log('Total feed items created:', items.length);
+  console.log('Total feed items created from real accounts:', items.length);
   return items;
 };

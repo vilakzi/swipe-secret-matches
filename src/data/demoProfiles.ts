@@ -20,5 +20,5 @@ export interface Profile {
   isRealAccount?: boolean;
 }
 
-// Removed all demo profiles - platform now uses only real accounts from database
+// All demo profiles removed - platform now uses only real accounts from database
 export const demoProfiles: Profile[] = [];
