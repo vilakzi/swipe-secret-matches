@@ -16,7 +16,8 @@ import {
   DollarSign,
   UserCheck,
   Activity,
-  Calendar
+  Calendar,
+  Crown
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,6 +27,7 @@ import UserManagement from '@/components/admin/UserManagement';
 import PaymentTracking from '@/components/admin/PaymentTracking';
 import AppAnalytics from '@/components/admin/AppAnalytics';
 import AdminSettings from '@/components/admin/AdminSettings';
+import SuperAdminDashboard from '@/components/admin/SuperAdminDashboard';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -61,10 +63,14 @@ const AdminDashboard = () => {
 
       <div className="max-w-7xl mx-auto p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 bg-black/20 backdrop-blur-md">
+          <TabsList className="grid w-full grid-cols-6 bg-black/20 backdrop-blur-md">
             <TabsTrigger value="overview" className="text-white data-[state=active]:bg-purple-600">
               <TrendingUp className="w-4 h-4 mr-2" />
               Overview
+            </TabsTrigger>
+            <TabsTrigger value="superadmin" className="text-white data-[state=active]:bg-purple-600">
+              <Crown className="w-4 h-4 mr-2" />
+              SuperAdmin
             </TabsTrigger>
             <TabsTrigger value="users" className="text-white data-[state=active]:bg-purple-600">
               <Users className="w-4 h-4 mr-2" />
@@ -86,6 +92,10 @@ const AdminDashboard = () => {
 
           <TabsContent value="overview" className="space-y-6">
             <AdminOverview />
+          </TabsContent>
+
+          <TabsContent value="superadmin" className="space-y-6">
+            <SuperAdminDashboard />
           </TabsContent>
 
           <TabsContent value="users" className="space-y-6">

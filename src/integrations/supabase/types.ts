@@ -9,6 +9,69 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_content: {
+        Row: {
+          admin_id: string
+          content_type: string
+          created_at: string
+          description: string | null
+          file_size: number | null
+          file_url: string
+          id: string
+          like_count: number | null
+          metadata: Json | null
+          published_at: string | null
+          scheduled_at: string | null
+          share_count: number | null
+          status: string
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          view_count: number | null
+          visibility: string
+        }
+        Insert: {
+          admin_id: string
+          content_type: string
+          created_at?: string
+          description?: string | null
+          file_size?: number | null
+          file_url: string
+          id?: string
+          like_count?: number | null
+          metadata?: Json | null
+          published_at?: string | null
+          scheduled_at?: string | null
+          share_count?: number | null
+          status?: string
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          view_count?: number | null
+          visibility?: string
+        }
+        Update: {
+          admin_id?: string
+          content_type?: string
+          created_at?: string
+          description?: string | null
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          like_count?: number | null
+          metadata?: Json | null
+          published_at?: string | null
+          scheduled_at?: string | null
+          share_count?: number | null
+          status?: string
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          view_count?: number | null
+          visibility?: string
+        }
+        Relationships: []
+      }
       audit_log: {
         Row: {
           action: string
@@ -68,6 +131,44 @@ export type Database = {
           id?: string
         }
         Relationships: []
+      }
+      content_analytics: {
+        Row: {
+          content_id: string
+          id: string
+          metadata: Json | null
+          metric_type: string
+          timestamp: string
+          user_id: string | null
+          value: number
+        }
+        Insert: {
+          content_id: string
+          id?: string
+          metadata?: Json | null
+          metric_type: string
+          timestamp?: string
+          user_id?: string | null
+          value?: number
+        }
+        Update: {
+          content_id?: string
+          id?: string
+          metadata?: Json | null
+          metric_type?: string
+          timestamp?: string
+          user_id?: string | null
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_analytics_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "admin_content"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       daily_usage: {
         Row: {
@@ -485,6 +586,36 @@ export type Database = {
         }
         Relationships: []
       }
+      superadmin_sessions: {
+        Row: {
+          admin_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          ip_address: unknown | null
+          session_token: string
+          user_agent: string | null
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          ip_address?: unknown | null
+          session_token: string
+          user_agent?: string | null
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          ip_address?: unknown | null
+          session_token?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       swipes: {
         Row: {
           created_at: string
@@ -688,6 +819,17 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      get_content_analytics_summary: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          total_content: number
+          total_views: number
+          total_likes: number
+          total_shares: number
+          published_content: number
+          draft_content: number
+        }[]
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -701,6 +843,10 @@ export type Database = {
           | { _user_id: string; _role: Database["public"]["Enums"]["app_role"] }
           | { mutable: string }
         Returns: boolean
+      }
+      increment_content_view: {
+        Args: { content_id: string }
+        Returns: undefined
       }
       is_admin: {
         Args: Record<PropertyKey, never>
