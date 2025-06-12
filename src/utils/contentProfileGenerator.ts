@@ -1,5 +1,5 @@
 
-import { AdminContent } from '@/hooks/useAdminContent';
+import { EnhancedAdminContent } from '@/hooks/useEnhancedAdminContent';
 
 export interface ContentProfile {
   id: string;
@@ -18,6 +18,8 @@ export interface ContentProfile {
   likes?: number;
   shares?: number;
   viewCount?: number;
+  category?: string;
+  tags?: string[];
 }
 
 export interface ContentFeedItem {
@@ -28,6 +30,8 @@ export interface ContentFeedItem {
   caption?: string;
   contentType?: 'image' | 'video';
   timestamp: string;
+  category?: string;
+  tags?: string[];
   engagement: {
     likes: number;
     views: number;
@@ -35,12 +39,12 @@ export interface ContentFeedItem {
   };
 }
 
-export const generateContentProfileCard = (adminContent: AdminContent): ContentFeedItem => {
+export const generateContentProfileCard = (adminContent: EnhancedAdminContent): ContentFeedItem => {
   const contentProfile: ContentProfile = {
     id: `content-${adminContent.id}`,
     name: "Content",
     age: 0, // Not applicable for content profiles
-    image: "/placeholder.svg", // Default content logo
+    image: "/placeholder.svg", // Default content logo - could be customized per category
     bio: adminContent.description || "Official content",
     whatsapp: "", // Not applicable
     location: "Official",
@@ -51,6 +55,8 @@ export const generateContentProfileCard = (adminContent: AdminContent): ContentF
     likes: adminContent.like_count || 0,
     shares: adminContent.share_count || 0,
     viewCount: adminContent.view_count || 0,
+    category: adminContent.category,
+    tags: adminContent.tags || [],
   };
 
   const feedItem: ContentFeedItem = {
@@ -61,6 +67,8 @@ export const generateContentProfileCard = (adminContent: AdminContent): ContentF
     caption: adminContent.title,
     contentType: adminContent.content_type as 'image' | 'video',
     timestamp: adminContent.created_at,
+    category: adminContent.category,
+    tags: adminContent.tags || [],
     engagement: {
       likes: adminContent.like_count || 0,
       views: adminContent.view_count || 0,
@@ -71,9 +79,13 @@ export const generateContentProfileCard = (adminContent: AdminContent): ContentF
   return feedItem;
 };
 
-export const generateContentProfileCards = (adminContentList: AdminContent[]): ContentFeedItem[] => {
+export const generateContentProfileCards = (adminContentList: EnhancedAdminContent[]): ContentFeedItem[] => {
   return adminContentList
-    .filter(content => content.status === 'published' && content.visibility === 'public')
+    .filter(content => 
+      content.status === 'published' && 
+      content.visibility === 'public' &&
+      content.approval_status === 'approved'
+    )
     .map(generateContentProfileCard)
     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 };

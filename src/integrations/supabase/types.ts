@@ -12,6 +12,12 @@ export type Database = {
       admin_content: {
         Row: {
           admin_id: string
+          approval_status: string | null
+          approved_at: string | null
+          approved_by: string | null
+          auto_published: boolean | null
+          category: Database["public"]["Enums"]["content_category"] | null
+          content_hash: string | null
           content_type: string
           created_at: string
           description: string | null
@@ -20,7 +26,10 @@ export type Database = {
           id: string
           like_count: number | null
           metadata: Json | null
+          optimized_file_sizes: Json | null
+          original_file_size: number | null
           published_at: string | null
+          rejection_reason: string | null
           scheduled_at: string | null
           share_count: number | null
           status: string
@@ -32,6 +41,12 @@ export type Database = {
         }
         Insert: {
           admin_id: string
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          auto_published?: boolean | null
+          category?: Database["public"]["Enums"]["content_category"] | null
+          content_hash?: string | null
           content_type: string
           created_at?: string
           description?: string | null
@@ -40,7 +55,10 @@ export type Database = {
           id?: string
           like_count?: number | null
           metadata?: Json | null
+          optimized_file_sizes?: Json | null
+          original_file_size?: number | null
           published_at?: string | null
+          rejection_reason?: string | null
           scheduled_at?: string | null
           share_count?: number | null
           status?: string
@@ -52,6 +70,12 @@ export type Database = {
         }
         Update: {
           admin_id?: string
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          auto_published?: boolean | null
+          category?: Database["public"]["Enums"]["content_category"] | null
+          content_hash?: string | null
           content_type?: string
           created_at?: string
           description?: string | null
@@ -60,7 +84,10 @@ export type Database = {
           id?: string
           like_count?: number | null
           metadata?: Json | null
+          optimized_file_sizes?: Json | null
+          original_file_size?: number | null
           published_at?: string | null
+          rejection_reason?: string | null
           scheduled_at?: string | null
           share_count?: number | null
           status?: string
@@ -163,6 +190,70 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "content_analytics_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "admin_content"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_approvals: {
+        Row: {
+          action: string
+          content_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          reviewer_id: string
+        }
+        Insert: {
+          action: string
+          content_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          reviewer_id: string
+        }
+        Update: {
+          action?: string
+          content_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          reviewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_approvals_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "admin_content"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_tags: {
+        Row: {
+          content_id: string
+          created_at: string
+          id: string
+          tag: string
+        }
+        Insert: {
+          content_id: string
+          created_at?: string
+          id?: string
+          tag: string
+        }
+        Update: {
+          content_id?: string
+          created_at?: string
+          id?: string
+          tag?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_tags_content_id_fkey"
             columns: ["content_id"]
             isOneToOne: false
             referencedRelation: "admin_content"
@@ -815,9 +906,17 @@ export type Database = {
       }
     }
     Functions: {
+      check_duplicate_content: {
+        Args: { hash_value: string }
+        Returns: boolean
+      }
       cleanup_expired_matches: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      generate_content_hash: {
+        Args: { file_data: string }
+        Returns: string
       }
       get_content_analytics_summary: {
         Args: Record<PropertyKey, never>
@@ -881,6 +980,19 @@ export type Database = {
     }
     Enums: {
       app_role: "user" | "service_provider" | "admin"
+      content_category:
+        | "entertainment"
+        | "news"
+        | "lifestyle"
+        | "sports"
+        | "technology"
+        | "food"
+        | "travel"
+        | "fashion"
+        | "health"
+        | "education"
+        | "business"
+        | "other"
       post_type: "image" | "video"
       promotion_type: "free_2h" | "paid_8h" | "paid_12h"
       user_type: "user" | "service_provider"
@@ -1000,6 +1112,20 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["user", "service_provider", "admin"],
+      content_category: [
+        "entertainment",
+        "news",
+        "lifestyle",
+        "sports",
+        "technology",
+        "food",
+        "travel",
+        "fashion",
+        "health",
+        "education",
+        "business",
+        "other",
+      ],
       post_type: ["image", "video"],
       promotion_type: ["free_2h", "paid_8h", "paid_12h"],
       user_type: ["user", "service_provider"],

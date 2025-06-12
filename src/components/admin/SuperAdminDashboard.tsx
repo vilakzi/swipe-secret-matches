@@ -1,105 +1,176 @@
 
 import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Upload, 
+  Shield, 
   Settings, 
-  BarChart3, 
-  FileText, 
-  Shield,
-  Crown
+  BarChart3,
+  FileImage,
+  CheckCircle,
+  Clock,
+  XCircle
 } from 'lucide-react';
-import ContentUpload from './ContentUpload';
+import EnhancedContentUpload from './EnhancedContentUpload';
+import ContentModerationPanel from './ContentModerationPanel';
 import ContentManager from './ContentManager';
-import AnalyticsDashboard from './AnalyticsDashboard';
+import { useEnhancedAdminContent } from '@/hooks/useEnhancedAdminContent';
 
 const SuperAdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState('upload');
+  const { content } = useEnhancedAdminContent();
+  
+  // Calculate stats
+  const stats = {
+    total: content.length,
+    pending: content.filter(item => item.approval_status === 'pending').length,
+    approved: content.filter(item => item.approval_status === 'approved').length,
+    rejected: content.filter(item => item.approval_status === 'rejected').length,
+    scheduled: content.filter(item => item.status === 'scheduled').length,
+  };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <Card className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-2xl font-bold flex items-center gap-2">
-                <Crown className="w-8 h-8" />
-                SuperAdmin Dashboard
-              </CardTitle>
-              <p className="text-purple-100 mt-2">
-                Complete control over content management and analytics
-              </p>
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Total Content</p>
+                <p className="text-2xl font-bold">{stats.total}</p>
+              </div>
+              <FileImage className="w-8 h-8 text-blue-500" />
             </div>
-            <Badge className="bg-yellow-500 text-black">
-              <Shield className="w-4 h-4 mr-1" />
-              Super Admin
-            </Badge>
-          </div>
-        </CardHeader>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Main Dashboard */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 bg-white shadow-md">
-          <TabsTrigger value="upload" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Pending Review</p>
+                <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+              </div>
+              <Clock className="w-8 h-8 text-yellow-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Approved</p>
+                <p className="text-2xl font-bold text-green-600">{stats.approved}</p>
+              </div>
+              <CheckCircle className="w-8 h-8 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Rejected</p>
+                <p className="text-2xl font-bold text-red-600">{stats.rejected}</p>
+              </div>
+              <XCircle className="w-8 h-8 text-red-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Scheduled</p>
+                <p className="text-2xl font-bold text-purple-600">{stats.scheduled}</p>
+              </div>
+              <Clock className="w-8 h-8 text-purple-500" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Content Management Tabs */}
+      <Tabs defaultValue="upload" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4 bg-black/20 backdrop-blur-md">
+          <TabsTrigger value="upload" className="text-white data-[state=active]:bg-purple-600">
             <Upload className="w-4 h-4 mr-2" />
-            Upload
+            Upload Content
           </TabsTrigger>
-          <TabsTrigger value="content" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white">
-            <FileText className="w-4 h-4 mr-2" />
-            Content
+          <TabsTrigger value="moderation" className="text-white data-[state=active]:bg-purple-600">
+            <Shield className="w-4 h-4 mr-2" />
+            Moderation ({stats.pending})
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white">
+          <TabsTrigger value="management" className="text-white data-[state=active]:bg-purple-600">
+            <Settings className="w-4 h-4 mr-2" />
+            Content Manager
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="text-white data-[state=active]:bg-purple-600">
             <BarChart3 className="w-4 h-4 mr-2" />
             Analytics
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white">
-            <Settings className="w-4 h-4 mr-2" />
-            Settings
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="upload" className="space-y-6">
-          <ContentUpload />
+          <EnhancedContentUpload />
         </TabsContent>
 
-        <TabsContent value="content" className="space-y-6">
+        <TabsContent value="moderation" className="space-y-6">
+          <ContentModerationPanel />
+        </TabsContent>
+
+        <TabsContent value="management" className="space-y-6">
           <ContentManager />
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6">
-          <AnalyticsDashboard />
-        </TabsContent>
-
-        <TabsContent value="settings" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>SuperAdmin Settings</CardTitle>
+              <CardTitle>Content Analytics</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="p-4 border rounded-lg">
-                  <h3 className="font-medium mb-2">Content Settings</h3>
-                  <p className="text-sm text-gray-600">
-                    Manage default content settings, approval workflows, and publishing rules.
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg text-white">
+                  <h3 className="text-lg font-semibold">Total Views</h3>
+                  <p className="text-3xl font-bold">
+                    {content.reduce((sum, item) => sum + (item.view_count || 0), 0).toLocaleString()}
                   </p>
                 </div>
                 
-                <div className="p-4 border rounded-lg">
-                  <h3 className="font-medium mb-2">User Management</h3>
-                  <p className="text-sm text-gray-600">
-                    Control user permissions, content moderation, and access levels.
+                <div className="p-4 bg-gradient-to-r from-green-500 to-teal-600 rounded-lg text-white">
+                  <h3 className="text-lg font-semibold">Total Likes</h3>
+                  <p className="text-3xl font-bold">
+                    {content.reduce((sum, item) => sum + (item.like_count || 0), 0).toLocaleString()}
                   </p>
                 </div>
                 
-                <div className="p-4 border rounded-lg">
-                  <h3 className="font-medium mb-2">System Configuration</h3>
-                  <p className="text-sm text-gray-600">
-                    Configure system-wide settings, storage limits, and performance options.
+                <div className="p-4 bg-gradient-to-r from-orange-500 to-red-600 rounded-lg text-white">
+                  <h3 className="text-lg font-semibold">Total Shares</h3>
+                  <p className="text-3xl font-bold">
+                    {content.reduce((sum, item) => sum + (item.share_count || 0), 0).toLocaleString()}
                   </p>
+                </div>
+              </div>
+
+              {/* Category Breakdown */}
+              <div className="mt-6">
+                <h4 className="text-lg font-semibold mb-4">Content by Category</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {Object.entries(
+                    content.reduce((acc, item) => {
+                      acc[item.category] = (acc[item.category] || 0) + 1;
+                      return acc;
+                    }, {} as Record<string, number>)
+                  ).map(([category, count]) => (
+                    <div key={category} className="p-2 bg-gray-100 rounded text-center">
+                      <div className="text-sm font-medium capitalize">{category}</div>
+                      <div className="text-lg font-bold">{count}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </CardContent>
