@@ -45,6 +45,7 @@ const PostCard = ({ item, likedItems, isSubscribed, onLike, onContact }: PostCar
   const navigate = useNavigate();
   const { isOpen, imageSrc, imageAlt, openModal, closeModal } = useImageModal();
   const [showComments, setShowComments] = useState(false);
+  const [videoError, setVideoError] = useState<string | null>(null);
 
   const handleProfileClick = () => {
     console.log('Navigating to profile:', item.profile.id);
@@ -71,7 +72,10 @@ const PostCard = ({ item, likedItems, isSubscribed, onLike, onContact }: PostCar
     openModal(item.postImage || '', `${item.profile.name}'s post`);
   };
 
-  const isVideo = item.postImage?.includes('.mp4') || item.postImage?.includes('.mov') || item.postImage?.includes('.webm');
+  const isVideo =
+    item.postImage?.includes('.mp4') ||
+    item.postImage?.includes('.mov') ||
+    item.postImage?.includes('.webm');
 
   return (
     <>
@@ -120,14 +124,30 @@ const PostCard = ({ item, likedItems, isSubscribed, onLike, onContact }: PostCar
         <div className="relative">
           {isVideo ? (
             <div className="relative">
+              {console.log("[Feed] Video src:", item.postImage)}
               <video
                 src={item.postImage}
                 className="w-full h-72 object-cover"
                 controls
                 poster={item.postImage?.replace(/\.(mp4|mov|webm)$/, '.jpg')}
+                onError={(e) => {
+                  setVideoError('Failed to load video (check file integrity and URL).');
+                  console.error('[Feed] Video failed to load:', item.postImage, e);
+                }}
+                onCanPlay={() => {
+                  setVideoError(null);
+                  console.log('[Feed] Video can be played:', item.postImage);
+                }}
               >
-                Your browser does not support the video tag.
+                Sorry, your browser can't play this video.
               </video>
+              {videoError && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-10">
+                  <span className="text-red-400 font-bold text-center px-4">
+                    {videoError}
+                  </span>
+                </div>
+              )}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <Play className="w-12 h-12 text-white opacity-80" />
               </div>
