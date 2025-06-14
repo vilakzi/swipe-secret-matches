@@ -9,6 +9,7 @@ import ImageModal from '@/components/ui/ImageModal';
 import { useImageModal } from '@/hooks/useImageModal';
 import PostComments from './PostComments';
 import { useState } from 'react';
+import PostVideoPlayer from './PostVideoPlayer';
 
 interface Profile {
   id: string;
@@ -128,35 +129,10 @@ const PostCard = ({ item, likedItems, isSubscribed, onLike, onContact }: PostCar
         {/* Post Content */}
         <div className="relative">
           {isVideo && item.postImage ? (
-            <div className="relative">
-              <video
-                src={item.postImage}
-                className="w-full h-72 object-cover"
-                controls
-                poster={item.postImage.replace(/\.(mp4|mov|webm)$/, '.jpg')}
-                onError={(e) => {
-                  setVideoError('Failed to load video (check file integrity and URL).');
-                  console.error('[Feed] Video failed to load:', item.postImage, e);
-                }}
-                onCanPlay={() => {
-                  setVideoError(null);
-                  console.log('[Feed] Video can be played:', item.postImage);
-                }}
-              >
-                Sorry, your browser can't play this video.
-              </video>
-              {videoError && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-10">
-                  <span className="text-red-400 font-bold text-center px-4">
-                    {videoError}<br/>
-                    <span className="text-xs">({item.postImage})</span>
-                  </span>
-                </div>
-              )}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <Play className="w-12 h-12 text-white opacity-80" />
-              </div>
-            </div>
+            <PostVideoPlayer
+              src={item.postImage}
+              posterUrl={item.postImage.replace(/\.(mp4|mov|webm)$/, '.jpg')}
+            />
           ) : (
             item.postImage && (
               <OptimizedImage
