@@ -38,27 +38,59 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment }: PostUploadFormProps)
   };
 
   const handleUpload = async () => {
-    if (!selectedFile || !user) return;
+    if (!selectedFile || !user) {
+      toast({
+        title: "No file or user",
+        description: "Please select a file and try again.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     setUploading(true);
 
     try {
       const fileExt = selectedFile.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-      
+      console.log('[Upload] Starting upload:', fileName);
+
+      // Upload file to Supabase Storage
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('posts')
         .upload(fileName, selectedFile);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('[Upload] Storage upload error:', uploadError);
+        toast({
+          title: "Storage upload failed",
+          description: uploadError.message,
+          variant: "destructive"
+        });
+        setUploading(false);
+        return;
+      }
+      console.log('[Upload] Storage upload successful:', uploadData);
 
+      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('posts')
         .getPublicUrl(fileName);
 
+      if (!publicUrl) {
+        toast({
+          title: "Get public URL failed",
+          description: "Could not get URL for uploaded file.",
+          variant: "destructive"
+        });
+        setUploading(false);
+        return;
+      }
+      console.log('[Upload] Public URL:', publicUrl);
+
       const expiresAt = calculateExpiryTime(promotionType);
       const postType = selectedFile.type.startsWith('image/') ? 'image' : 'video';
 
+      // Insert post record to DB
       const { data: postData, error: postError } = await supabase
         .from('posts')
         .insert({
@@ -74,7 +106,17 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment }: PostUploadFormProps)
         .select()
         .single();
 
-      if (postError) throw postError;
+      if (postError) {
+        console.error('[Upload] DB insert error:', postError);
+        toast({
+          title: "Feed DB insert failed",
+          description: postError.message,
+          variant: "destructive"
+        });
+        setUploading(false);
+        return;
+      }
+      console.log('[Upload] DB insert complete, postData:', postData);
 
       if (promotionType !== 'free_2h') {
         onShowPayment(postData);
@@ -89,10 +131,11 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment }: PostUploadFormProps)
       setSelectedFile(null);
       setCaption('');
     } catch (error: any) {
+      console.error('[Upload] UNEXPECTED error:', error);
       toast({
         title: "Upload failed",
-        description: error.message,
-        variant: "destructive",
+        description: error.message ?? String(error),
+        variant: "destructive"
       });
     } finally {
       setUploading(false);
