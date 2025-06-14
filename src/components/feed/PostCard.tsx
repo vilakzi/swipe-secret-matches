@@ -77,6 +77,11 @@ const PostCard = ({ item, likedItems, isSubscribed, onLike, onContact }: PostCar
     item.postImage?.includes('.mov') ||
     item.postImage?.includes('.webm');
 
+  // Debugging: log postImage before rendering
+  if (isVideo && item.postImage) {
+    console.log("[Feed] Rendering video with src:", item.postImage);
+  }
+
   return (
     <>
       <Card className="bg-gray-800 border-gray-700 mb-4">
@@ -122,14 +127,13 @@ const PostCard = ({ item, likedItems, isSubscribed, onLike, onContact }: PostCar
 
         {/* Post Content */}
         <div className="relative">
-          {isVideo ? (
+          {isVideo && item.postImage ? (
             <div className="relative">
-              {console.log("[Feed] Video src:", item.postImage)}
               <video
                 src={item.postImage}
                 className="w-full h-72 object-cover"
                 controls
-                poster={item.postImage?.replace(/\.(mp4|mov|webm)$/, '.jpg')}
+                poster={item.postImage.replace(/\.(mp4|mov|webm)$/, '.jpg')}
                 onError={(e) => {
                   setVideoError('Failed to load video (check file integrity and URL).');
                   console.error('[Feed] Video failed to load:', item.postImage, e);
@@ -144,7 +148,8 @@ const PostCard = ({ item, likedItems, isSubscribed, onLike, onContact }: PostCar
               {videoError && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-10">
                   <span className="text-red-400 font-bold text-center px-4">
-                    {videoError}
+                    {videoError}<br/>
+                    <span className="text-xs">({item.postImage})</span>
                   </span>
                 </div>
               )}
@@ -153,13 +158,15 @@ const PostCard = ({ item, likedItems, isSubscribed, onLike, onContact }: PostCar
               </div>
             </div>
           ) : (
-            <OptimizedImage
-              src={item.postImage || ''}
-              alt="Post"
-              className="w-full h-72 hover:opacity-95 transition-opacity"
-              onClick={handlePostImageClick}
-              expandable
-            />
+            item.postImage && (
+              <OptimizedImage
+                src={item.postImage}
+                alt="Post"
+                className="w-full h-72 hover:opacity-95 transition-opacity"
+                onClick={handlePostImageClick}
+                expandable
+              />
+            )
           )}
           <div 
             className="absolute top-4 left-4 right-4 h-8 bg-transparent cursor-pointer" 
