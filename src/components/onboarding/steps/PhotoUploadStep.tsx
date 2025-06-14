@@ -1,10 +1,11 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Camera, X, Upload, ArrowUp, ArrowDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { useUserRole } from "@/hooks/useUserRole";
+import { getMaxUploadSize } from "@/utils/getMaxUploadSize";
 
 interface PhotoUploadStepProps {
   profileData: { photos: string[] };
@@ -13,6 +14,8 @@ interface PhotoUploadStepProps {
 
 const PhotoUploadStep = ({ profileData, updateProfileData }: PhotoUploadStepProps) => {
   const { user } = useAuth();
+  const { role } = useUserRole();
+  const maxSize = getMaxUploadSize(role);
   const [uploading, setUploading] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<number | null>(null);
 
@@ -28,6 +31,15 @@ const PhotoUploadStep = ({ profileData, updateProfileData }: PhotoUploadStepProp
     try {
       for (let i = 0; i < Math.min(files.length, maxPhotos - profileData.photos.length); i++) {
         const file = files[i];
+
+        if (file.size > maxSize) {
+          toast({
+            title: "File too large",
+            description: `Image must be less than ${Math.round(maxSize / (1024*1024))}MB (${role})`,
+            variant: "destructive"
+          });
+          continue;
+        }
         
         const fileExt = file.name.split('.').pop();
         const fileName = `${user.id}/profile_${Date.now()}_${i}.${fileExt}`;
@@ -210,7 +222,9 @@ const PhotoUploadStep = ({ profileData, updateProfileData }: PhotoUploadStepProp
         {profileData.photos.length < maxPhotos && (
           <label className="aspect-square border-2 border-dashed border-gray-600 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-purple-500 transition-colors">
             <Camera className="w-8 h-8 text-gray-400 mb-2" />
-            <span className="text-sm text-gray-400">Add Photo</span>
+            <span className="text-sm text-gray-400">
+              Add Photo (max {Math.round(maxSize / (1024*1024))}MB)
+            </span>
             <input
               type="file"
               accept="image/*"

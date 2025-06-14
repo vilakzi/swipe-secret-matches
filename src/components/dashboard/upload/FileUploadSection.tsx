@@ -1,9 +1,10 @@
-
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { X, Image, Video, CheckCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useUserRole } from "@/hooks/useUserRole";
+import { getMaxUploadSize } from "@/utils/getMaxUploadSize";
 
 interface FileUploadSectionProps {
   selectedFile: File | null;
@@ -11,6 +12,9 @@ interface FileUploadSectionProps {
 }
 
 const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProps) => {
+  const { role } = useUserRole();
+  const maxSize = getMaxUploadSize(role);
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -26,10 +30,10 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
         return;
       }
 
-      if (isVideo && file.size > 30 * 1024 * 1024) {
+      if (file.size > maxSize) {
         toast({
           title: "File too large",
-          description: "Video files must be 30MB or less.",
+          description: `Maximum allowed: ${Math.round(maxSize / (1024*1024))}MB (${role === "admin" ? "Admin" : "Provider/User"} limit)`,
           variant: "destructive",
         });
         return;
@@ -75,7 +79,7 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
               className="bg-gray-800 border-gray-600 text-white file:bg-purple-600 file:text-white file:border-0 file:rounded file:px-3 file:py-1 file:mr-3 cursor-pointer"
             />
             <p className="text-xs text-gray-400 mt-1">
-              Images: Any size | Videos: Max 30MB
+              Images: Any size | Videos: Max {Math.round(maxSize / (1024*1024))}MB ({role})
             </p>
           </>
         ) : (

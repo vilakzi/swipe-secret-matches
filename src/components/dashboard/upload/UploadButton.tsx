@@ -1,7 +1,8 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload, CheckCircle } from 'lucide-react';
+import { useUserRole } from "@/hooks/useUserRole";
+import { getMaxUploadSize } from "@/utils/getMaxUploadSize";
 
 interface UploadButtonProps {
   selectedFile: File | null;
@@ -11,6 +12,9 @@ interface UploadButtonProps {
 }
 
 const UploadButton = ({ selectedFile, uploading, promotionType, onUpload }: UploadButtonProps) => {
+  const { role } = useUserRole();
+  const maxSize = getMaxUploadSize(role);
+
   const getPromotionPrice = (type: string) => {
     switch (type) {
       case 'paid_8h':
@@ -64,6 +68,10 @@ const UploadButton = ({ selectedFile, uploading, promotionType, onUpload }: Uplo
           </div>
         )}
       </Button>
+      
+      <p className="text-center text-gray-400 text-xs">
+        Max file size: {Math.round(maxSize / (1024*1024))}MB ({role})
+      </p>
       
       {!selectedFile && (
         <p className="text-center text-gray-400 text-xs">

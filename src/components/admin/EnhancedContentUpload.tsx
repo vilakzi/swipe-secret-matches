@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Upload, X, Image, Video, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { useEnhancedAdminContent, ContentCategory } from '@/hooks/useEnhancedAdminContent';
+import { useUserRole } from "@/hooks/useUserRole";
+import { getMaxUploadSize } from "@/utils/getMaxUploadSize";
 
 interface UploadFile {
   file: File;
@@ -43,6 +44,8 @@ const EnhancedContentUpload = () => {
   const [tags, setTags] = useState<string>('');
   const [scheduledDate, setScheduledDate] = useState('');
   const { createContent } = useEnhancedAdminContent();
+  const { role } = useUserRole();
+  const maxSize = getMaxUploadSize(role);
 
   // Generate file hash for duplicate detection
   const generateFileHash = async (file: File): Promise<string> => {
@@ -56,6 +59,10 @@ const EnhancedContentUpload = () => {
     const newFiles: UploadFile[] = [];
     
     for (const file of acceptedFiles) {
+      if (file.size > maxSize) {
+        alert(`"${file.name}" too large: ${Math.round(file.size / (1024*1024))}MB. Limit: ${Math.round(maxSize / (1024*1024))}MB (${role})`);
+        continue;
+      }
       const hash = await generateFileHash(file);
       
       newFiles.push({
@@ -69,7 +76,7 @@ const EnhancedContentUpload = () => {
     }
     
     setUploadFiles(prev => [...prev, ...newFiles]);
-  }, []);
+  }, [maxSize, role, generateFileHash]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -249,6 +256,9 @@ const EnhancedContentUpload = () => {
               </p>
             </div>
           )}
+          <p className="text-sm text-gray-500 mt-2">
+            Max file size: {Math.round(maxSize / (1024*1024))}MB ({role})
+          </p>
         </div>
 
         {/* File Previews */}
