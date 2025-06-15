@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useRealProfiles } from './useRealProfiles';
 import { useNewJoiners } from './useNewJoiners';
@@ -19,7 +18,6 @@ export const useFeedData = (itemsPerPage: number = 6) => {
   // Defensive user extraction
   let user;
   try {
-    // Uses Supabase Auth Context
     user = useAuth().user;
   } catch (e) {
     user = null;
@@ -27,6 +25,17 @@ export const useFeedData = (itemsPerPage: number = 6) => {
 
   const { realProfiles, loading: profilesLoading } = useRealProfiles();
   const { newJoiners, loading: newJoinersLoading } = useNewJoiners();
+
+  // Provide fallback early exit if there is no user
+  if (!user) {
+    return {
+      displayedItems: [],
+      hasMoreItems: false,
+      isLoadingMore: false,
+      handleLoadMore: () => {},
+      handleRefresh: () => {},
+    };
+  }
 
   // Fetch posts from Supabase
   const fetchPosts = useCallback(async () => {
