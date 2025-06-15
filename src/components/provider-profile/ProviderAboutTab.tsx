@@ -1,9 +1,4 @@
-
-interface ProviderData {
-  display_name: string;
-  bio: string;
-  profile_images: string[];
-}
+import { ProviderData } from '@/types/provider';
 
 const ProviderAboutTab = ({ provider }: { provider: ProviderData }) => (
   <div className="bg-black/20 backdrop-blur-md border border-gray-700 rounded shadow">

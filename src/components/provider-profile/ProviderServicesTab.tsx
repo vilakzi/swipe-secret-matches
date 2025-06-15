@@ -1,5 +1,7 @@
 
 import { Button } from '@/components/ui/button';
+import { COMMON_SERVICES } from '@/constants/serviceCategories';
+import { ProviderData } from '@/types/provider';
 
 const ProviderServicesTab = ({ services }: { services?: string[] }) => {
   return (
@@ -9,9 +11,17 @@ const ProviderServicesTab = ({ services }: { services?: string[] }) => {
         {services && services.length > 0 ? (
           <div className="grid gap-3">
             {services.map((service, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-800/50 rounded">
+              <div
+                key={index}
+                className="flex items-center justify-between p-3 bg-gray-800/50 rounded"
+              >
                 <span className="text-white">{service}</span>
-                <Button size="sm" variant="outline" className="border-purple-500 text-purple-400">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-purple-500 text-purple-400"
+                  aria-label={`Inquire about ${service}`}
+                >
                   Inquire
                 </Button>
               </div>
