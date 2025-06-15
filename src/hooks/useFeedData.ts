@@ -22,6 +22,9 @@ export const useFeedData = (itemsPerPage: number = 6) => {
     user = null;
   }
 
+  // Debug: output user value before any use
+  console.debug("user value is", user);
+
   // --- Return default values if no user (instead of null) --- //
   if (!user) {
     return {
