@@ -16,6 +16,7 @@
     "isolatedModules": true,
     "resolveJsonModule": true,
     "typeRoots": ["./node_modules/@types"]
+    // If there is a "types": [...] array, ensure "testing-library__jest-dom" is NOT present.
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]

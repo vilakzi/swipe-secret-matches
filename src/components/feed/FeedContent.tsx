@@ -55,7 +55,7 @@ const FeedContent = ({
   const { contentFeedItems, handleContentLike, handleContentShare } = useContentFeed();
   const { user } = useAuth();
 
-  // Enhanced filter: exclude post items missing a valid postImage, and exclude any item with missing profile/id
+  // More strict filter: must have valid profile, profile.id, profile.name, and profile.image (for all cards)
   const isValidMedia = (url?: string) => {
     if (!url) return false;
     const ext = url.split('.').pop()?.toLowerCase();
@@ -65,18 +65,24 @@ const FeedContent = ({
   };
 
   const filteredFeedItems = feedItems.filter((item: any) => {
-    if (!item || !item.profile || !item.id) return false;
+    if (!item || !item.profile || !item.profile.id || !item.profile.name || !item.profile.image) return false; // essential for any item
     if (item.type === 'post') {
       return isValidMedia(item.postImage);
     }
     return true;
   });
 
-  // Prepare adminFeed (contentFeedItems always have .file_url and .title per generator, but double check)
+  // Prepare adminFeed (contentFeedItems always have .file_url and .title per generator, but double check essentials)
   const adminFeed = contentFeedItems
     .filter(
       (item) =>
-        !!item && !!item.id && !!item.postImage && !!item.caption && isValidMedia(item.postImage)
+        !!item && !!item.id && !!item.postImage
+        && !!item.caption
+        && isValidMedia(item.postImage)
+        && !!item.profile
+        && !!item.profile.id
+        && !!item.profile.name
+        && !!item.profile.image
     )
     .map(item => ({ ...item, isContent: true }));
 
@@ -104,13 +110,11 @@ const FeedContent = ({
 
   return (
     <div className="space-y-4 px-4 pb-6" role="list" aria-label="Social feed items">
-      {/* Combined Feed Items */}
       {filteredItems
-        .filter((item: any) => !!item && !!item.profile && !!item.id) // extra safety
+        .filter((item: any) => !!item && !!item.profile && !!item.profile.id && !!item.profile.name && !!item.profile.image && !!item.id) // double guard
         .map((item: any) => {
           if (item.isContent) {
-            // ContentProfileCard: ensure required fields present
-            if (!item.postImage || !item.caption) return null;
+            if (!item.postImage || !item.caption || !isValidMedia(item.postImage) || !item.profile || !item.profile.id || !item.profile.name || !item.profile.image) return null;
             return (
               <ContentProfileCard
                 key={`content-${item.id}`}
@@ -122,11 +126,12 @@ const FeedContent = ({
               />
             );
           } else {
-            // Render regular profile cards
-            if (!item.profile || !item.id) return null;
+            if (!item.profile || !item.profile.id || !item.profile.name || !item.profile.image || !item.id) return null;
             const isServiceProvider = item.profile.userType === 'service_provider';
 
             if (isServiceProvider) {
+              // For ProviderProfileCard: must have essentials
+              if (!item.profile.id || !item.profile.name || !item.profile.image) return null;
               return (
                 <ProviderProfileCard
                   key={item.id}
@@ -138,6 +143,8 @@ const FeedContent = ({
                 />
               );
             } else if (item.type === 'post' && item.postImage && isValidMedia(item.postImage)) {
+              // For PostCard: must have valid postImage, profile, etc
+              if (!item.profile.id || !item.profile.name || !item.profile.image || !item.postImage) return null;
               return (
                 <PostCard
                   key={item.id}
@@ -149,6 +156,8 @@ const FeedContent = ({
                 />
               );
             } else if (item.type === 'profile') {
+              // For ProfileCard: must have essentials
+              if (!item.profile.id || !item.profile.name || !item.profile.image) return null;
               return (
                 <ProfileCard
                   key={item.id}
@@ -160,7 +169,6 @@ const FeedContent = ({
                 />
               );
             }
-            // Otherwise, do not render the card
             return null;
           }
         })}
