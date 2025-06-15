@@ -1,45 +1,13 @@
 
 import React from "react";
-import ProfileCard from "./ProfileCard";
-import PostCard from "./PostCard";
-import { 
-  isValidMedia, 
-  isProfileImageChanged,
-  isNewJoiner,
-  PLACEHOLDER_IMAGE
-} from "@/utils/feedUtils";
-
-interface Profile {
-  id: string;
-  name: string;
-  age: number;
-  image: string;
-  bio: string;
-  whatsapp: string;
-  location: string;
-  gender?: "male" | "female";
-  userType?: "user" | "service_provider" | "admin" | "superadmin";
-  serviceCategory?: string;
-  portfolio?: string[];
-  rating?: number;
-  reviewCount?: number;
-  isAvailable?: boolean;
-  services?: string[];
-  liked?: boolean;
-  posts?: string[];
-  isRealAccount?: boolean;
-  joinDate?: string;
-  role?: string;
-}
-
-interface FeedItem {
-  id: string;
-  type: "profile" | "post";
-  profile: Profile;
-  postImage?: string;
-  caption?: string;
-  isWelcome?: boolean;
-}
+import { isValidMedia } from "@/utils/feed/mediaUtils";
+import { isProfileImageChanged } from "@/utils/feed/profileUtils";
+import { isNewJoiner } from "@/utils/feed/joinerUtils";
+import { PLACEHOLDER_IMAGE } from "@/utils/feed/profileUtils";
+import WelcomeCard from "./WelcomeCard";
+import FeedProfileCard from "./FeedProfileCard";
+import FeedPostCard from "./FeedPostCard";
+import { FeedItem, Profile } from "./types/feedTypes";
 
 interface NormalFeedListProps {
   userFeed: FeedItem[];
@@ -71,16 +39,15 @@ const NormalFeedList: React.FC<NormalFeedListProps> = ({
       {nonAdminFeed.map((item: any) => {
         if (item.isWelcome) {
           return (
-            <div key={`welcome-${item.profile.id}`} className="bg-gradient-to-r from-blue-800 via-purple-800 to-indigo-900 rounded-lg px-6 py-8 shadow-lg text-center">
-              <h2 className="font-bold text-2xl text-white mb-2">👋 Welcome, {item.profile.name || 'New user'}!</h2>
-              <p className="text-purple-200">Upload your first photo or video to be featured in the feed.</p>
-              <p className="text-sm text-gray-400 mt-3">We can't wait to see your first post.</p>
-            </div>
+            <WelcomeCard
+              key={`welcome-${item.profile.id}`}
+              profile={item.profile}
+            />
           );
         }
         if (item.type === "post" && isValidMedia(item.postImage)) {
           return (
-            <PostCard
+            <FeedPostCard
               key={item.id}
               item={item}
               likedItems={likedItems}
@@ -92,7 +59,7 @@ const NormalFeedList: React.FC<NormalFeedListProps> = ({
         }
         if (item.type === "profile") {
           return (
-            <ProfileCard
+            <FeedProfileCard
               key={item.id}
               item={item}
               likedItems={likedItems}

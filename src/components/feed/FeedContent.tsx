@@ -6,42 +6,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import ContentProfileCard from './ContentProfileCard';
 import { useContentFeed } from '@/hooks/useContentFeed';
 import { useUserRole } from '@/hooks/useUserRole';
-import {
-  isValidMedia,
-  isProfileImageChanged,
-  isNewJoiner,
-} from '@/utils/feedUtils';
-
-interface Profile {
-  id: string;
-  name: string;
-  age: number;
-  image: string;
-  bio: string;
-  whatsapp: string;
-  location: string;
-  gender?: 'male' | 'female';
-  userType?: 'user' | 'service_provider' | 'admin' | 'superadmin';
-  serviceCategory?: string;
-  portfolio?: string[];
-  rating?: number;
-  reviewCount?: number;
-  isAvailable?: boolean;
-  services?: string[];
-  liked?: boolean;
-  posts?: string[];
-  isRealAccount?: boolean;
-  joinDate?: string;
-  role?: string;
-}
-
-interface FeedItem {
-  id: string;
-  type: 'profile' | 'post';
-  profile: Profile;
-  postImage?: string;
-  caption?: string;
-}
+// Utility imports
+import { isValidMedia } from '@/utils/feed/mediaUtils';
+import { isProfileImageChanged } from '@/utils/feed/profileUtils';
+import { isNewJoiner } from '@/utils/feed/joinerUtils';
+import { FeedItem, Profile } from './types/feedTypes';
 
 interface FeedContentProps {
   feedItems: FeedItem[];
@@ -64,7 +33,6 @@ const FeedContent = ({
   const { user } = useAuth();
   const { role } = useUserRole();
 
-  // Identify admin roles
   const adminRoles = ["admin", "superadmin"];
 
   // Enrich feed items with role/joinDate for easier checks
@@ -82,7 +50,7 @@ const FeedContent = ({
     ...(contentFeedItems.filter(
       c => !!c && !!c.id && isValidMedia(c.postImage)
     )
-    .map(item => ({ ...item, isContent: true, isAdminCard: true }))),
+      .map(item => ({ ...item, isContent: true, isAdminCard: true }))),
     ...enrichedFeedItems.filter(item =>
       adminRoles.includes(String(item.profile.role).toLowerCase()) &&
       ((item.type === 'post' && isValidMedia(item.postImage)) ||
