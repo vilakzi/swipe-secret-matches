@@ -15,8 +15,13 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "resolveJsonModule": true
-    // No `types` or `typeRoots`. Clean state!
+    // All type definitions default. No 'types' or 'typeRoots' present.
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }
