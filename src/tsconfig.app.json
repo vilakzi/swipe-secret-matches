@@ -2,8 +2,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "composite": true,
-    "types": ["node"] // Only include the essentials for the app build
+    "composite": true
   },
   "include": [
     "vite.config.ts",
