@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Send, MessageCircle } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import CommentForm from './CommentForm';
+import CommentList from './CommentList';
 
 interface Comment {
   id: string;
@@ -40,7 +41,6 @@ const PostComments = ({ postId, isOpen, onToggle }: PostCommentsProps) => {
   const fetchComments = async () => {
     setLoading(true);
     try {
-      // First, get comments
       const { data: commentsData, error: commentsError } = await supabase
         .from('post_comments')
         .select('id, content, created_at, user_id')
@@ -50,10 +50,8 @@ const PostComments = ({ postId, isOpen, onToggle }: PostCommentsProps) => {
       if (commentsError) throw commentsError;
 
       if (commentsData && commentsData.length > 0) {
-        // Get unique user IDs
         const userIds = [...new Set(commentsData.map(comment => comment.user_id))];
-        
-        // Fetch profiles for these users
+
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
           .select('id, display_name, profile_image_url')
@@ -63,7 +61,6 @@ const PostComments = ({ postId, isOpen, onToggle }: PostCommentsProps) => {
           console.error('Error fetching profiles:', profilesError);
         }
 
-        // Merge comments with profile data
         const commentsWithProfiles = commentsData.map(comment => ({
           ...comment,
           user_profile: profilesData?.find(profile => profile.id === comment.user_id) || {
@@ -102,7 +99,6 @@ const PostComments = ({ postId, isOpen, onToggle }: PostCommentsProps) => {
 
       if (error) throw error;
 
-      // Get current user's profile for the new comment
       const { data: userProfile } = await supabase
         .from('profiles')
         .select('display_name, profile_image_url')
@@ -119,7 +115,7 @@ const PostComments = ({ postId, isOpen, onToggle }: PostCommentsProps) => {
 
       setComments(prev => [...prev, newCommentWithProfile]);
       setNewComment('');
-      
+
       toast({
         title: "Comment posted!",
         description: "Your comment has been added.",
@@ -171,55 +167,18 @@ const PostComments = ({ postId, isOpen, onToggle }: PostCommentsProps) => {
         </div>
       ) : (
         <div className="space-y-3 max-h-40 overflow-y-auto mb-4">
-          {comments.length === 0 ? (
-            <p className="text-gray-400 text-sm">No comments yet. Be the first to comment!</p>
-          ) : (
-            comments.map((comment) => (
-              <div key={comment.id} className="flex space-x-2">
-                <img
-                  src={comment.user_profile?.profile_image_url || '/placeholder.svg'}
-                  alt="User"
-                  className="w-6 h-6 rounded-full"
-                />
-                <div className="flex-1">
-                  <div className="bg-gray-700 rounded-lg px-3 py-2">
-                    <p className="text-white text-sm font-medium">
-                      {comment.user_profile?.display_name || 'Anonymous'}
-                    </p>
-                    <p className="text-gray-300 text-sm">{comment.content}</p>
-                  </div>
-                  <p className="text-gray-500 text-xs mt-1">
-                    {new Date(comment.created_at).toLocaleTimeString()}
-                  </p>
-                </div>
-              </div>
-            ))
-          )}
+          <CommentList comments={comments as any[]} />
         </div>
       )}
 
       {user && (
-        <form onSubmit={handleSubmit} className="flex space-x-2">
-          <Input
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder="Write a comment..."
-            className="flex-1 bg-gray-700 border-gray-600 text-white"
-            disabled={submitting}
-          />
-          <Button
-            type="submit"
-            size="sm"
-            disabled={!newComment.trim() || submitting}
-            className="bg-purple-600 hover:bg-purple-700"
-          >
-            {submitting ? (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <Send className="w-4 h-4" />
-            )}
-          </Button>
-        </form>
+        <CommentForm
+          value={newComment}
+          onChange={e => setNewComment(e.target.value)}
+          onSubmit={handleSubmit}
+          disabled={submitting}
+          submitting={submitting}
+        />
       )}
     </div>
   );
