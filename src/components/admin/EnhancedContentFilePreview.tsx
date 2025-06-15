@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +25,7 @@ const EnhancedContentFilePreview = ({
       : `Preview of video file ${uploadFile.file.name}`;
 
   return (
-    <div className="relative group" aria-label={altText}>
+    <div className="relative group" aria-label={altText} tabIndex={0}>
       <div className="aspect-video rounded-lg overflow-hidden bg-gray-100">
         {uploadFile.type === "image" ? (
           <img
@@ -87,4 +86,3 @@ const EnhancedContentFilePreview = ({
 };
 
 export default EnhancedContentFilePreview;
-

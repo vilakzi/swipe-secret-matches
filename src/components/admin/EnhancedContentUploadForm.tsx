@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,8 +37,8 @@ const EnhancedContentUploadForm = ({
   setScheduledDate,
   CONTENT_CATEGORIES,
 }: EnhancedContentUploadFormProps) => (
-  <div className="space-y-4">
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <form className="space-y-4" aria-label="Content details form">
+    <fieldset className="grid grid-cols-1 md:grid-cols-2 gap-4" aria-label="Basic content details">
       <div>
         <label className="text-sm font-medium" htmlFor="content-title">Title</label>
         <Input
@@ -47,7 +46,7 @@ const EnhancedContentUploadForm = ({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Content title (optional - uses filename if empty)"
-          aria-label="Content Title"
+          aria-label="Content title"
         />
       </div>
 
@@ -55,7 +54,7 @@ const EnhancedContentUploadForm = ({
         <label className="text-sm font-medium" htmlFor="content-category">Category</label>
         <Select value={category} onValueChange={setCategory as any}>
           <SelectTrigger id="content-category" aria-label="Category">
-            <SelectValue />
+            <SelectValue placeholder="Choose category" />
           </SelectTrigger>
           <SelectContent>
             {CONTENT_CATEGORIES.map((cat) => (
@@ -66,9 +65,9 @@ const EnhancedContentUploadForm = ({
           </SelectContent>
         </Select>
       </div>
-    </div>
+    </fieldset>
 
-    <div>
+    <fieldset>
       <label className="text-sm font-medium" htmlFor="content-description">Description</label>
       <Textarea
         id="content-description"
@@ -76,11 +75,11 @@ const EnhancedContentUploadForm = ({
         onChange={(e) => setDescription(e.target.value)}
         placeholder="Content description..."
         rows={3}
-        aria-label="Content Description"
+        aria-label="Content description"
       />
-    </div>
+    </fieldset>
 
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <fieldset className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
         <label className="text-sm font-medium" htmlFor="content-tags">Tags (comma-separated)</label>
         <Input
@@ -88,7 +87,7 @@ const EnhancedContentUploadForm = ({
           value={tags}
           onChange={(e) => setTags(e.target.value)}
           placeholder="trending, viral, featured..."
-          aria-label="Content Tags"
+          aria-label="Content tags"
         />
       </div>
       <div>
@@ -100,12 +99,11 @@ const EnhancedContentUploadForm = ({
           id="content-schedule"
           value={scheduledDate}
           onChange={(e) => setScheduledDate(e.target.value)}
-          aria-label="Schedule Publication Date"
+          aria-label="Schedule publication date"
         />
       </div>
-    </div>
-  </div>
+    </fieldset>
+  </form>
 );
 
 export default EnhancedContentUploadForm;
-

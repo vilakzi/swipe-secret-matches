@@ -20,29 +20,30 @@ const EnhancedContentFileDropzone = ({
   role,
   maxSize,
 }: EnhancedContentFileDropzoneProps) => {
-  // Add ARIA: provide clear instructions, role, focus style, etc.
+  // Add ARIA: instructions, role, focus style, etc.
   return (
     <div
       {...getRootProps({
         tabIndex: 0,
-        role: 'button',
-        'aria-label': isDragActive
-          ? 'Drop the files here'
-          : 'Drag and drop files here, or click to select',
-        'aria-describedby': 'dropzone-description dropzone-limit',
+        role: "button",
+        "aria-label": isDragActive
+          ? "Drop the files here"
+          : "Drag and drop files here, or click to select",
+        "aria-describedby": "dropzone-description dropzone-limit",
         onKeyDown: (e: React.KeyboardEvent) => {
           // Support Enter/Space for keyboard activation
-          if (e.key === ' ' || e.key === 'Enter') {
+          if (e.key === " " || e.key === "Enter") {
             e.preventDefault();
             getInputProps().onClick?.(e);
           }
-        }
+        },
+        "aria-live": "polite"
       })}
       className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500 ${
         isDragActive ? "border-purple-500 bg-purple-50" : "border-gray-300 hover:border-gray-400"
       }`}
     >
-      <input {...getInputProps()} aria-label="File Upload Input" />
+      <input {...getInputProps()} aria-label="File upload input" />
       <Upload
         className="w-12 h-12 mx-auto mb-4 text-gray-400"
         aria-hidden="true"
@@ -74,4 +75,3 @@ const EnhancedContentFileDropzone = ({
 };
 
 export default EnhancedContentFileDropzone;
-
