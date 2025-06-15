@@ -70,7 +70,7 @@ const FeedContent = ({
   const filteredItems = combinedFeedItems;
 
   return (
-    <div className="space-y-4 px-4 pb-6">
+    <div className="space-y-4 px-4 pb-6" role="list" aria-label="Social feed items">
       {/* Combined Feed Items */}
       {filteredItems.map((item: any) => {
         if (item.isContent) {
@@ -127,14 +127,14 @@ const FeedContent = ({
 
       {/* Empty State */}
       {filteredItems.length === 0 && (
-        <div className="text-center py-8">
+        <div className="text-center py-8" aria-live="polite">
           <p className="text-gray-400">No profiles found.</p>
         </div>
       )}
 
       {/* No More Content Message */}
       {filteredItems.length > 0 && feedItems.length === 0 && (
-        <div className="text-center py-8">
+        <div className="text-center py-8" aria-live="polite">
           <p className="text-gray-400">No more content to display.</p>
         </div>
       )}

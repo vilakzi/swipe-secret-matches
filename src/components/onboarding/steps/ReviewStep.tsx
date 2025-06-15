@@ -28,9 +28,13 @@ const ReviewStep = ({ profileData }: ReviewStepProps) => {
       <div className="bg-gray-800/50 rounded-lg p-6">
         <div className="flex items-start space-x-4 mb-4">
           <Avatar className="w-20 h-20">
-            <AvatarImage src={profileData.photos[0]} className="object-cover" />
+            <AvatarImage
+              src={profileData.photos[0]}
+              className="object-cover"
+              alt={`${profileData.photos[0] ? 'Your profile photo' : 'User avatar'}`}
+            />
             <AvatarFallback className="bg-gray-600 text-white text-xl">
-              <User className="w-8 h-8" />
+              <User className="w-8 h-8" aria-hidden="true" />
             </AvatarFallback>
           </Avatar>
 
@@ -38,13 +42,13 @@ const ReviewStep = ({ profileData }: ReviewStepProps) => {
             <div className="flex items-center space-x-2 mb-2">
               {profileData.age && (
                 <div className="flex items-center text-gray-300">
-                  <Calendar className="w-4 h-4 mr-1" />
+                  <Calendar className="w-4 h-4 mr-1" aria-hidden="true" />
                   {profileData.age} years old
                 </div>
               )}
               {profileData.location && (
                 <div className="flex items-center text-gray-300">
-                  <MapPin className="w-4 h-4 mr-1" />
+                  <MapPin className="w-4 h-4 mr-1" aria-hidden="true" />
                   {profileData.location}
                 </div>
               )}
@@ -80,7 +84,7 @@ const ReviewStep = ({ profileData }: ReviewStepProps) => {
                 <img
                   key={index}
                   src={photo}
-                  alt={`Profile ${index + 2}`}
+                  alt={`Profile photo ${index + 2}`}
                   className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
                 />
               ))}

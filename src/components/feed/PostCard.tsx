@@ -85,7 +85,7 @@ const PostCard = ({
 
   return (
     <>
-      <Card className="bg-gray-800 border-gray-700 mb-4">
+      <Card className="bg-gray-800 border-gray-700 mb-4" tabIndex={0} aria-label={`Post card from ${item.profile.name}`}>
         <PostCardHeader
           profile={item.profile}
           isSubscribed={isSubscribed}
@@ -104,7 +104,7 @@ const PostCard = ({
             item.postImage && (
               <OptimizedImage
                 src={item.postImage}
-                alt="Post"
+                alt={`Post image from ${item.profile.name}`}
                 className="w-full h-72 hover:opacity-95 transition-opacity"
                 onClick={handlePostImageClick}
                 expandable
@@ -114,6 +114,15 @@ const PostCard = ({
           <div
             className="absolute top-4 left-4 right-4 h-8 bg-transparent cursor-pointer"
             onClick={handleProfileClick}
+            tabIndex={0}
+            aria-label={`Open profile for ${item.profile.name}`}
+            role="button"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                handleProfileClick();
+              }
+            }}
           />
         </div>
 

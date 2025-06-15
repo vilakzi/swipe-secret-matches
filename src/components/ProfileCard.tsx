@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -114,8 +113,17 @@ const ProfileCard = ({ profile, onSwipe, onNavigate, disabled = false, isSubscri
         ref={cardRef}
         className={`w-full h-full bg-gray-800 border-gray-700 overflow-hidden cursor-grab active:cursor-grabbing relative ${
           profile.liked ? 'ring-2 ring-pink-500' : ''
-        }`}
+        } focus:outline-none focus:ring-4 focus:ring-purple-600`}
         style={cardStyle}
+        tabIndex={0}
+        aria-label={`Profile card for ${profile.name}, age ${profile.age}, location ${profile.location}`}
+        role="article"
+        onKeyDown={(e) => {
+          if (disabled) return;
+          if (e.key === 'ArrowLeft') onSwipe('left');
+          if (e.key === 'ArrowRight') onSwipe('right');
+          if (e.key === 'Enter' && onNavigate) onNavigate();
+        }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleEnd}
@@ -128,6 +136,8 @@ const ProfileCard = ({ profile, onSwipe, onNavigate, disabled = false, isSubscri
         <div 
           className="w-full h-64 bg-cover bg-center relative"
           style={{ backgroundImage: `url(${profile.image})` }}
+          role="img"
+          aria-label={`${profile.name}'s profile photo`}
         >
           {/* Online Status Indicator */}
           <div className="absolute top-2 left-2">
@@ -140,14 +150,14 @@ const ProfileCard = ({ profile, onSwipe, onNavigate, disabled = false, isSubscri
 
           {/* Subscription Status */}
           {!isSubscribed && (
-            <div className="absolute top-2 right-2 bg-yellow-500 rounded-full p-2">
+            <div className="absolute top-2 right-2 bg-yellow-500 rounded-full p-2" aria-label="Locked, subscription required">
               <Lock className="w-4 h-4 text-white" />
             </div>
           )}
 
           {/* Liked Indicator */}
           {profile.liked && (
-            <div className="absolute bottom-2 right-2 bg-pink-500 rounded-full p-2">
+            <div className="absolute bottom-2 right-2 bg-pink-500 rounded-full p-2" aria-label="You liked this profile">
               <Heart className="w-4 h-4 text-white fill-white" />
             </div>
           )}
@@ -160,6 +170,7 @@ const ProfileCard = ({ profile, onSwipe, onNavigate, disabled = false, isSubscri
                   isLikeDirection ? 'bg-green-500' : 'bg-red-500'
                 }`}
                 style={{ opacity: overlayOpacity * 0.7 }}
+                aria-label={isLikeDirection ? 'Liking profile' : 'Passing profile'}
               >
                 <span className="text-white text-3xl font-bold transform rotate-12">
                   {isLikeDirection ? 'LIKE' : 'PASS'}
@@ -185,25 +196,27 @@ const ProfileCard = ({ profile, onSwipe, onNavigate, disabled = false, isSubscri
               <Button
                 size="sm"
                 variant="outline"
-                className={`${isSubscribed ? 'bg-pink-600 hover:bg-pink-700' : 'bg-gray-600 hover:bg-gray-700'} text-white border-none`}
+                className={`${isSubscribed ? 'bg-pink-600 hover:bg-pink-700' : 'bg-gray-600 hover:bg-gray-700'} text-white border-none focus:ring-2 focus:ring-purple-400`}
                 onClick={handleLikeClick}
+                aria-label="Like profile"
               >
-                <Heart className="w-4 h-4 mr-1" />
-                {isSubscribed ? 'Like' : <Lock className="w-3 h-3" />}
+                <Heart className="w-4 h-4 mr-1" aria-hidden="true" />
+                {isSubscribed ? 'Like' : <Lock className="w-3 h-3" aria-hidden="true" />}
               </Button>
               <Button
                 size="sm"
-                className={`${isSubscribed ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-600 hover:bg-gray-700'} text-white`}
+                className={`${isSubscribed ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-600 hover:bg-gray-700'} text-white focus:ring-2 focus:ring-green-400`}
                 onClick={handleWhatsAppClick}
+                aria-label="Contact on WhatsApp"
               >
-                <MessageCircle className="w-4 h-4 mr-1" />
-                {isSubscribed ? 'Chat' : <Lock className="w-3 h-3" />}
+                <MessageCircle className="w-4 h-4 mr-1" aria-hidden="true" />
+                {isSubscribed ? 'Chat' : <Lock className="w-3 h-3" aria-hidden="true" />}
               </Button>
             </div>
           </div>
           
           <div className="flex items-center text-gray-400 text-sm">
-            <MapPin className="w-4 h-4 mr-1" />
+            <MapPin className="w-4 h-4 mr-1" aria-hidden="true" />
             {profile.location}
           </div>
           
@@ -212,8 +225,8 @@ const ProfileCard = ({ profile, onSwipe, onNavigate, disabled = false, isSubscri
       </Card>
 
       {/* Background Cards */}
-      <Card className="absolute top-2 left-2 w-full h-full bg-gray-700 border-gray-600 -z-10" />
-      <Card className="absolute top-4 left-4 w-full h-full bg-gray-600 border-gray-500 -z-20" />
+      <Card className="absolute top-2 left-2 w-full h-full bg-gray-700 border-gray-600 -z-10" aria-hidden="true" />
+      <Card className="absolute top-4 left-4 w-full h-full bg-gray-600 border-gray-500 -z-20" aria-hidden="true" />
     </div>
   );
 };

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -74,8 +73,17 @@ const SwipeCard = ({ profile, onSwipe, onTap, disabled = false }: SwipeCardProps
     <div className="relative w-80 h-96 mx-auto select-none">
       <Card
         ref={cardRef}
-        className="w-full h-full bg-gray-800 border-gray-700 overflow-hidden cursor-grab active:cursor-grabbing relative"
+        className="w-full h-full bg-gray-800 border-gray-700 overflow-hidden cursor-grab active:cursor-grabbing relative focus:outline-none focus:ring-4 focus:ring-purple-600"
         style={cardStyle}
+        tabIndex={0}
+        aria-label={`Swipe card for ${profile.name}, ${profile.age}, ${profile.location}.`}
+        role="article"
+        onKeyDown={(e) => {
+          if (disabled) return;
+          if (e.key === 'ArrowLeft') onSwipe('left');
+          if (e.key === 'ArrowRight') onSwipe('right');
+          if (e.key === 'Enter' && onTap) onTap();
+        }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -85,6 +93,8 @@ const SwipeCard = ({ profile, onSwipe, onTap, disabled = false }: SwipeCardProps
         <div 
           className="w-full h-64 bg-cover bg-center relative"
           style={{ backgroundImage: `url(${profile.image})` }}
+          role="img"
+          aria-label={`${profile.name}'s profile photo`}
         >
           {/* Online Status */}
           <div className="absolute top-2 left-2">
@@ -102,6 +112,7 @@ const SwipeCard = ({ profile, onSwipe, onTap, disabled = false }: SwipeCardProps
                 isLikeDirection ? 'bg-green-500' : 'bg-red-500'
               }`}
               style={{ opacity: overlayOpacity * 0.7 }}
+              aria-label={isLikeDirection ? 'Liking profile' : 'Passing profile'}
             >
               <span className="text-white text-3xl font-bold transform rotate-12">
                 {isLikeDirection ? 'LIKE' : 'PASS'}
@@ -120,7 +131,7 @@ const SwipeCard = ({ profile, onSwipe, onTap, disabled = false }: SwipeCardProps
           </div>
           
           <div className="flex items-center text-gray-400 text-sm">
-            <MapPin className="w-4 h-4 mr-1" />
+            <MapPin className="w-4 h-4 mr-1" aria-hidden="true" />
             {profile.location}
           </div>
           
@@ -146,42 +157,45 @@ const SwipeCard = ({ profile, onSwipe, onTap, disabled = false }: SwipeCardProps
           <Button
             size="sm"
             variant="outline"
-            className="bg-red-600/20 border-red-500 text-red-400 hover:bg-red-600"
+            className="bg-red-600/20 border-red-500 text-red-400 hover:bg-red-600 focus:ring-2 focus:ring-red-400"
             onClick={(e) => {
               e.stopPropagation();
               onSwipe('left');
             }}
+            aria-label="Pass profile"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4" aria-hidden="true" />
           </Button>
           <Button
             size="sm"
             variant="outline"
-            className="bg-yellow-600/20 border-yellow-500 text-yellow-400 hover:bg-yellow-600"
+            className="bg-yellow-600/20 border-yellow-500 text-yellow-400 hover:bg-yellow-600 focus:ring-2 focus:ring-yellow-400"
             onClick={(e) => {
               e.stopPropagation();
               onSwipe('right', true);
             }}
+            aria-label="Super Like profile"
           >
-            <Star className="w-4 h-4" />
+            <Star className="w-4 h-4" aria-hidden="true" />
           </Button>
           <Button
             size="sm"
             variant="outline"
-            className="bg-green-600/20 border-green-500 text-green-400 hover:bg-green-600"
+            className="bg-green-600/20 border-green-500 text-green-400 hover:bg-green-600 focus:ring-2 focus:ring-green-400"
             onClick={(e) => {
               e.stopPropagation();
               onSwipe('right');
             }}
+            aria-label="Like profile"
           >
-            <Heart className="w-4 h-4" />
+            <Heart className="w-4 h-4" aria-hidden="true" />
           </Button>
         </div>
       </Card>
 
       {/* Background Cards */}
-      <Card className="absolute top-2 left-2 w-full h-full bg-gray-700 border-gray-600 -z-10" />
-      <Card className="absolute top-4 left-4 w-full h-full bg-gray-600 border-gray-500 -z-20" />
+      <Card className="absolute top-2 left-2 w-full h-full bg-gray-700 border-gray-600 -z-10" aria-hidden="true" />
+      <Card className="absolute top-4 left-4 w-full h-full bg-gray-600 border-gray-500 -z-20" aria-hidden="true" />
     </div>
   );
 };
