@@ -1,10 +1,12 @@
-
 import React, { useState, useRef, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MapPin, MessageCircle, Heart, X, Star } from 'lucide-react';
 import OnlineStatus from '@/components/OnlineStatus';
 import { usePresence } from '@/hooks/usePresence';
+import ProfileImage from '@/components/profile/ProfileImage';
+import ProfileInfo from '@/components/profile/ProfileInfo';
+import ActionButtons from '@/components/profile/ActionButtons';
 
 interface SwipeCardProps {
   profile: {
@@ -87,22 +89,13 @@ const SwipeCard = React.memo(({ profile, onSwipe, onTap, disabled = false }: Swi
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
       >
-        {/* Profile Image */}
-        <div 
-          className="w-full h-64 bg-cover bg-center relative"
-          style={{ backgroundImage: `url(${profile.image})` }}
-          role="img"
-          aria-label={`${profile.name}'s profile photo`}
+        {/* Profile Image & Drag Overlays */}
+        <ProfileImage
+          image={profile.image}
+          name={profile.name}
+          isOnline={isUserOnline(profile.id)}
+          alt={`${profile.name}'s profile photo`}
         >
-          {/* Online Status */}
-          <div className="absolute top-2 left-2">
-            <OnlineStatus 
-              isOnline={isUserOnline(profile.id)} 
-              size="md"
-              className="bg-gray-900/50 rounded-full p-1"
-            />
-          </div>
-          {/* Swipe Overlays */}
           {isDragging && (
             <div
               className={`absolute inset-0 flex items-center justify-center ${
@@ -116,73 +109,35 @@ const SwipeCard = React.memo(({ profile, onSwipe, onTap, disabled = false }: Swi
               </span>
             </div>
           )}
-        </div>
+        </ProfileImage>
         {/* Profile Info */}
-        <div className="p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold text-white">
-              {profile.name}, {profile.age}
-            </h3>
-            <OnlineStatus isOnline={isUserOnline(profile.id)} size="sm" />
-          </div>
-          <div className="flex items-center text-gray-400 text-sm">
-            <MapPin className="w-4 h-4 mr-1" aria-hidden="true" />
-            {profile.location}
-          </div>
-          <p className="text-gray-300 text-sm line-clamp-2">{profile.bio}</p>
-          {/* Interests */}
-          {profile.interests && profile.interests.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {profile.interests.slice(0, 3).map((interest, index) => (
-                <span
-                  key={index}
-                  className="bg-purple-600/20 text-purple-300 px-2 py-1 rounded-full text-xs"
-                >
-                  {interest}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
+        <ProfileInfo
+          name={profile.name}
+          age={profile.age}
+          location={profile.location}
+          bio={profile.bio}
+          interests={profile.interests}
+          isOnline={isUserOnline(profile.id)}
+          lineClampBio={2}
+        />
         {/* Action Buttons */}
-        <div className="absolute bottom-4 right-4 flex space-x-2">
-          <Button
-            size="sm"
-            variant="outline"
-            className="bg-red-600/20 border-red-500 text-red-400 hover:bg-red-600 focus:ring-2 focus:ring-red-400"
-            onClick={(e) => {
-              e.stopPropagation();
-              onSwipe('left');
-            }}
-            aria-label="Pass profile"
-          >
-            <X className="w-4 h-4" aria-hidden="true" />
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="bg-yellow-600/20 border-yellow-500 text-yellow-400 hover:bg-yellow-600 focus:ring-2 focus:ring-yellow-400"
-            onClick={(e) => {
-              e.stopPropagation();
-              onSwipe('right', true);
-            }}
-            aria-label="Super Like profile"
-          >
-            <Star className="w-4 h-4" aria-hidden="true" />
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="bg-green-600/20 border-green-500 text-green-400 hover:bg-green-600 focus:ring-2 focus:ring-green-400"
-            onClick={(e) => {
-              e.stopPropagation();
-              onSwipe('right');
-            }}
-            aria-label="Like profile"
-          >
-            <Heart className="w-4 h-4" aria-hidden="true" />
-          </Button>
-        </div>
+        <ActionButtons
+          onLike={e => {
+            e.stopPropagation();
+            onSwipe('right');
+          }}
+          onPass={e => {
+            e.stopPropagation();
+            onSwipe('left');
+          }}
+          onSuperLike={e => {
+            e.stopPropagation();
+            onSwipe('right', true);
+          }}
+          showPass
+          showSuperLike
+          showLike
+        />
       </Card>
       {/* Background Cards */}
       <Card className="absolute top-2 left-2 w-full h-full bg-gray-700 border-gray-600 -z-10" aria-hidden="true" />

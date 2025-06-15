@@ -1,10 +1,12 @@
-
 import React, { useState, useRef, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MapPin, MessageCircle, Heart, Lock } from 'lucide-react';
 import OnlineStatus from './OnlineStatus';
 import { usePresence } from '@/hooks/usePresence';
+import ProfileImage from '@/components/profile/ProfileImage';
+import ProfileInfo from '@/components/profile/ProfileInfo';
+import ActionButtons from '@/components/profile/ActionButtons';
 
 interface Profile {
   id: number;
@@ -128,20 +130,14 @@ const ProfileCard = React.memo(({ profile, onSwipe, onNavigate, disabled = false
         onTouchEnd={handleEnd}
       >
         {/* Profile Image */}
-        <div 
-          className="w-full h-64 bg-cover bg-center relative"
-          style={{ backgroundImage: `url(${profile.image})` }}
-          role="img"
-          aria-label={`${profile.name}'s profile photo`}
+        <ProfileImage
+          image={profile.image}
+          name={profile.name}
+          isOnline={isUserOnline(profile.id.toString())}
+          liked={profile.liked}
+          locked={!isSubscribed}
+          alt={`${profile.name}'s profile photo`}
         >
-          {/* Online Status Indicator */}
-          <div className="absolute top-2 left-2">
-            <OnlineStatus 
-              isOnline={isUserOnline(profile.id.toString())} 
-              size="md"
-              className="bg-gray-900/50 rounded-full p-1"
-            />
-          </div>
           {/* Subscription Status */}
           {!isSubscribed && (
             <div className="absolute top-2 right-2 bg-yellow-500 rounded-full p-2" aria-label="Locked, subscription required">
@@ -156,60 +152,50 @@ const ProfileCard = React.memo(({ profile, onSwipe, onNavigate, disabled = false
           )}
           {/* Swipe Overlays */}
           {isDragging && (
-            <>
-              <div
-                className={`absolute inset-0 flex items-center justify-center ${
-                  isLikeDirection ? 'bg-green-500' : 'bg-red-500'
-                }`}
-                style={{ opacity: overlayOpacity * 0.7 }}
-                aria-label={isLikeDirection ? 'Liking profile' : 'Passing profile'}
-              >
-                <span className="text-white text-3xl font-bold transform rotate-12">
-                  {isLikeDirection ? 'LIKE' : 'PASS'}
-                </span>
-              </div>
-            </>
+            <div
+              className={`absolute inset-0 flex items-center justify-center ${
+                isLikeDirection ? 'bg-green-500' : 'bg-red-500'
+              }`}
+              style={{ opacity: overlayOpacity * 0.7 }}
+              aria-label={isLikeDirection ? 'Liking profile' : 'Passing profile'}
+            >
+              <span className="text-white text-3xl font-bold transform rotate-12">
+                {isLikeDirection ? 'LIKE' : 'PASS'}
+              </span>
+            </div>
           )}
-        </div>
+        </ProfileImage>
         {/* Profile Info */}
-        <div className="p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <h3 className="text-xl font-bold text-white">
-                {profile.name}, {profile.age}
-              </h3>
-              <OnlineStatus 
-                isOnline={isUserOnline(profile.id.toString())} 
-                size="sm"
-              />
-            </div>
-            <div className="flex space-x-2">
-              <Button
-                size="sm"
-                variant="outline"
-                className={`${isSubscribed ? 'bg-pink-600 hover:bg-pink-700' : 'bg-gray-600 hover:bg-gray-700'} text-white border-none focus:ring-2 focus:ring-purple-400`}
-                onClick={handleLikeClick}
-                aria-label="Like profile"
-              >
-                <Heart className="w-4 h-4 mr-1" aria-hidden="true" />
-                {isSubscribed ? 'Like' : <Lock className="w-3 h-3" aria-hidden="true" />}
-              </Button>
-              <Button
-                size="sm"
-                className={`${isSubscribed ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-600 hover:bg-gray-700'} text-white focus:ring-2 focus:ring-green-400`}
-                onClick={handleWhatsAppClick}
-                aria-label="Contact on WhatsApp"
-              >
-                <MessageCircle className="w-4 h-4 mr-1" aria-hidden="true" />
-                {isSubscribed ? 'Chat' : <Lock className="w-3 h-3" aria-hidden="true" />}
-              </Button>
-            </div>
-          </div>
-          <div className="flex items-center text-gray-400 text-sm">
-            <MapPin className="w-4 h-4 mr-1" aria-hidden="true" />
-            {profile.location}
-          </div>
-          <p className="text-gray-300 text-sm">{profile.bio}</p>
+        <ProfileInfo
+          name={profile.name}
+          age={profile.age}
+          location={profile.location}
+          bio={profile.bio}
+          isOnline={isUserOnline(profile.id.toString())}
+          // ProfileCard doesn't show interests
+          lineClampBio={0}
+        />
+        {/* Action Buttons */}
+        <div className="absolute bottom-4 right-4 flex space-x-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className={`${isSubscribed ? 'bg-pink-600 hover:bg-pink-700' : 'bg-gray-600 hover:bg-gray-700'} text-white border-none focus:ring-2 focus:ring-purple-400`}
+            onClick={handleLikeClick}
+            aria-label="Like profile"
+          >
+            <Heart className="w-4 h-4 mr-1" aria-hidden="true" />
+            {isSubscribed ? 'Like' : <Lock className="w-3 h-3" aria-hidden="true" />}
+          </Button>
+          <Button
+            size="sm"
+            className={`${isSubscribed ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-600 hover:bg-gray-700'} text-white focus:ring-2 focus:ring-green-400`}
+            onClick={handleWhatsAppClick}
+            aria-label="Contact on WhatsApp"
+          >
+            <MessageCircle className="w-4 h-4 mr-1" aria-hidden="true" />
+            {isSubscribed ? 'Chat' : <Lock className="w-3 h-3" aria-hidden="true" />}
+          </Button>
         </div>
       </Card>
       {/* Background Cards */}
