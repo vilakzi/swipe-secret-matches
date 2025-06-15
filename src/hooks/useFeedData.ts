@@ -1,3 +1,4 @@
+
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useRealProfiles } from './useRealProfiles';
 import { useNewJoiners } from './useNewJoiners';
@@ -5,8 +6,8 @@ import { useFilteredFeedData } from './useFilteredFeedData';
 import { useFeedPagination } from './useFeedPagination';
 import { generateFeedItems, type FeedItem } from '@/utils/feedItemGenerator';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext'; // Correct import
 
+// Removed: import { useAuth } from '@/contexts/AuthContext';
 // Removed: import { useProfileFilters } from './useProfileFilters';
 
 export type { FeedItem };
@@ -15,10 +16,10 @@ export const useFeedData = (itemsPerPage: number = 6) => {
   const [shuffleKey, setShuffleKey] = useState(0);
   const [posts, setPosts] = useState<any[]>([]);
 
-  // Defensive user extraction
-  let user;
+  // Custom user extraction per request
+  let user = undefined;
   try {
-    user = useAuth().user;
+    user = getAuth().currentUser;
   } catch (e) {
     user = null;
   }
