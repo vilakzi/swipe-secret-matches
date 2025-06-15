@@ -8,8 +8,8 @@ import {
   UserCheck,
   Activity,
   Calendar,
-  Heart,
-  MessageCircle
+  Heart
+  // MessageCircle // <-- Removed as messages stat is gone
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -22,7 +22,7 @@ interface OverviewStats {
   activeUsers7d: number;
   totalRevenue: number;
   totalMatches: number;
-  totalMessages: number;
+  // totalMessages: number;  // Removed
 }
 
 const AdminOverview = () => {
@@ -33,8 +33,8 @@ const AdminOverview = () => {
     totalPosts: 0,
     activeUsers7d: 0,
     totalRevenue: 0,
-    totalMatches: 0,
-    totalMessages: 0
+    totalMatches: 0
+    // totalMessages: 0
   });
   const [loading, setLoading] = useState(true);
 
@@ -86,10 +86,10 @@ const AdminOverview = () => {
         .from('matches')
         .select('*', { count: 'exact', head: true });
 
-      // Fetch messages count
-      const { count: messagesCount } = await supabase
-        .from('messages')
-        .select('*', { count: 'exact', head: true });
+      // // Fetch messages count (REMOVED)
+      // const { count: messagesCount } = await supabase
+      //   .from('messages')
+      //   .select('*', { count: 'exact', head: true });
 
       const totalRevenue = revenueData?.reduce((sum, payment) => sum + payment.amount, 0) || 0;
 
@@ -100,8 +100,8 @@ const AdminOverview = () => {
         totalPosts: totalPosts || 0,
         activeUsers7d: activeUsers7d || 0,
         totalRevenue,
-        totalMatches: matchesCount || 0,
-        totalMessages: messagesCount || 0
+        totalMatches: matchesCount || 0
+        // totalMessages: messagesCount || 0
       });
     } catch (error) {
       console.error('Error fetching overview stats:', error);
@@ -118,7 +118,7 @@ const AdminOverview = () => {
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {Array.from({ length: 8 }).map((_, index) => (
+        {Array.from({ length: 7 }).map((_, index) => (
           <Card key={index} className="bg-black/20 backdrop-blur-md border-gray-700">
             <CardContent className="p-6">
               <div className="h-16 bg-gray-700 animate-pulse rounded"></div>
@@ -171,13 +171,14 @@ const AdminOverview = () => {
       value: stats.totalMatches.toLocaleString(),
       icon: Heart,
       color: 'text-pink-400'
-    },
-    {
-      title: 'Total Messages',
-      value: stats.totalMessages.toLocaleString(),
-      icon: MessageCircle,
-      color: 'text-cyan-400'
     }
+    // Removed messages card
+    // {
+    //   title: 'Total Messages',
+    //   value: stats.totalMessages.toLocaleString(),
+    //   icon: MessageCircle,
+    //   color: 'text-cyan-400'
+    // }
   ];
 
   return (
@@ -207,3 +208,4 @@ const AdminOverview = () => {
 };
 
 export default AdminOverview;
+
