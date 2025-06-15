@@ -1,3 +1,13 @@
+// User detection FIRST, before any React hooks
+let user = undefined;
+try {
+  user = getAuth().currentUser;
+} catch (e) {
+  user = null;
+}
+
+// Early return if no user, before any hooks!
+if (!user) return null;
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useRealProfiles } from './useRealProfiles';
@@ -7,38 +17,15 @@ import { useFeedPagination } from './useFeedPagination';
 import { generateFeedItems, type FeedItem } from '@/utils/feedItemGenerator';
 import { supabase } from '@/integrations/supabase/client';
 
-// Removed: import { useAuth } from '@/contexts/AuthContext';
-// Removed: import { useProfileFilters } from './useProfileFilters';
-
 export type { FeedItem };
 
 export const useFeedData = (itemsPerPage: number = 6) => {
   const [shuffleKey, setShuffleKey] = useState(0);
   const [posts, setPosts] = useState<any[]>([]);
 
-  // Custom user extraction per request
-  let user = undefined;
-  try {
-    user = getAuth().currentUser;
-  } catch (e) {
-    user = null;
-  }
-
   const { realProfiles, loading: profilesLoading } = useRealProfiles();
   const { newJoiners, loading: newJoinersLoading } = useNewJoiners();
 
-  // Provide fallback early exit if there is no user
-  if (!user) {
-    return {
-      displayedItems: [],
-      hasMoreItems: false,
-      isLoadingMore: false,
-      handleLoadMore: () => {},
-      handleRefresh: () => {},
-    };
-  }
-
-  // Fetch posts from Supabase
   const fetchPosts = useCallback(async () => {
     try {
       const { data: postsData, error } = await supabase
