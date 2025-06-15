@@ -16,7 +16,15 @@ export const useFeedData = (itemsPerPage: number = 6) => {
   const [shuffleKey, setShuffleKey] = useState(0);
   const [posts, setPosts] = useState<any[]>([]);
 
-  const { user } = useAuth(); // <-- Added to get the current user
+  // Defensive user extraction
+  let user;
+  try {
+    // Uses Supabase Auth Context
+    user = useAuth().user;
+  } catch (e) {
+    user = null;
+  }
+
   const { realProfiles, loading: profilesLoading } = useRealProfiles();
   const { newJoiners, loading: newJoinersLoading } = useNewJoiners();
 
