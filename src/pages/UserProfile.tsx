@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Star, MapPin, Phone, MessageCircle, Heart, Share } from 'lucide-react';
+import { ArrowLeft, Star, MapPin, Phone, MessageCircle, Heart, Share, Lock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import OnlineStatus from '@/components/OnlineStatus';
@@ -25,6 +25,13 @@ interface UserData {
   gender: string;
   interests: string[];
 }
+
+const getMockRelationshipStatus = (userId: string): RelationshipStatus => {
+  // TODO: Replace this with real follower/approval check in a real app!
+  // For demo: everyone is "not-followed" except userId === "approved-demo-id"
+  if (userId === "approved-demo-id") return "approved";
+  return "not-followed";
+};
 
 const UserProfile = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -104,6 +111,11 @@ const UserProfile = () => {
     navigate(-1);
   };
 
+  // Determine if viewer is approved or not (placeholder logic)
+  const viewerRelationship = user?.id ? getMockRelationshipStatus(user.id) : "not-followed";
+  const profileVisibility = (user as any)?.privacy_settings?.profileVisibility || "public";
+  const profileIsViewable = canViewProfile(profileVisibility, viewerRelationship);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center">
@@ -156,107 +168,117 @@ const UserProfile = () => {
         </div>
 
         <div className="max-w-4xl mx-auto p-4 pt-8">
-          {/* Profile Header */}
-          <Card className="bg-black/20 backdrop-blur-md border-gray-700 mb-6">
-            <CardContent className="p-6">
-              <div className="flex items-start space-x-6">
-                <div className="relative">
-                  <OptimizedImage
-                    src={user.profile_image_url || '/placeholder.svg'}
-                    alt={user.display_name}
-                    className="w-32 h-32 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={handleProfileImageClick}
-                    expandable
-                  />
-                  <OnlineStatus 
-                    isOnline={isUserOnline(user.id)} 
-                    size="lg"
-                    className="absolute -bottom-2 -right-2"
-                  />
-                </div>
-                
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <h1 className="text-3xl font-bold text-white">{user.display_name}</h1>
-                    {user.age && (
-                      <span className="text-2xl text-gray-300">{user.age}</span>
-                    )}
-                  </div>
+          {(!profileIsViewable) ? (
+            <div className="rounded-lg bg-gray-800/80 p-8 mb-8 text-center flex flex-col items-center">
+              <Lock className="w-12 h-12 text-yellow-400 mb-2" />
+              <h2 className="text-2xl font-bold text-white mb-2">This profile is private</h2>
+              <p className="text-gray-400">Only approved followers can see this user's profile information.</p>
+            </div>
+          ) : (
+            <>
+              {/* Profile Header */}
+              <Card className="bg-black/20 backdrop-blur-md border-gray-700 mb-6">
+                <CardContent className="p-6">
+                  <div className="flex items-start space-x-6">
+                    <div className="relative">
+                      <OptimizedImage
+                        src={user.profile_image_url || '/placeholder.svg'}
+                        alt={user.display_name}
+                        className="w-32 h-32 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={handleProfileImageClick}
+                        expandable
+                      />
+                      <OnlineStatus 
+                        isOnline={isUserOnline(user.id)} 
+                        size="lg"
+                        className="absolute -bottom-2 -right-2"
+                      />
+                    </div>
+                    
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <h1 className="text-3xl font-bold text-white">{user.display_name}</h1>
+                        {user.age && (
+                          <span className="text-2xl text-gray-300">{user.age}</span>
+                        )}
+                      </div>
 
-                  {user.gender && (
-                    <Badge className="bg-purple-600 text-white mb-3">
-                      {user.gender}
-                    </Badge>
+                      {user.gender && (
+                        <Badge className="bg-purple-600 text-white mb-3">
+                          {user.gender}
+                        </Badge>
+                      )}
+
+                      <div className="flex items-center text-gray-400 text-sm mb-4">
+                        <MapPin className="w-4 h-4 mr-1" />
+                        {user.location}
+                      </div>
+
+                      <div className="flex space-x-3">
+                        <Button
+                          onClick={handleContact}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <MessageCircle className="w-4 h-4 mr-2" />
+                          Contact
+                        </Button>
+                        <Button variant="outline" className="border-gray-600 text-white hover:bg-white/10">
+                          <Heart className="w-4 h-4 mr-2" />
+                          Like
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* About Section */}
+              <Card className="bg-black/20 backdrop-blur-md border-gray-700 mb-6">
+                <CardHeader>
+                  <CardTitle className="text-white">About</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-300 mb-4">{user.bio || 'No bio available.'}</p>
+                  
+                  {/* Interests */}
+                  {user.interests && user.interests.length > 0 && (
+                    <div>
+                      <h3 className="text-white font-semibold mb-3">Interests</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {user.interests.map((interest, index) => (
+                          <Badge key={index} variant="secondary" className="bg-purple-600/20 text-purple-300">
+                            {interest}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
                   )}
+                </CardContent>
+              </Card>
 
-                  <div className="flex items-center text-gray-400 text-sm mb-4">
-                    <MapPin className="w-4 h-4 mr-1" />
-                    {user.location}
-                  </div>
-
-                  <div className="flex space-x-3">
-                    <Button
-                      onClick={handleContact}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      <MessageCircle className="w-4 h-4 mr-2" />
-                      Contact
-                    </Button>
-                    <Button variant="outline" className="border-gray-600 text-white hover:bg-white/10">
-                      <Heart className="w-4 h-4 mr-2" />
-                      Like
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* About Section */}
-          <Card className="bg-black/20 backdrop-blur-md border-gray-700 mb-6">
-            <CardHeader>
-              <CardTitle className="text-white">About</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-300 mb-4">{user.bio || 'No bio available.'}</p>
-              
-              {/* Interests */}
-              {user.interests && user.interests.length > 0 && (
-                <div>
-                  <h3 className="text-white font-semibold mb-3">Interests</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {user.interests.map((interest, index) => (
-                      <Badge key={index} variant="secondary" className="bg-purple-600/20 text-purple-300">
-                        {interest}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
+              {/* Photos */}
+              {user.profile_images && user.profile_images.length > 1 && (
+                <Card className="bg-black/20 backdrop-blur-md border-gray-700">
+                  <CardHeader>
+                    <CardTitle className="text-white">Photos</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {user.profile_images.slice(1).map((image, index) => (
+                        <OptimizedImage
+                          key={index}
+                          src={image}
+                          alt={`${user.display_name} ${index + 2}`}
+                          className="w-full aspect-square object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => handleGalleryImageClick(image, index)}
+                          expandable
+                        />
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
               )}
-            </CardContent>
-          </Card>
-
-          {/* Photos */}
-          {user.profile_images && user.profile_images.length > 1 && (
-            <Card className="bg-black/20 backdrop-blur-md border-gray-700">
-              <CardHeader>
-                <CardTitle className="text-white">Photos</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {user.profile_images.slice(1).map((image, index) => (
-                    <OptimizedImage
-                      key={index}
-                      src={image}
-                      alt={`${user.display_name} ${index + 2}`}
-                      className="w-full aspect-square object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={() => handleGalleryImageClick(image, index)}
-                      expandable
-                    />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            </>
           )}
         </div>
       </div>

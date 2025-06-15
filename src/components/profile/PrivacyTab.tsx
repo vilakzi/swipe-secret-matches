@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { Shield } from 'lucide-react';
+import { Shield, Eye, Lock } from 'lucide-react';
 import { ProfileData } from '@/types/profile';
 
 interface PrivacyTabProps {
@@ -11,6 +11,8 @@ interface PrivacyTabProps {
 }
 
 const PrivacyTab = ({ formData, onPrivacyChange }: PrivacyTabProps) => {
+  const profileVisibility = formData.privacySettings.profileVisibility;
+
   return (
     <Card className="bg-gray-800 border-gray-700">
       <CardHeader>
@@ -20,29 +22,36 @@ const PrivacyTab = ({ formData, onPrivacyChange }: PrivacyTabProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Profile Visibility Toggle */}
         <div>
           <h3 className="text-white font-medium mb-4">Profile Visibility</h3>
-          <div className="space-y-3">
-            {[
-              { value: 'public', label: 'Public', desc: 'Anyone can see your profile' },
-              { value: 'friends', label: 'Connections Only', desc: 'Only matched users can see details' },
-              { value: 'private', label: 'Private', desc: 'Very limited profile visibility' }
-            ].map((option) => (
-              <label key={option.value} className="flex items-start space-x-3 cursor-pointer">
-                <input
-                  type="radio"
-                  name="profileVisibility"
-                  value={option.value}
-                  checked={formData.privacySettings.profileVisibility === option.value}
-                  onChange={(e) => onPrivacyChange('profileVisibility', e.target.value)}
-                  className="mt-1"
-                />
-                <div>
-                  <div className="text-white font-medium">{option.label}</div>
-                  <div className="text-gray-400 text-sm">{option.desc}</div>
-                </div>
-              </label>
-            ))}
+          <div className="flex items-center space-x-6">
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="radio"
+                name="profileVisibility"
+                value="public"
+                checked={profileVisibility === "public"}
+                onChange={() => onPrivacyChange('profileVisibility', "public")}
+                className="accent-green-500"
+              />
+              <Eye className="w-4 h-4 text-green-400" />
+              <span className="text-white">Public</span>
+              <span className="text-xs text-gray-400 ml-1">Anyone can view</span>
+            </label>
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="radio"
+                name="profileVisibility"
+                value="private"
+                checked={profileVisibility === "private"}
+                onChange={() => onPrivacyChange('profileVisibility', "private")}
+                className="accent-yellow-500"
+              />
+              <Lock className="w-4 h-4 text-yellow-400" />
+              <span className="text-white">Private</span>
+              <span className="text-xs text-gray-400 ml-1">Only approved followers</span>
+            </label>
           </div>
         </div>
 
