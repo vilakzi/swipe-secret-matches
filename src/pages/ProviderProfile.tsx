@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -142,8 +141,10 @@ const ProviderProfile = () => {
 
   const handleContact = () => {
     if (provider?.whatsapp) {
-      const message = encodeURIComponent(`Hi ${provider.display_name}! I saw your profile and would love to chat about your services.`);
-      window.open(`https://wa.me/${provider.whatsapp.replace(/[^0-9]/g, '')}?text=${message}`, '_blank');
+      // Enforced WhatsApp with preset message for providers
+      const num = provider.whatsapp.replace(/[^0-9]/g, "");
+      const message = encodeURIComponent("Hi, I got your number from ConnectsBuddy looking for hook up services/content.");
+      window.open(`https://wa.me/${num}?text=${message}`, '_blank');
     }
   };
 
@@ -200,6 +201,7 @@ const ProviderProfile = () => {
               className="bg-green-600 hover:bg-green-700"
             >
               <MessageCircle className="w-4 h-4" />
+              WhatsApp
             </Button>
             <Button variant="ghost" size="sm" className="text-white">
               <Share className="w-4 h-4" />

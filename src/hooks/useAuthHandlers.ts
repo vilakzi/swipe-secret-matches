@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -55,7 +54,18 @@ export const useAuthHandlers = () => {
           setLoading(false);
           return;
         }
-        
+
+        // Enforce phone for service providers
+        if (userType === 'service_provider' && (!phone || phone.trim().length < 8)) {
+          toast({
+            title: "Phone number required",
+            description: "Service providers must provide a valid phone number.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+
         // Sign up with basic info
         await signUp(email, password, displayName, userType, isAdmin);
 
@@ -68,7 +78,7 @@ export const useAuthHandlers = () => {
               .update({ 
                 user_type: userType,
                 role: isAdmin ? 'admin' : userType,
-                phone: phone || ''
+                phone: userType === 'service_provider' ? (phone || '') : ''
               })
               .eq('id', user.id);
 

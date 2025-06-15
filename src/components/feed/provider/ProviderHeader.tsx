@@ -30,6 +30,16 @@ interface ProviderHeaderProps {
 }
 
 const ProviderHeader = ({ profile, isOnline, isSubscribed, onProfileClick }: ProviderHeaderProps) => {
+  // WhatsApp for providers: always shown for service_provider
+  const handleWhatsAppClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (profile.userType === 'service_provider' && profile.whatsapp) {
+      const num = profile.whatsapp.replace(/[^0-9]/g, "");
+      const message = encodeURIComponent("Hi, I got your number from ConnectsBuddy looking for hook up services/content.");
+      window.open(`https://wa.me/${num}?text=${message}`, '_blank');
+    }
+  };
+
   return (
     <div className="p-4 flex items-center justify-between">
       <div className="flex items-center space-x-3">
@@ -82,6 +92,17 @@ const ProviderHeader = ({ profile, isOnline, isSubscribed, onProfileClick }: Pro
           <User className="w-4 h-4 mr-1" />
           View Profile
         </Button>
+        {/* WhatsApp shown for providers */}
+        {profile.userType === 'service_provider' && profile.whatsapp && (
+          <Button
+            onClick={handleWhatsAppClick}
+            size="sm"
+            className="bg-green-600 hover:bg-green-700 text-white"
+            title="Contact via WhatsApp"
+          >
+            WhatsApp
+          </Button>
+        )}
         {!isSubscribed && (
           <Lock className="w-4 h-4 text-yellow-500" />
         )}
