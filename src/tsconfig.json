@@ -1,3 +1,4 @@
+
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
@@ -13,9 +14,8 @@
     "noEmit": true,
     "skipLibCheck": true,
     "isolatedModules": true,
-    "resolveJsonModule": true,
-    "typeRoots": ["./node_modules/@types"]
-    // If there is a "types": [...] array, ensure "testing-library__jest-dom" is NOT present.
+    "resolveJsonModule": true
+    // Cleaned up: No "types" array at all; no references to "testing-library__jest-dom"
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]
