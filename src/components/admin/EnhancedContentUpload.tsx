@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload } from 'lucide-react';
+import { useDropzone } from 'react-dropzone';
 import EnhancedContentUploadForm from "./EnhancedContentUploadForm";
 import EnhancedContentFileDropzone from "./EnhancedContentFileDropzone";
 import EnhancedContentBulkActions from "./EnhancedContentBulkActions";
@@ -46,7 +47,20 @@ const EnhancedContentUpload = () => {
     maxSize,
   } = useEnhancedContentUpload();
 
-  // Use react-dropzone for drag activation state if needed, else read from custom hook
+  // Use react-dropzone here and forward all dropzone props
+  const {
+    getRootProps,
+    getInputProps,
+    isDragActive,
+  } = useDropzone({
+    onDrop,
+    accept: {
+      'image/*': ['.jpeg', '.jpg', '.png', '.gif', '.webp'],
+      'video/*': ['.mp4', '.webm', '.ogg', '.mov']
+    },
+    multiple: true,
+    maxSize
+  });
 
   return (
     <Card>
@@ -66,7 +80,6 @@ const EnhancedContentUpload = () => {
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Content Details Form */}
         <EnhancedContentUploadForm
           title={title}
           setTitle={setTitle}
@@ -83,25 +96,23 @@ const EnhancedContentUpload = () => {
         <div className="text-xs text-gray-500 mb-2 pl-1" role="note" id="upload-helper-tip">
           Please fill in details for better search and categorization. Tags are comma-separated. Scheduling is optional.
         </div>
-        {/* Drag & Drop Area */}
         <EnhancedContentFileDropzone
           onDrop={onDrop}
-          // Use only required props, remove unrelated code/state
+          isDragActive={isDragActive}
+          getRootProps={getRootProps}
+          getInputProps={getInputProps}
           maxSize={maxSize}
           role={role}
         />
         <div className="text-xs text-gray-500 ml-1" id="dropzone-helper-tip">
           Drag & drop files or click to add files. Only approved types and size.
         </div>
-        {/* Bulk Actions (Upload All button/bar) */}
         <EnhancedContentBulkActions
           uploadFiles={uploadFiles}
           uploading={uploading}
           handleBulkUpload={handleBulkUpload}
         />
-        {/* File Previews List */}
         <EnhancedContentFileList uploadFiles={uploadFiles} onRemove={removeFile} />
-        {/* Features Info/Panel */}
         <EnhancedContentFeatureInfo />
       </CardContent>
     </Card>

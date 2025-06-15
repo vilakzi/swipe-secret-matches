@@ -1,7 +1,6 @@
 
 import React from "react";
 import { Upload } from "lucide-react";
-import { useDropzone } from "react-dropzone";
 
 interface EnhancedContentFileDropzoneProps {
   onDrop: (acceptedFiles: File[]) => void;
@@ -13,7 +12,6 @@ interface EnhancedContentFileDropzoneProps {
 }
 
 const EnhancedContentFileDropzone = ({
-  onDrop,
   isDragActive,
   getRootProps,
   getInputProps,
