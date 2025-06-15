@@ -1,15 +1,16 @@
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { Image, Video, X } from "lucide-react";
-import type { UploadFile } from "./useContentUpload";
 import ContentFilePreview from "./ContentFilePreview";
+import type { UploadFile } from "./useContentUpload";
 
 interface ContentFilePreviewListProps {
   uploadFiles: UploadFile[];
   onRemove: (id: string) => void;
 }
 
-const ContentFilePreviewList = ({ uploadFiles, onRemove }: ContentFilePreviewListProps) => {
+const ContentFilePreviewList = ({
+  uploadFiles,
+  onRemove,
+}: ContentFilePreviewListProps) => {
   if (uploadFiles.length === 0) return null;
 
   return (

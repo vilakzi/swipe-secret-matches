@@ -1,19 +1,37 @@
-import React, { useState, useCallback } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Upload, X, Image, Video } from 'lucide-react';
+import { Upload } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
-import { useAdminContent } from '@/hooks/useAdminContent';
 import { useContentUpload } from "./useContentUpload";
 import ContentFileDropzone from "./ContentFileDropzone";
 import ContentFilePreviewList from "./ContentFilePreviewList";
+import ContentBulkActions from "./ContentBulkActions";
 
-interface UploadFile {
-  file: File;
-  preview: string;
-  type: 'image' | 'video';
-  id: string;
-}
+/** Info block for consistency with EnhancedContent */
+const ClassicContentFeatureInfo = () => (
+  <div
+    className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4"
+    role="region"
+    aria-label="Content Upload Auto Features"
+  >
+    <h4 className="font-medium text-blue-900 mb-2">
+      Content Upload Features
+    </h4>
+    <ul className="text-sm text-blue-700 space-y-1">
+      <li>• Creates content profile cards automatically</li>
+      <li>• Official verification badge</li>
+      <li>• Content type indicators (image/video)</li>
+      <li>• Engagement metrics tracking</li>
+      <li>• Automatic timestamp & sorting</li>
+      <li>• Accessible upload workflow</li>
+    </ul>
+    <div className="mt-3 text-xs text-blue-700">
+      <span aria-live="polite">
+        For support, contact admin@yourapp.com.
+      </span>
+    </div>
+  </div>
+);
 
 const ContentUpload = () => {
   const {
@@ -24,6 +42,20 @@ const ContentUpload = () => {
     handleBulkUpload,
   } = useContentUpload();
 
+  // Modern dropzone props (like Enhanced)
+  const {
+    getRootProps,
+    getInputProps,
+    isDragActive,
+  } = useDropzone({
+    onDrop,
+    accept: {
+      'image/*': ['.jpeg', '.jpg', '.png', '.gif', '.webp'],
+      'video/*': ['.mp4', '.webm', '.ogg', '.mov']
+    },
+    multiple: true,
+  });
+
   return (
     <Card>
       <CardHeader>
@@ -32,38 +64,31 @@ const ContentUpload = () => {
           Content Upload & Profile Card Generator
         </CardTitle>
         <p className="text-sm text-gray-600">
-          Upload content to automatically generate "Content" profile cards in the feed
+          Upload content to automatically generate "Content" profile cards in the feed.
         </p>
+        <div className="mt-2">
+          <span className="text-xs text-blue-600" id="classic-upload-helper-tip">
+            <strong>Tip:</strong> Fill up with multiple images or videos, then upload all at once.
+          </span>
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        <ContentFileDropzone onDrop={onDrop} />
-        {uploadFiles.length > 0 && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium">
-                Files Ready for Upload ({uploadFiles.length})
-              </h3>
-              <Button 
-                onClick={handleBulkUpload} 
-                disabled={uploading}
-                className="bg-purple-600 hover:bg-purple-700"
-              >
-                {uploading ? 'Uploading...' : 'Upload All'}
-              </Button>
-            </div>
-            <ContentFilePreviewList uploadFiles={uploadFiles} onRemove={removeFile} />
-          </div>
-        )}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h4 className="font-medium text-blue-900 mb-2">Automatic Profile Card Generation</h4>
-          <ul className="text-sm text-blue-700 space-y-1">
-            <li>• All uploaded content creates "Content" profile cards</li>
-            <li>• Cards include official verification badge</li>
-            <li>• Content type indicators (image/video)</li>
-            <li>• Engagement metrics tracking</li>
-            <li>• Automatic timestamp and sorting</li>
-          </ul>
+        <ContentFileDropzone
+          onDrop={onDrop}
+          getRootProps={getRootProps}
+          getInputProps={getInputProps}
+          isDragActive={isDragActive}
+        />
+        <div className="text-xs text-gray-500 ml-1" id="dropzone-info-block">
+          Drag & drop files or click to add. All content is instantly profiled.
         </div>
+        <ContentBulkActions
+          uploadFiles={uploadFiles}
+          uploading={uploading}
+          handleBulkUpload={handleBulkUpload}
+        />
+        <ContentFilePreviewList uploadFiles={uploadFiles} onRemove={removeFile} />
+        <ClassicContentFeatureInfo />
       </CardContent>
     </Card>
   );
