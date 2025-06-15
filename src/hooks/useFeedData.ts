@@ -1,5 +1,7 @@
+
 // --- Imports must come first --- //
 import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRealProfiles } from './useRealProfiles';
 import { useNewJoiners } from './useNewJoiners';
 import { useFilteredFeedData } from './useFilteredFeedData';
@@ -14,13 +16,7 @@ export type { FeedItem };
 
 export const useFeedData = (itemsPerPage: number = 6) => {
   // ---- User detection must be at the top of the hook, before any other hooks ---- //
-  let user = undefined;
-  try {
-    // Note: getAuth() must be available in your project. If you use something else for user, update accordingly.
-    user = getAuth().currentUser;
-  } catch (e) {
-    user = null;
-  }
+  const { user } = useAuth() || {};
 
   // Debug: output user value before any use
   console.debug("user value is", user);
@@ -174,3 +170,4 @@ function shuffleArray<T>(array: T[]): T[] {
   }
   return arr;
 }
+
