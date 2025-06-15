@@ -56,11 +56,26 @@ const FeedContent = ({
   const { user } = useAuth();
 
   // Filter user/service_provider content with meaningful media only:
-  const filteredFeedItems = feedItems.filter(
-    (item: any) =>
-      item.type !== 'post' ||
-      (item.type === 'post' && item.postImage && (item.postImage.endsWith('.jpg') || item.postImage.endsWith('.jpeg') || item.postImage.endsWith('.png') || item.postImage.endsWith('.webp') || item.postImage.endsWith('.gif') || item.postImage.endsWith('.mp4') || item.postImage.endsWith('.mov') || item.postImage.endsWith('.webm'))
-  );
+  const filteredFeedItems = feedItems.filter((item: any) => {
+    if (item.type !== 'post') return true;
+    if (
+      item.type === 'post' &&
+      item.postImage &&
+      (
+        item.postImage.endsWith('.jpg') ||
+        item.postImage.endsWith('.jpeg') ||
+        item.postImage.endsWith('.png') ||
+        item.postImage.endsWith('.webp') ||
+        item.postImage.endsWith('.gif') ||
+        item.postImage.endsWith('.mp4') ||
+        item.postImage.endsWith('.mov') ||
+        item.postImage.endsWith('.webm')
+      )
+    ) {
+      return true;
+    }
+    return false;
+  });
 
   // Sort: Always float/inject isContent (admin/superadmin) items to the top, then rhythmically mix or after N posts
   const adminFeed = contentFeedItems.map(item => ({ ...item, isContent: true }));
