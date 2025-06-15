@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import * as ToastPrimitives from "@radix-ui/react-toast"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -17,6 +18,10 @@ const ToastViewport = React.forwardRef<
       "fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]",
       className
     )}
+    // ARIA global announcement region for all toasts
+    aria-live="polite"
+    aria-atomic="false"
+    data-testid="toast-viewport"
     {...props}
   />
 ))
@@ -38,15 +43,22 @@ const toastVariants = cva(
   }
 )
 
+// Add explicit role and aria-live to toast root (polite for info/success, assertive for error)
 const Toast = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Root>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> &
     VariantProps<typeof toastVariants>
 >(({ className, variant, ...props }, ref) => {
+  const ariaRole = variant === "destructive" ? "alert" : "status";
+  const ariaLive = variant === "destructive" ? "assertive" : "polite";
   return (
     <ToastPrimitives.Root
       ref={ref}
       className={cn(toastVariants({ variant }), className)}
+      role={ariaRole}
+      aria-live={ariaLive}
+      aria-atomic="true"
+      tabIndex={0}
       {...props}
     />
   )
@@ -79,6 +91,8 @@ const ToastClose = React.forwardRef<
       className
     )}
     toast-close=""
+    aria-label="Close notification"
+    tabIndex={0}
     {...props}
   >
     <X className="h-4 w-4" />
@@ -92,6 +106,7 @@ const ToastTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <ToastPrimitives.Title
     ref={ref}
+    id="toast-title"
     className={cn("text-sm font-semibold", className)}
     {...props}
   />
@@ -104,6 +119,7 @@ const ToastDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <ToastPrimitives.Description
     ref={ref}
+    id="toast-description"
     className={cn("text-sm opacity-90", className)}
     {...props}
   />
