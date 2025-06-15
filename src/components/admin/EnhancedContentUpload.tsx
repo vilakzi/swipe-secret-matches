@@ -10,6 +10,9 @@ import { useDropzone } from 'react-dropzone';
 import { useEnhancedAdminContent, ContentCategory } from '@/hooks/useEnhancedAdminContent';
 import { useUserRole } from "@/hooks/useUserRole";
 import { getMaxUploadSize } from "@/utils/getMaxUploadSize";
+import EnhancedContentUploadForm from "./EnhancedContentUploadForm";
+import EnhancedContentFileDropzone from "./EnhancedContentFileDropzone";
+import EnhancedContentFilePreview from "./EnhancedContentFilePreview";
 
 interface UploadFile {
   file: File;
@@ -178,88 +181,29 @@ const EnhancedContentUpload = () => {
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Content Details Form */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="text-sm font-medium">Title</label>
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Content title (optional - uses filename if empty)"
-            />
-          </div>
-          
-          <div>
-            <label className="text-sm font-medium">Category</label>
-            <Select value={category} onValueChange={(value: ContentCategory) => setCategory(value)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {CONTENT_CATEGORIES.map((cat) => (
-                  <SelectItem key={cat.value} value={cat.value}>
-                    {cat.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div>
-          <label className="text-sm font-medium">Description</label>
-          <Textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Content description..."
-            rows={3}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="text-sm font-medium">Tags (comma-separated)</label>
-            <Input
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              placeholder="trending, viral, featured..."
-            />
-          </div>
-          
-          <div>
-            <label className="text-sm font-medium">Schedule Publication (optional)</label>
-            <Input
-              type="datetime-local"
-              value={scheduledDate}
-              onChange={(e) => setScheduledDate(e.target.value)}
-            />
-          </div>
-        </div>
+        <EnhancedContentUploadForm
+          title={title}
+          setTitle={setTitle}
+          description={description}
+          setDescription={setDescription}
+          category={category}
+          setCategory={setCategory}
+          tags={tags}
+          setTags={setTags}
+          scheduledDate={scheduledDate}
+          setScheduledDate={setScheduledDate}
+          CONTENT_CATEGORIES={CONTENT_CATEGORIES}
+        />
 
         {/* Drag & Drop Area */}
-        <div
-          {...getRootProps()}
-          className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
-            isDragActive ? 'border-purple-500 bg-purple-50' : 'border-gray-300 hover:border-gray-400'
-          }`}
-        >
-          <input {...getInputProps()} />
-          <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-          {isDragActive ? (
-            <p className="text-purple-600">Drop the files here...</p>
-          ) : (
-            <div>
-              <p className="text-lg font-medium text-gray-700 mb-2">
-                Drag & drop files here, or click to select
-              </p>
-              <p className="text-sm text-gray-500">
-                Supports images and videos • Automatic duplicate detection • Media optimization
-              </p>
-            </div>
-          )}
-          <p className="text-sm text-gray-500 mt-2">
-            Max file size: {Math.round(maxSize / (1024*1024))}MB ({role})
-          </p>
-        </div>
+        <EnhancedContentFileDropzone
+          onDrop={onDrop}
+          isDragActive={isDragActive}
+          getRootProps={getRootProps}
+          getInputProps={getInputProps}
+          role={role}
+          maxSize={maxSize}
+        />
 
         {/* File Previews */}
         {uploadFiles.length > 0 && (
@@ -279,63 +223,11 @@ const EnhancedContentUpload = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {uploadFiles.map((uploadFile) => (
-                <div key={uploadFile.id} className="relative group">
-                  <div className="aspect-video rounded-lg overflow-hidden bg-gray-100">
-                    {uploadFile.type === 'image' ? (
-                      <img
-                        src={uploadFile.preview}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <video
-                        src={uploadFile.preview}
-                        className="w-full h-full object-cover"
-                        controls
-                      />
-                    )}
-                  </div>
-                  
-                  <div className="absolute top-2 right-2">
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => removeFile(uploadFile.id)}
-                      className="h-8 w-8 p-0"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  
-                  <div className="absolute bottom-2 left-2">
-                    <div className="bg-black/70 text-white px-2 py-1 rounded text-xs flex items-center gap-1">
-                      {uploadFile.type === 'image' ? (
-                        <Image className="w-3 h-3" />
-                      ) : (
-                        <Video className="w-3 h-3" />
-                      )}
-                      {uploadFile.type}
-                    </div>
-                  </div>
-
-                  {uploadFile.isDuplicate && (
-                    <div className="absolute top-2 left-2">
-                      <Badge variant="destructive" className="text-xs">
-                        <AlertTriangle className="w-3 h-3 mr-1" />
-                        Duplicate
-                      </Badge>
-                    </div>
-                  )}
-                  
-                  <div className="mt-2">
-                    <p className="text-sm font-medium truncate">
-                      {uploadFile.file.name}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {(uploadFile.file.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-                  </div>
-                </div>
+                <EnhancedContentFilePreview
+                  key={uploadFile.id}
+                  uploadFile={uploadFile}
+                  onRemove={removeFile}
+                />
               ))}
             </div>
           </div>
