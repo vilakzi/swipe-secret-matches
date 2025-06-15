@@ -18,7 +18,7 @@ const CommentItem = ({ comment }: CommentItemProps) => (
     <img
       src={comment.user_profile?.profile_image_url || '/placeholder.svg'}
       alt="User"
-      className="w-6 h-6 rounded-full"
+      className="w-6 h-6 rounded-full object-cover"
     />
     <div className="flex-1">
       <div className="bg-gray-700 rounded-lg px-3 py-2">

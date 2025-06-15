@@ -36,6 +36,7 @@ const PostComments = ({ postId, isOpen, onToggle }: PostCommentsProps) => {
     if (isOpen) {
       fetchComments();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, postId]);
 
   const fetchComments = async () => {
