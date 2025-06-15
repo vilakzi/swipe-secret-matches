@@ -23,11 +23,6 @@
   ],
   "exclude": [
     "node_modules",
-    "dist",
-    "**/*.test.ts",
-    "**/*.test.tsx",
-    "**/__tests__/**/*",
-    "**/jest-dom*",
-    "**/testing-library*"
+    "dist"
   ]
 }
