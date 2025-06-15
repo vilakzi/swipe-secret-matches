@@ -55,33 +55,34 @@ const FeedContent = ({
   const { contentFeedItems, handleContentLike, handleContentShare } = useContentFeed();
   const { user } = useAuth();
 
-  // Filter user/service_provider content with meaningful media only:
+  // Enhanced filter: exclude post items missing a valid postImage, and exclude any item with missing profile/id
+  const isValidMedia = (url?: string) => {
+    if (!url) return false;
+    const ext = url.split('.').pop()?.toLowerCase();
+    return [
+      'jpg','jpeg','png','webp','gif','mp4','mov','webm'
+    ].includes(ext ?? '');
+  };
+
   const filteredFeedItems = feedItems.filter((item: any) => {
-    if (item.type !== 'post') return true;
-    if (
-      item.type === 'post' &&
-      item.postImage &&
-      (
-        item.postImage.endsWith('.jpg') ||
-        item.postImage.endsWith('.jpeg') ||
-        item.postImage.endsWith('.png') ||
-        item.postImage.endsWith('.webp') ||
-        item.postImage.endsWith('.gif') ||
-        item.postImage.endsWith('.mp4') ||
-        item.postImage.endsWith('.mov') ||
-        item.postImage.endsWith('.webm')
-      )
-    ) {
-      return true;
+    if (!item || !item.profile || !item.id) return false;
+    if (item.type === 'post') {
+      return isValidMedia(item.postImage);
     }
-    return false;
+    return true;
   });
 
-  // Sort: Always float/inject isContent (admin/superadmin) items to the top, then rhythmically mix or after N posts
-  const adminFeed = contentFeedItems.map(item => ({ ...item, isContent: true }));
+  // Prepare adminFeed (contentFeedItems always have .file_url and .title per generator, but double check)
+  const adminFeed = contentFeedItems
+    .filter(
+      (item) =>
+        !!item && !!item.id && !!item.postImage && !!item.caption && isValidMedia(item.postImage)
+    )
+    .map(item => ({ ...item, isContent: true }));
+
   const userFeed = filteredFeedItems.map(item => ({ ...item, isContent: false }));
 
-  // For a rhythmic flow, interleave 1 admin after every 3 user posts (adjust as needed)
+  // Interleave as before
   const combinedFeedItems: any[] = [];
   let adminIdx = 0, userIdx = 0;
   const userChunk = 3;
@@ -93,7 +94,6 @@ const FeedContent = ({
       combinedFeedItems.push(adminFeed[adminIdx++]);
     }
   }
-  // If only admin content, show all admin items
   if (!userFeed.length) {
     adminFeed.forEach(item => {
       if (!combinedFeedItems.includes(item)) combinedFeedItems.push(item);
@@ -105,59 +105,65 @@ const FeedContent = ({
   return (
     <div className="space-y-4 px-4 pb-6" role="list" aria-label="Social feed items">
       {/* Combined Feed Items */}
-      {filteredItems.map((item: any) => {
-        if (item.isContent) {
-          // Render content profile card with admin/superadmin marker
-          return (
-            <ContentProfileCard
-              key={`content-${item.id}`}
-              item={item}
-              likedItems={likedItems}
-              onLike={handleContentLike}
-              onShare={handleContentShare}
-              isAdminCard
-            />
-          );
-        } else {
-          // Render regular profile cards
-          const isServiceProvider = item.profile.userType === 'service_provider';
-
-          if (isServiceProvider) {
+      {filteredItems
+        .filter((item: any) => !!item && !!item.profile && !!item.id) // extra safety
+        .map((item: any) => {
+          if (item.isContent) {
+            // ContentProfileCard: ensure required fields present
+            if (!item.postImage || !item.caption) return null;
             return (
-              <ProviderProfileCard
-                key={item.id}
+              <ContentProfileCard
+                key={`content-${item.id}`}
                 item={item}
                 likedItems={likedItems}
-                isSubscribed={isSubscribed}
-                onLike={onLike}
-                onContact={onContact}
-              />
-            );
-          } else if (item.type === 'post') {
-            return (
-              <PostCard
-                key={item.id}
-                item={item}
-                likedItems={likedItems}
-                isSubscribed={isSubscribed}
-                onLike={onLike}
-                onContact={onContact}
+                onLike={handleContentLike}
+                onShare={handleContentShare}
+                isAdminCard
               />
             );
           } else {
-            return (
-              <ProfileCard
-                key={item.id}
-                item={item}
-                likedItems={likedItems}
-                isSubscribed={isSubscribed}
-                onLike={onLike}
-                onContact={onContact}
-              />
-            );
+            // Render regular profile cards
+            if (!item.profile || !item.id) return null;
+            const isServiceProvider = item.profile.userType === 'service_provider';
+
+            if (isServiceProvider) {
+              return (
+                <ProviderProfileCard
+                  key={item.id}
+                  item={item}
+                  likedItems={likedItems}
+                  isSubscribed={isSubscribed}
+                  onLike={onLike}
+                  onContact={onContact}
+                />
+              );
+            } else if (item.type === 'post' && item.postImage && isValidMedia(item.postImage)) {
+              return (
+                <PostCard
+                  key={item.id}
+                  item={item}
+                  likedItems={likedItems}
+                  isSubscribed={isSubscribed}
+                  onLike={onLike}
+                  onContact={onContact}
+                />
+              );
+            } else if (item.type === 'profile') {
+              return (
+                <ProfileCard
+                  key={item.id}
+                  item={item}
+                  likedItems={likedItems}
+                  isSubscribed={isSubscribed}
+                  onLike={onLike}
+                  onContact={onContact}
+                />
+              );
+            }
+            // Otherwise, do not render the card
+            return null;
           }
-        }
-      })}
+        })}
 
       {/* Empty State */}
       {filteredItems.length === 0 && (
