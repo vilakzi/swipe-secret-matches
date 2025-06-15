@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import FeedHeader from './feed/FeedHeader';
 import FeedContent from './feed/FeedContent';
@@ -21,11 +20,7 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
     displayedItems,
     hasMoreItems,
     isLoadingMore,
-    filterGender,
-    filterName,
     handleLoadMore,
-    handleFilterChange,
-    handleNameFilterChange,
     handleRefresh
   } = useFeedData(6);
 
@@ -50,10 +45,6 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
       <FeedHeader
         showFilters={showFilters}
         setShowFilters={setShowFilters}
-        filterGender={filterGender}
-        setFilterGender={handleFilterChange}
-        filterName={filterName}
-        setFilterName={handleNameFilterChange}
         onImageUpload={() => console.log('Image upload initiated')}
         onVideoUpload={() => console.log('Video upload initiated')}
         onRefresh={handleFeedRefresh}
@@ -70,11 +61,9 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
               feedItems={displayedItems}
               likedItems={likedItems}
               isSubscribed={true}
-              filterGender={filterGender}
               onLike={onLike}
               onContact={onContact}
               onRefresh={onRefresh}
-              setFilterGender={handleFilterChange}
             />
           </InfiniteScroll>
         </PullToRefresh>

@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useRealProfiles } from './useRealProfiles';
 import { useNewJoiners } from './useNewJoiners';
@@ -11,11 +10,9 @@ import { supabase } from '@/integrations/supabase/client';
 export type { FeedItem };
 
 export const useFeedData = (itemsPerPage: number = 6) => {
-  const [filterGender, setFilterGender] = useState<'male' | 'female' | null>(null);
-  const [filterName, setFilterName] = useState<string>('');
   const [shuffleKey, setShuffleKey] = useState(0);
   const [posts, setPosts] = useState<any[]>([]);
-  
+
   const { realProfiles, loading: profilesLoading } = useRealProfiles();
   const { newJoiners, loading: newJoinersLoading } = useNewJoiners();
 
@@ -57,7 +54,6 @@ export const useFeedData = (itemsPerPage: number = 6) => {
     fetchPosts();
   }, [fetchPosts]);
 
-  // Use only real profiles from database
   const allProfiles = useMemo(() => {
     console.log(`Total profiles: ${realProfiles.length} (all real accounts)`);
     return realProfiles;
@@ -66,13 +62,13 @@ export const useFeedData = (itemsPerPage: number = 6) => {
   // Apply role-based filtering with posts data
   const roleFilteredProfiles = useFilteredFeedData(allProfiles, newJoiners, posts);
 
-  // Apply gender and name filters
-  const filteredProfiles = useProfileFilters(roleFilteredProfiles, filterGender, filterName);
+  // All profiles are used; no further filtering
+  const filteredProfiles = roleFilteredProfiles;
 
   // Create all feed items (including posts)
   const allFeedItems = useMemo(() => {
     const profileItems = generateFeedItems(filteredProfiles, shuffleKey);
-    
+
     // Convert posts to feed items
     const postItems: FeedItem[] = posts.map(post => ({
       id: `post-${post.id}`,
@@ -93,7 +89,6 @@ export const useFeedData = (itemsPerPage: number = 6) => {
       caption: post.caption
     }));
 
-    // Mix posts with profile items
     const mixed = [...postItems, ...profileItems].sort(() => Math.random() - 0.5);
     return mixed;
   }, [filteredProfiles, posts, shuffleKey]);
@@ -109,21 +104,7 @@ export const useFeedData = (itemsPerPage: number = 6) => {
 
   const isLoadingMore = paginationLoading || profilesLoading || newJoinersLoading;
 
-  // Reset pagination when filter changes
-  const handleFilterChange = useCallback((gender: 'male' | 'female' | null) => {
-    console.log('Filter change - gender:', gender);
-    setFilterGender(gender);
-    resetPagination();
-    setShuffleKey(prev => prev + 1);
-  }, [resetPagination]);
-
-  const handleNameFilterChange = useCallback((name: string) => {
-    console.log('Filter change - name:', name);
-    setFilterName(name);
-    resetPagination();
-    setShuffleKey(prev => prev + 1);
-  }, [resetPagination]);
-
+  // Unified, only refresh-related handler
   const handleRefresh = useCallback(() => {
     console.log('Refreshing feed');
     resetPagination();
@@ -135,11 +116,7 @@ export const useFeedData = (itemsPerPage: number = 6) => {
     displayedItems,
     hasMoreItems,
     isLoadingMore,
-    filterGender,
-    filterName,
     handleLoadMore,
-    handleFilterChange,
-    handleNameFilterChange,
     handleRefresh
   };
 };

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,10 +9,6 @@ import { toast } from '@/hooks/use-toast';
 interface FeedHeaderProps {
   showFilters: boolean;
   setShowFilters: (show: boolean) => void;
-  filterGender: 'male' | 'female' | null;
-  setFilterGender: (gender: 'male' | 'female' | null) => void;
-  filterName: string;
-  setFilterName: (name: string) => void;
   onImageUpload: () => void;
   onVideoUpload: () => void;
   onRefresh?: () => void;
@@ -22,10 +17,6 @@ interface FeedHeaderProps {
 const FeedHeader = ({
   showFilters,
   setShowFilters,
-  filterGender,
-  setFilterGender,
-  filterName,
-  setFilterName,
   onImageUpload,
   onVideoUpload,
   onRefresh
@@ -147,18 +138,9 @@ const FeedHeader = ({
 
   return (
     <div className="space-y-4">
-      {/* Search and Actions */}
+      {/* Actions Row - Search removed */}
       <div className="flex items-center space-x-2">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <Input
-            placeholder="Search by name..."
-            value={filterName}
-            onChange={(e) => setFilterName(e.target.value)}
-            className="pl-10 bg-gray-800 border-gray-700 text-white"
-          />
-        </div>
-        
+        <div className="flex-1" />
         <Button
           variant="ghost"
           size="sm"
@@ -167,8 +149,6 @@ const FeedHeader = ({
         >
           <Filter className="w-4 h-4" />
         </Button>
-        
-        {/* Refresh button */}
         <Button
           variant="ghost"
           size="sm"
@@ -178,8 +158,6 @@ const FeedHeader = ({
         >
           <RotateCcw className="w-4 h-4" />
         </Button>
-        
-        {/* Upload buttons - available to all logged in users */}
         {user && (
           <>
             <Button
@@ -191,7 +169,6 @@ const FeedHeader = ({
             >
               <Image className="w-4 h-4" />
             </Button>
-            
             <Button
               variant="ghost"
               size="sm"
@@ -204,37 +181,11 @@ const FeedHeader = ({
           </>
         )}
       </div>
-
-      {/* Filters */}
+      {/* Filters panel (now only general content) */}
       {showFilters && (
         <div className="bg-gray-800/50 rounded-lg p-4 space-y-3">
           <h3 className="text-white font-medium">Filters</h3>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant={filterGender === null ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setFilterGender(null)}
-              className={filterGender === null ? "bg-purple-600 hover:bg-purple-700" : "text-white hover:bg-white/10"}
-            >
-              All
-            </Button>
-            <Button
-              variant={filterGender === 'male' ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setFilterGender('male')}
-              className={filterGender === 'male' ? "bg-purple-600 hover:bg-purple-700" : "text-white hover:bg-white/10"}
-            >
-              Male
-            </Button>
-            <Button
-              variant={filterGender === 'female' ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setFilterGender('female')}
-              className={filterGender === 'female' ? "bg-purple-600 hover:bg-purple-700" : "text-white hover:bg-white/10"}
-            >
-              Female
-            </Button>
-          </div>
+          <div className="text-gray-400 text-sm">Feed filtering is disabled. All content is shown uniformly.</div>
         </div>
       )}
     </div>

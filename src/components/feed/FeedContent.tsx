@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import ProfileCard from './ProfileCard';
 import PostCard from './PostCard';
@@ -40,32 +39,21 @@ interface FeedContentProps {
   feedItems: FeedItem[];
   likedItems: Set<string>;
   isSubscribed: boolean;
-  filterGender: string;
   onLike: (itemId: string, profileId: string) => void;
   onContact: (profile: Profile) => void;
   onRefresh: () => void;
-  setFilterGender: (gender: string) => void;
 }
 
-const FeedContent = ({ 
-  feedItems, 
-  likedItems, 
-  isSubscribed, 
-  filterGender, 
-  onLike, 
-  onContact, 
-  onRefresh, 
-  setFilterGender 
+const FeedContent = ({
+  feedItems,
+  likedItems,
+  isSubscribed,
+  onLike,
+  onContact,
+  onRefresh
 }: FeedContentProps) => {
   const { contentFeedItems, handleContentLike, handleContentShare } = useContentFeed();
   const { user } = useAuth();
-  const [genderCounts, setGenderCounts] = useState({ male: 0, female: 0, all: 0 });
-
-  useEffect(() => {
-    const maleCount = feedItems.filter(item => item.type === 'profile' && item.profile.gender === 'male').length;
-    const femaleCount = feedItems.filter(item => item.type === 'profile' && item.profile.gender === 'female').length;
-    setGenderCounts({ male: maleCount, female: femaleCount, all: feedItems.length });
-  }, [feedItems]);
 
   // Combine regular feed items with content profile cards
   const combinedFeedItems = [
@@ -78,46 +66,11 @@ const FeedContent = ({
     return dateB.getTime() - dateA.getTime();
   });
 
-  const filteredItems = combinedFeedItems.filter((item: any) => {
-    if (filterGender === 'all') {
-      return true;
-    }
-    if (item.isContent) {
-      return true;
-    }
-    return item.profile.gender === filterGender;
-  });
-
-  const handleFilterChange = (gender: string) => {
-    setFilterGender(gender);
-  };
+  // Unified feed (no gender filter)
+  const filteredItems = combinedFeedItems;
 
   return (
     <div className="space-y-4 px-4 pb-6">
-      {/* Filter Section */}
-      {user && (
-        <div className="flex justify-around bg-gray-700 rounded-full p-2">
-          <button
-            className={`py-2 px-4 rounded-full text-sm ${filterGender === 'all' ? 'bg-purple-500 text-white' : 'text-gray-400 hover:text-white hover:bg-purple-500/10'}`}
-            onClick={() => handleFilterChange('all')}
-          >
-            All ({genderCounts.all})
-          </button>
-          <button
-            className={`py-2 px-4 rounded-full text-sm ${filterGender === 'female' ? 'bg-pink-500 text-white' : 'text-gray-400 hover:text-white hover:bg-pink-500/10'}`}
-            onClick={() => handleFilterChange('female')}
-          >
-            Female ({genderCounts.female})
-          </button>
-          <button
-            className={`py-2 px-4 rounded-full text-sm ${filterGender === 'male' ? 'bg-blue-500 text-white' : 'text-gray-400 hover:text-white hover:bg-blue-500/10'}`}
-            onClick={() => handleFilterChange('male')}
-          >
-            Male ({genderCounts.male})
-          </button>
-        </div>
-      )}
-
       {/* Combined Feed Items */}
       {filteredItems.map((item: any) => {
         if (item.isContent) {
@@ -134,7 +87,7 @@ const FeedContent = ({
         } else {
           // Render regular profile cards
           const isServiceProvider = item.profile.userType === 'service_provider';
-          
+
           if (isServiceProvider) {
             return (
               <ProviderProfileCard
