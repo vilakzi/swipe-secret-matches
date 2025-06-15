@@ -1,4 +1,3 @@
-
 // --- Imports must come first --- //
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useRealProfiles } from './useRealProfiles';
@@ -23,8 +22,16 @@ export const useFeedData = (itemsPerPage: number = 6) => {
     user = null;
   }
 
-  // ---- Early return if no user, before any other hook is called ---- //
-  if (!user) return null;
+  // --- Return default values if no user (instead of null) --- //
+  if (!user) {
+    return {
+      displayedItems: [],
+      hasMoreItems: false,
+      isLoadingMore: false,
+      handleLoadMore: () => {},
+      handleRefresh: () => {},
+    };
+  }
 
   // --- Now, normal hooks usage --- //
   const [shuffleKey, setShuffleKey] = useState(0);
@@ -164,4 +171,3 @@ function shuffleArray<T>(array: T[]): T[] {
   }
   return arr;
 }
-
