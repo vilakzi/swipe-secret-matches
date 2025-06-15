@@ -1,28 +1,83 @@
 
 import { useState, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from "@/hooks/use-toast";
 import { useAdminContent } from '@/hooks/useAdminContent';
 
 export interface UploadFile {
   file: File;
-  preview: string;
+  preview: string; // Still used for local preview ONLY
   type: 'image' | 'video';
   id: string;
+  file_url?: string; // New: storage public url
+  thumbnail_url?: string; // For images only
 }
 
-// Upload hook for admin ContentUpload
+const BUCKET = 'content_files';
+
 export function useContentUpload() {
   const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const { createContent } = useAdminContent();
+  const { toast } = useToast();
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    const newFiles = acceptedFiles.map(file => ({
-      file,
-      preview: URL.createObjectURL(file),
-      type: file.type.startsWith('image/') ? 'image' as const : 'video' as const,
-      id: Math.random().toString(36).substr(2, 9),
-    }));
-    setUploadFiles(prev => [...prev, ...newFiles]);
+  // Helper to upload a file to supabase storage and return its public url
+  const uploadToStorage = async (file: File, pathPrefix: string) => {
+    const ext = file.name.split('.').pop();
+    const filename = `${Date.now()}-${Math.random().toString(36).substr(2, 8)}.${ext}`;
+    const filePath = `${pathPrefix}/${filename}`;
+
+    // Upload 
+    const { error } = await supabase.storage
+      .from(BUCKET)
+      .upload(filePath, file, { upsert: false });
+
+    if (error) throw new Error(error.message);
+
+    // Get public URL
+    const { data } = supabase.storage.from(BUCKET).getPublicUrl(filePath);
+    return data.publicUrl;
+  };
+
+  // Local handler for dropped files (add to UI & upload to storage)
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    const prefix = user?.id || 'anonymous';
+
+    setUploading(true);
+
+    try {
+      const newFiles: UploadFile[] = [];
+      for (const file of acceptedFiles) {
+        // Upload to storage
+        const file_url = await uploadToStorage(file, prefix);
+        let thumbnail_url: string | undefined = undefined;
+        if (file.type.startsWith('image/')) thumbnail_url = file_url;
+
+        const uploadFile: UploadFile = {
+          file,
+          preview: URL.createObjectURL(file), // Local browser preview
+          type: file.type.startsWith('image/') ? 'image' : 'video',
+          id: Math.random().toString(36).substr(2, 9),
+          file_url,
+          thumbnail_url,
+        };
+        newFiles.push(uploadFile);
+      }
+      setUploadFiles(prev => [...prev, ...newFiles]);
+      toast({
+        title: "Upload complete",
+        description: "All files uploaded to storage.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Upload failed",
+        description: error.message || "Could not upload files to storage.",
+        variant: "destructive"
+      });
+    } finally {
+      setUploading(false);
+    }
   }, []);
 
   const removeFile = (id: string) => {
@@ -35,13 +90,15 @@ export function useContentUpload() {
     });
   };
 
+  // Create the content database row using storage links
   const uploadSingleFile = async (uploadFile: UploadFile) => {
-    const fileUrl = uploadFile.preview; // Should be replaced by actual storage
+    // Fallback: use storage file_url if present, otherwise old preview
+    const fileUrl = uploadFile.file_url || uploadFile.preview;
     await createContent({
       title: uploadFile.file.name,
       content_type: uploadFile.type,
       file_url: fileUrl,
-      thumbnail_url: uploadFile.type === 'image' ? fileUrl : undefined,
+      thumbnail_url: uploadFile.type === 'image' ? (uploadFile.thumbnail_url || fileUrl) : undefined,
       file_size: uploadFile.file.size,
       status: 'published',
       visibility: 'public',
@@ -62,8 +119,16 @@ export function useContentUpload() {
       }
       uploadFiles.forEach(file => URL.revokeObjectURL(file.preview));
       setUploadFiles([]);
-    } catch (error) {
-      console.error('Bulk upload failed:', error);
+      toast({
+        title: "Content published",
+        description: "All files added with public storage links."
+      });
+    } catch (error: any) {
+      toast({
+        title: "Bulk upload failed",
+        description: error.message,
+        variant: "destructive"
+      });
     } finally {
       setUploading(false);
     }
