@@ -1,11 +1,9 @@
+
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "composite": true,
-    "types": [
-      "node"
-      // Removed 'testing-library__jest-dom'
-    ]
+    "types": ["node"]
   },
   "include": [
     "vite.config.ts",
