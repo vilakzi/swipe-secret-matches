@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Ban, UserCheck, Trash2, Loader2 } from "lucide-react";
-import { UserOverview } from "./UserManagementTable";
+import { UserOverview } from "./UserManagement";
 
 interface Props {
   user: UserOverview;
@@ -11,27 +11,30 @@ interface Props {
   onRemoveContent: (userId: string) => void;
 }
 
+/// Button row with compact layout
 const UserActionsMenu: React.FC<Props> = ({
   user,
   removingContentUserId,
   onBlockUser,
   onRemoveContent,
 }) => (
-  <div className="flex space-x-2">
+  <div className="flex space-x-1 sm:space-x-2">
     <Button
       size="sm"
       variant={user.is_blocked ? "default" : "destructive"}
       onClick={() => onBlockUser(user.id, user.is_blocked)}
+      className="px-2 py-1"
+      aria-label={user.is_blocked ? "Unblock User" : "Block User"}
     >
       {user.is_blocked ? (
         <>
           <UserCheck className="w-3 h-3 mr-1" />
-          Unblock
+          <span className="hidden sm:inline">Unblock</span>
         </>
       ) : (
         <>
           <Ban className="w-3 h-3 mr-1" />
-          Block
+          <span className="hidden sm:inline">Block</span>
         </>
       )}
     </Button>
@@ -40,18 +43,18 @@ const UserActionsMenu: React.FC<Props> = ({
       variant="outline"
       onClick={() => onRemoveContent(user.id)}
       disabled={removingContentUserId === user.id}
-      className="flex items-center"
+      className="flex items-center px-2 py-1"
       aria-label={`Remove all content posted by ${user.display_name || user.email}`}
     >
       {removingContentUserId === user.id ? (
         <>
           <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-          Removing...
+          <span className="hidden sm:inline">Removing...</span>
         </>
       ) : (
         <>
           <Trash2 className="w-3 h-3 mr-1" />
-          Remove Content
+          <span className="hidden sm:inline">Remove Content</span>
         </>
       )}
     </Button>

@@ -1,22 +1,13 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Ban, Eye, Search, UserCheck, AlertTriangle, Trash2, Loader2 } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import UserManagementTable from "./UserManagementTable";
 
-interface UserOverview {
+export interface UserOverview {
   id: string;
   display_name: string;
   email: string;
@@ -52,6 +43,7 @@ const UserManagement = () => {
   }, [users, searchTerm]);
 
   const fetchUsers = async () => {
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('admin_user_overview')
@@ -59,7 +51,7 @@ const UserManagement = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
+      console.log('Loaded users:', data);
       setUsers(data || []);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -68,6 +60,7 @@ const UserManagement = () => {
         description: "Failed to load user data",
         variant: "destructive"
       });
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -87,7 +80,7 @@ const UserManagement = () => {
         description: `User has been ${isBlocked ? 'unblocked' : 'blocked'} successfully`,
       });
 
-      fetchUsers();
+      await fetchUsers();
     } catch (error) {
       console.error('Error updating user block status:', error);
       toast({
@@ -104,13 +97,11 @@ const UserManagement = () => {
     }
     setRemovingContentUserId(userId);
     try {
-      // 1. Delete all from admin_content
       const { error: adminContentError } = await supabase
         .from('admin_content')
         .delete()
         .eq('admin_id', userId);
 
-      // 2. Delete all from posts
       const { error: postsError } = await supabase
         .from('posts')
         .delete()
@@ -124,7 +115,7 @@ const UserManagement = () => {
         variant: "default"
       });
 
-      fetchUsers();
+      await fetchUsers();
     } catch (error) {
       console.error('Error removing user content:', error);
       toast({
@@ -134,17 +125,6 @@ const UserManagement = () => {
       });
     } finally {
       setRemovingContentUserId(null);
-    }
-  };
-
-  const getUserTypeColor = (userType: string) => {
-    switch (userType) {
-      case 'service_provider':
-        return 'bg-purple-600';
-      case 'admin':
-        return 'bg-red-600';
-      default:
-        return 'bg-blue-600';
     }
   };
 
@@ -161,27 +141,33 @@ const UserManagement = () => {
   return (
     <Card className="bg-black/20 backdrop-blur-md border-gray-700">
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <CardTitle className="text-white">User Management</CardTitle>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 w-full md:w-auto mt-2 md:mt-0">
             <Search className="w-4 h-4 text-gray-400" />
             <Input
               placeholder="Search users..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-64 bg-gray-800 border-gray-600 text-white"
+              className="w-48 sm:w-64 bg-gray-800 border-gray-600 text-white"
             />
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="overflow-x-auto">
-          <UserManagementTable
-            users={filteredUsers}
-            removingContentUserId={removingContentUserId}
-            onBlockUser={handleBlockUser}
-            onRemoveContent={handleRemoveContent}
-          />
+        <div className="overflow-x-auto rounded-md border-gray-700">
+          {!filteredUsers.length ? (
+            <div className="flex justify-center items-center h-40 text-muted-foreground text-center text-sm">
+              No users found. {searchTerm ? "Try a different search or check your spelling." : "If you're expecting users, check your Supabase data."}
+            </div>
+          ) : (
+            <UserManagementTable
+              users={filteredUsers}
+              removingContentUserId={removingContentUserId}
+              onBlockUser={handleBlockUser}
+              onRemoveContent={handleRemoveContent}
+            />
+          )}
         </div>
       </CardContent>
     </Card>
