@@ -1,15 +1,5 @@
 
-// User detection FIRST, before any React hooks
-let user = undefined;
-try {
-  user = getAuth().currentUser;
-} catch (e) {
-  user = null;
-}
-
-// Early return if no user, before any hooks!
-if (!user) return null;
-
+// --- Imports must come first --- //
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useRealProfiles } from './useRealProfiles';
 import { useNewJoiners } from './useNewJoiners';
@@ -18,9 +8,25 @@ import { useFeedPagination } from './useFeedPagination';
 import { generateFeedItems, type FeedItem } from '@/utils/feedItemGenerator';
 import { supabase } from '@/integrations/supabase/client';
 
+// You may need to import getAuth or the equivalent Supabase auth getter if not present
+// import { getAuth } from '...'
+
 export type { FeedItem };
 
 export const useFeedData = (itemsPerPage: number = 6) => {
+  // ---- User detection must be at the top of the hook, before any other hooks ---- //
+  let user = undefined;
+  try {
+    // Note: getAuth() must be available in your project. If you use something else for user, update accordingly.
+    user = getAuth().currentUser;
+  } catch (e) {
+    user = null;
+  }
+
+  // ---- Early return if no user, before any other hook is called ---- //
+  if (!user) return null;
+
+  // --- Now, normal hooks usage --- //
   const [shuffleKey, setShuffleKey] = useState(0);
   const [posts, setPosts] = useState<any[]>([]);
 
