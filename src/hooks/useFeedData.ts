@@ -1,3 +1,4 @@
+
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useRealProfiles } from './useRealProfiles';
 import { useNewJoiners } from './useNewJoiners';
@@ -5,7 +6,7 @@ import { useFilteredFeedData } from './useFilteredFeedData';
 import { useFeedPagination } from './useFeedPagination';
 import { generateFeedItems, type FeedItem } from '@/utils/feedItemGenerator';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/integrations/auth';
+import { useAuth } from '@/contexts/AuthContext'; // Correct import
 
 // Removed: import { useProfileFilters } from './useProfileFilters';
 
@@ -15,6 +16,7 @@ export const useFeedData = (itemsPerPage: number = 6) => {
   const [shuffleKey, setShuffleKey] = useState(0);
   const [posts, setPosts] = useState<any[]>([]);
 
+  const { user } = useAuth(); // <-- Added to get the current user
   const { realProfiles, loading: profilesLoading } = useRealProfiles();
   const { newJoiners, loading: newJoinersLoading } = useNewJoiners();
 
@@ -138,3 +140,13 @@ export const useFeedData = (itemsPerPage: number = 6) => {
     handleRefresh
   };
 };
+
+// --- Utility --- //
+function shuffleArray<T>(array: T[]): T[] {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
