@@ -9,6 +9,8 @@ import { toast } from '@/hooks/use-toast';
 import OnlineStatus from '@/components/OnlineStatus';
 import { usePresence } from '@/hooks/usePresence';
 import { demoProfiles } from '@/data/demoProfiles';
+import ProviderProfileHeader from '@/components/provider-profile/ProviderProfileHeader';
+import ProviderProfileTabs from '@/components/provider-profile/ProviderProfileTabs';
 
 interface ProviderData {
   id: string;
@@ -183,231 +185,17 @@ const ProviderProfile = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-black/80 backdrop-blur-md border-b border-gray-700">
-        <div className="flex items-center justify-between p-4 max-w-4xl mx-auto">
-          <Button
-            onClick={() => navigate('/')}
-            variant="ghost"
-            className="text-white hover:bg-white/10"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-          <h1 className="text-xl font-bold text-white">{provider.display_name}</h1>
-          <div className="flex space-x-2">
-            <Button
-              onClick={handleContact}
-              size="sm"
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <MessageCircle className="w-4 h-4" />
-              WhatsApp
-            </Button>
-            <Button variant="ghost" size="sm" className="text-white">
-              <Share className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
+      <ProviderProfileHeader
+        provider={provider}
+        onBack={() => navigate('/')}
+      />
 
+      {/* TABS */}
       <div className="max-w-4xl mx-auto p-4 pt-8">
-        {/* Profile Header */}
-        <Card className="bg-black/20 backdrop-blur-md border-gray-700 mb-6">
-          <CardContent className="p-6">
-            <div className="flex items-start space-x-6">
-              <div className="relative">
-                <img
-                  src={provider.profile_image_url || '/placeholder.svg'}
-                  alt={provider.display_name}
-                  className="w-32 h-32 rounded-full object-cover"
-                />
-                <OnlineStatus 
-                  isOnline={isUserOnline(provider.id)} 
-                  size="lg"
-                  className="absolute -bottom-2 -right-2"
-                />
-              </div>
-              
-              <div className="flex-1">
-                <div className="flex items-center space-x-3 mb-2">
-                  <h1 className="text-3xl font-bold text-white">{provider.display_name}</h1>
-                  <Badge variant="secondary" className="bg-purple-600 text-white">
-                    Provider
-                  </Badge>
-                  {provider.isAvailable && (
-                    <Badge className="bg-green-600 text-white">
-                      <Clock className="w-3 h-3 mr-1" />
-                      Available
-                    </Badge>
-                  )}
-                </div>
-
-                {provider.serviceCategory && (
-                  <Badge className="bg-blue-600 text-white mb-3">
-                    {provider.serviceCategory}
-                  </Badge>
-                )}
-
-                <div className="flex items-center space-x-4 mb-3">
-                  {provider.rating && (
-                    <div className="flex items-center space-x-2">
-                      <div className="flex items-center">
-                        {renderStars(provider.rating)}
-                      </div>
-                      <span className="text-yellow-400 font-semibold">{provider.rating.toFixed(1)}</span>
-                      {provider.reviewCount && (
-                        <span className="text-gray-400 text-sm">({provider.reviewCount} reviews)</span>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center text-gray-400 text-sm mb-4">
-                  <MapPin className="w-4 h-4 mr-1" />
-                  {provider.location}
-                </div>
-
-                <div className="flex space-x-3">
-                  <Button
-                    onClick={handleContact}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Contact
-                  </Button>
-                  <Button variant="outline" className="border-gray-600 text-white hover:bg-white/10">
-                    <Heart className="w-4 h-4 mr-2" />
-                    Like
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Tabs */}
-        <div className="flex space-x-1 mb-6">
-          {[
-            { id: 'about', label: 'About' },
-            { id: 'posts', label: `Posts (${posts.length})` },
-            { id: 'services', label: 'Services' }
-          ].map((tab) => (
-            <Button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              variant={activeTab === tab.id ? 'default' : 'ghost'}
-              className={`${
-                activeTab === tab.id 
-                  ? 'bg-purple-600 text-white' 
-                  : 'text-gray-400 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              {tab.label}
-            </Button>
-          ))}
-        </div>
-
-        {/* Tab Content */}
-        {activeTab === 'about' && (
-          <Card className="bg-black/20 backdrop-blur-md border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-white">About</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-300 mb-4">{provider.bio || 'No bio available.'}</p>
-              
-              {provider.profile_images && provider.profile_images.length > 1 && (
-                <div>
-                  <h3 className="text-white font-semibold mb-3">Photos</h3>
-                  <div className="grid grid-cols-3 gap-3">
-                    {provider.profile_images.slice(1).map((image, index) => (
-                      <img
-                        key={index}
-                        src={image}
-                        alt={`${provider.display_name} ${index + 2}`}
-                        className="w-full h-32 object-cover rounded"
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {activeTab === 'posts' && (
-          <div className="space-y-4">
-            {posts.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-2">
-                {posts.map((post) => (
-                  <Card key={post.id} className="bg-black/20 backdrop-blur-md border-gray-700">
-                    <CardContent className="p-0">
-                      <div className="relative">
-                        {post.post_type === 'image' ? (
-                          <img
-                            src={post.content_url}
-                            alt="Post content"
-                            className="w-full h-64 object-cover rounded-t"
-                          />
-                        ) : (
-                          <div className="w-full h-64 bg-gray-700 rounded-t flex items-center justify-center">
-                            <Video className="w-12 h-12 text-gray-400" />
-                          </div>
-                        )}
-                        <div className="absolute top-2 right-2">
-                          <Badge className={`${
-                            post.promotion_type === 'free_2h' 
-                              ? 'bg-green-600' 
-                              : 'bg-purple-600'
-                          }`}>
-                            {post.promotion_type === 'free_2h' ? '2H Free' : 
-                             post.promotion_type === 'paid_8h' ? '8H Promoted' : '12H Promoted'}
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="p-4">
-                        <p className="text-gray-400 text-sm">
-                          Posted {new Date(post.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <Card className="bg-black/20 backdrop-blur-md border-gray-700">
-                <CardContent className="p-8 text-center">
-                  <Images className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-400">No posts yet</p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'services' && (
-          <Card className="bg-black/20 backdrop-blur-md border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-white">Services Offered</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {provider.services && provider.services.length > 0 ? (
-                <div className="grid gap-3">
-                  {provider.services.map((service, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-800/50 rounded">
-                      <span className="text-white">{service}</span>
-                      <Button size="sm" variant="outline" className="border-purple-500 text-purple-400">
-                        Inquire
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-400">No services listed.</p>
-              )}
-            </CardContent>
-          </Card>
-        )}
+        <ProviderProfileTabs
+          provider={provider}
+          posts={posts}
+        />
       </div>
     </div>
   );
