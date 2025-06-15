@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { usePresence } from "@/hooks/usePresence";
 import { useNavigate } from "react-router-dom";
@@ -129,8 +128,6 @@ const PostCard = ({
         <div className="p-4">
           <PostCardActions
             itemId={item.id}
-            liked={likedItems.has(item.id)}
-            onLike={handleLike}
             showComments={showComments}
             onToggleComments={() => setShowComments((open) => !open)}
             onContact={handleContact}

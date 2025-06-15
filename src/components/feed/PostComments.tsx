@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { MessageCircle } from 'lucide-react';
@@ -39,6 +38,7 @@ const PostComments = ({ postId, isOpen, onToggle }: PostCommentsProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, postId]);
 
+  // Re-fetch comments when a new comment is added
   const fetchComments = async () => {
     setLoading(true);
     try {

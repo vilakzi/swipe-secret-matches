@@ -1,23 +1,9 @@
-
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "composite": true,
-    "declaration": true,
-    "declarationMap": true,
-    "module": "ESNext",
-    "moduleResolution": "Node",
-    "allowJs": true,
-    "checkJs": false,
-    "jsx": "react-jsx",
-    "noEmit": false,
-    "outDir": "./dist",
-    "baseUrl": "./src",
-    "paths": {
-      "@/*": ["./*"]
-    }
-    // Cleaned up: No "types" array at all; no references to "testing-library__jest-dom"
+    "types": ["node"]
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.js", "src/**/*.jsx"],
-  "exclude": ["node_modules"]
+  "include": ["vite.config.ts", "src/**/*.d.ts", "src/**/*", "src/**/*.vue"],
+  "exclude": ["node_modules", "src/**/*.spec.ts", "src/**/*.test.ts"]
 }
