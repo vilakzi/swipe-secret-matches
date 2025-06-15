@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Ban, Eye, Search, UserCheck, AlertTriangle } from 'lucide-react';
+import { Ban, Eye, Search, UserCheck, AlertTriangle, Trash2, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
@@ -37,6 +36,7 @@ const UserManagement = () => {
   const [filteredUsers, setFilteredUsers] = useState<UserOverview[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [removingContentUserId, setRemovingContentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -94,6 +94,45 @@ const UserManagement = () => {
         description: "Failed to update user status",
         variant: "destructive"
       });
+    }
+  };
+
+  const handleRemoveContent = async (userId: string) => {
+    if (!window.confirm("Are you sure you want to remove all content posted by this user? This cannot be undone.")) {
+      return;
+    }
+    setRemovingContentUserId(userId);
+    try {
+      // 1. Delete all from admin_content
+      const { error: adminContentError } = await supabase
+        .from('admin_content')
+        .delete()
+        .eq('admin_id', userId);
+
+      // 2. Delete all from posts
+      const { error: postsError } = await supabase
+        .from('posts')
+        .delete()
+        .eq('provider_id', userId);
+
+      if (adminContentError || postsError) throw adminContentError || postsError;
+
+      toast({
+        title: "Content removed",
+        description: "All content posted by this user has been deleted.",
+        variant: "default"
+      });
+
+      fetchUsers();
+    } catch (error) {
+      console.error('Error removing user content:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove user content",
+        variant: "destructive"
+      });
+    } finally {
+      setRemovingContentUserId(null);
     }
   };
 
@@ -210,6 +249,26 @@ const UserManagement = () => {
                           <>
                             <Ban className="w-3 h-3 mr-1" />
                             Block
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleRemoveContent(user.id)}
+                        disabled={removingContentUserId === user.id}
+                        className="flex items-center"
+                        aria-label={`Remove all content posted by ${user.display_name || user.email}`}
+                      >
+                        {removingContentUserId === user.id ? (
+                          <>
+                            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                            Removing...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="w-3 h-3 mr-1" />
+                            Remove Content
                           </>
                         )}
                       </Button>
