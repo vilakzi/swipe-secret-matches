@@ -1,12 +1,27 @@
 
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import EnhancedContentUploadForm from "../EnhancedContentUploadForm";
+
+// Mock ContentCategory type with example categories.
+type ContentCategory =
+  | "entertainment"
+  | "news"
+  | "lifestyle"
+  | "sports"
+  | "technology"
+  | "fashion"
+  | "food"
+  | "travel"
+  | "education"
+  | "business"
+  | "health"
+  | "other";
 
 describe("EnhancedContentUploadForm", () => {
   const CONTENT_CATEGORIES = [
-    { value: "news", label: "News" },
-    { value: "other", label: "Other" }
+    { value: "news" as ContentCategory, label: "News" },
+    { value: "other" as ContentCategory, label: "Other" }
   ];
 
   const defaultProps = {
@@ -14,7 +29,7 @@ describe("EnhancedContentUploadForm", () => {
     setTitle: jest.fn(),
     description: "",
     setDescription: jest.fn(),
-    category: "other",
+    category: "other" as ContentCategory,
     setCategory: jest.fn(),
     tags: "",
     setTags: jest.fn(),
