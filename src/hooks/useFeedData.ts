@@ -1,3 +1,4 @@
+
 // User detection FIRST, before any React hooks
 let user = undefined;
 try {
@@ -101,21 +102,23 @@ export const useFeedData = (itemsPerPage: number = 6) => {
     // Separate out posts belonging to currently logged-in user
     let myPostItems: FeedItem[] = [];
     let otherPostItems: FeedItem[] = [];
+    
+    if (user) {
+      if (user.id) {
+        myPostItems = postItems.filter(item => item.profile.id === user.id);
+        otherPostItems = postItems.filter(item => item.profile.id !== user.id);
+      } else {
+        otherPostItems = postItems;
+      }
 
-    if (user?.id) {
-      myPostItems = postItems.filter(item => item.profile.id === user.id);
-      otherPostItems = postItems.filter(item => item.profile.id !== user.id);
-    } else {
-      otherPostItems = postItems;
-    }
-
-    // Sort: your posts first, then all other posts mixed in
-    const mixed =
-      myPostItems.length > 0
+      // Sort: your posts first, then mix in others and profile items
+      return myPostItems.length > 0
         ? [...myPostItems, ...shuffleArray([...otherPostItems, ...profileItems])]
         : [...postItems, ...profileItems].sort(() => Math.random() - 0.5);
-
-    return mixed;
+    } else {
+      // No user: just mix everything (should not occur with the above guard, but fallback)
+      return [...postItems, ...profileItems].sort(() => Math.random() - 0.5);
+    }
   }, [filteredProfiles, posts, shuffleKey, user?.id]);
 
   // Handle pagination
@@ -155,3 +158,4 @@ function shuffleArray<T>(array: T[]): T[] {
   }
   return arr;
 }
+
