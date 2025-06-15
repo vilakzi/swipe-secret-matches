@@ -1,4 +1,3 @@
-
 import React from 'react';
 import ProfileCard from './ProfileCard';
 import PostCard from './PostCard';
@@ -8,6 +7,7 @@ import ContentProfileCard from './ContentProfileCard';
 import { useContentFeed } from '@/hooks/useContentFeed';
 import { useUserRole } from '@/hooks/useUserRole';
 import { formatDistanceToNow, differenceInMinutes } from 'date-fns';
+import AdminTileCarousel from './AdminTileCarousel';
 
 interface Profile {
   id: string;
@@ -155,8 +155,23 @@ const FeedContent = ({
 
   return (
     <div className="space-y-4 px-4 pb-6" role="list" aria-label="Social feed items">
-      {combinedFeed.map((item: any) => {
-        // Special: if isWelcome, show a welcome card
+      {/* ADMIN TILE CAROUSEL */}
+      {adminFeed.length > 0 && (
+        <AdminTileCarousel
+          adminFeed={adminFeed}
+          likedItems={likedItems}
+          isSubscribed={isSubscribed}
+          onLike={onLike}
+          onContact={onContact}
+          onContentLike={handleContentLike}
+          onContentShare={handleContentShare}
+          tilesToShow={2}
+          rotationIntervalMs={5000}
+        />
+      )}
+
+      {/* Normal User Feed follows after admin carousel */}
+      {combinedFeed.filter(item => !item.isAdminCard).map((item: any) => {
         if (item.isWelcome) {
           return (
             <div key={`welcome-${item.profile.id}`} className="bg-gradient-to-r from-blue-800 via-purple-800 to-indigo-900 rounded-lg px-6 py-8 shadow-lg text-center">
@@ -167,54 +182,6 @@ const FeedContent = ({
           );
         }
 
-        // Admin content (ContentProfileCard)
-        if (item.isContent) {
-          // Always show with red border/background
-          return (
-            <ContentProfileCard
-              key={`content-${item.id}`}
-              item={item}
-              likedItems={likedItems}
-              onLike={handleContentLike}
-              onShare={handleContentShare}
-              isAdminCard
-            />
-          );
-        }
-
-        // Admin/Superadmin posts or profiles use special red border/bg
-        if (item.isAdminCard) {
-          // Use the card type based on item.type
-          if (item.type === 'post' && isValidMedia(item.postImage)) {
-            return (
-              <div key={`admin-post-${item.id}`} className="ring-2 ring-red-600 border-2 border-red-600 rounded-xl overflow-hidden shadow-lg">
-                <PostCard
-                  item={item}
-                  likedItems={likedItems}
-                  isSubscribed={isSubscribed}
-                  onLike={onLike}
-                  onContact={onContact}
-                />
-              </div>
-            );
-          }
-          // For admin profiles
-          if (item.type === 'profile' && isProfileImageChanged(item.profile.image)) {
-            return (
-              <div key={`admin-profile-${item.id}`} className="ring-2 ring-red-600 border-2 border-red-600 rounded-xl overflow-hidden shadow-lg">
-                <ProfileCard
-                  item={item}
-                  likedItems={likedItems}
-                  isSubscribed={isSubscribed}
-                  onLike={onLike}
-                  onContact={onContact}
-                />
-              </div>
-            );
-          }
-        }
-
-        // Normal user posts/profiles
         if (item.type === 'post' && isValidMedia(item.postImage)) {
           return (
             <PostCard
@@ -243,7 +210,7 @@ const FeedContent = ({
       })}
 
       {/* Empty State */}
-      {combinedFeed.length === 0 && (
+      {combinedFeed.filter(item => !item.isAdminCard).length === 0 && (
         <div className="text-center py-8" aria-live="polite">
           <p className="text-gray-400">No profiles found.</p>
         </div>
@@ -253,4 +220,3 @@ const FeedContent = ({
 };
 
 export default FeedContent;
-
