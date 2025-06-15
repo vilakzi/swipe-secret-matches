@@ -1,65 +1,98 @@
+import '@testing-library/jest-dom';
+import React from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import EnhancedContentFileDropzone from '../EnhancedContentFileDropzone';
 
-import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
-import EnhancedContentFileDropzone from "../EnhancedContentFileDropzone";
-import userEvent from "@testing-library/user-event";
+describe('EnhancedContentFileDropzone Component', () => {
+  const mockSetFieldValue = jest.fn();
 
-describe("EnhancedContentFileDropzone", () => {
-  const mockOnDrop = jest.fn();
-  const rootProps = {
-    tabIndex: 0,
-    role: "button",
-    "aria-label": "Drag and drop files here, or click to select",
-    "aria-describedby": "dropzone-description dropzone-limit",
-    onKeyDown: jest.fn(),
-    "aria-live": "polite"
-  };
-  const inputProps = { onClick: jest.fn() };
-
-  it("renders with correct ARIA and description", () => {
+  const renderComponent = (props = {}) => {
     render(
       <EnhancedContentFileDropzone
-        onDrop={mockOnDrop}
-        isDragActive={false}
-        getRootProps={() => rootProps}
-        getInputProps={() => inputProps}
-        role="admin"
-        maxSize={1024 * 1024 * 20}
+        setFieldValue={mockSetFieldValue}
+        {...props}
       />
     );
-    expect(screen.getByRole("button")).toHaveAttribute(
-      "aria-label",
-      "Drag and drop files here, or click to select"
-    );
-    expect(screen.getByText(/drag & drop files here/i)).toBeInTheDocument();
-    expect(screen.getByText(/max file size/i)).toHaveAttribute("aria-live");
-    expect(screen.getByLabelText(/file upload input/i)).toBeInTheDocument();
+  };
+
+  it('renders without crashing', () => {
+    renderComponent();
+    expect(screen.getByText('Drag n\' drop some files here, or click to select files')).toBeInTheDocument();
   });
 
-  it("supports keyboard activation (Enter/Space)", async () => {
-    const user = userEvent.setup();
-    render(
-      <EnhancedContentFileDropzone
-        onDrop={mockOnDrop}
-        isDragActive={false}
-        getRootProps={() => ({
-          ...rootProps,
-          onKeyDown: (e: React.KeyboardEvent) => {
-            rootProps.onKeyDown(e);
-            if (e.key === " " || e.key === "Enter") inputProps.onClick(e);
-          }
-        })}
-        getInputProps={() => inputProps}
-        role="admin"
-        maxSize={1024 * 1024 * 20}
-      />
-    );
-    const dropzone = screen.getByRole("button");
-    await user.tab();
-    expect(dropzone).toHaveFocus();
-    await user.keyboard("{Enter}");
-    expect(inputProps.onClick).toHaveBeenCalled();
-    await user.keyboard(" ");
-    expect(inputProps.onClick).toHaveBeenCalledTimes(2);
+  it('allows file selection via click', () => {
+    renderComponent();
+    const fileInput = screen.getByLabelText('Upload a file') as HTMLInputElement;
+    expect(fileInput).toBeInTheDocument();
+
+    const mockFile = new File(['hello'], 'hello.txt', { type: 'text/plain' });
+    fireEvent.change(fileInput, { target: { files: [mockFile] } });
+
+    expect(mockSetFieldValue).toHaveBeenCalledWith('files', [mockFile]);
+  });
+
+  it('handles drag and drop events', () => {
+    renderComponent();
+    const dropzone = screen.getByRole('button', {
+      name: 'Drag n\' drop some files here, or click to select files'
+    });
+
+    const mockFile = new File(['hello'], 'hello.txt', { type: 'text/plain' });
+    const mockEvent = {
+      preventDefault: jest.fn(),
+      stopPropagation: jest.fn(),
+      dataTransfer: {
+        files: [mockFile],
+      },
+    };
+
+    fireEvent.dragEnter(dropzone, mockEvent);
+    fireEvent.dragOver(dropzone, mockEvent);
+    fireEvent.drop(dropzone, mockEvent);
+
+    expect(mockSetFieldValue).toHaveBeenCalledWith('files', [mockFile]);
+  });
+
+  it('displays an error message when too many files are selected', () => {
+    renderComponent({ maxFiles: 1 });
+    const fileInput = screen.getByLabelText('Upload a file') as HTMLInputElement;
+
+    const mockFile1 = new File(['hello'], 'hello.txt', { type: 'text/plain' });
+    const mockFile2 = new File(['world'], 'world.txt', { type: 'text/plain' });
+    fireEvent.change(fileInput, { target: { files: [mockFile1, mockFile2] } });
+
+    expect(screen.getByText('You can only upload up to 1 files')).toBeInTheDocument();
+  });
+
+  it('accepts specific file types', () => {
+    const accept = 'image/jpeg, image/png';
+    renderComponent({ accept });
+    const dropzone = screen.getByRole('button', {
+      name: 'Drag n\' drop some files here, or click to select files'
+    });
+
+    expect(dropzone).toHaveAttribute('accept', accept);
+  });
+
+  it('calls onFileAccepted when a file is accepted', () => {
+    const onFileAccepted = jest.fn();
+    renderComponent({ onFileAccepted });
+    const fileInput = screen.getByLabelText('Upload a file') as HTMLInputElement;
+
+    const mockFile = new File(['hello'], 'hello.txt', { type: 'text/plain' });
+    fireEvent.change(fileInput, { target: { files: [mockFile] } });
+
+    expect(onFileAccepted).toHaveBeenCalledWith([mockFile]);
+  });
+
+  it('calls onFileRejected when a file is rejected', () => {
+    const onFileRejected = jest.fn();
+    renderComponent({ onFileRejected, accept: 'image/jpeg' });
+    const fileInput = screen.getByLabelText('Upload a file') as HTMLInputElement;
+
+    const mockFile = new File(['hello'], 'hello.txt', { type: 'text/plain' });
+    fireEvent.change(fileInput, { target: { files: [mockFile] } });
+
+    expect(onFileRejected).toHaveBeenCalled();
   });
 });
