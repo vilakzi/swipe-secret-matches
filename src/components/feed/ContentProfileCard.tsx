@@ -1,8 +1,7 @@
-
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, MessageCircle, Share, Play, Image as ImageIcon, BadgeCheck, Clock } from 'lucide-react';
+import { Heart, MessageCircle, Share, Play, Image as ImageIcon, BadgeCheck, Clock, Shield, Crown } from 'lucide-react';
 import OptimizedImage from '@/components/ui/OptimizedImage';
 import ImageModal from '@/components/ui/ImageModal';
 import { useImageModal } from '@/hooks/useImageModal';
@@ -14,9 +13,20 @@ interface ContentProfileCardProps {
   likedItems: Set<string>;
   onLike: (itemId: string, profileId: string) => void;
   onShare: (itemId: string) => void;
+  isAdminCard?: boolean;
 }
 
-const ContentProfileCard = ({ item, likedItems, onLike, onShare }: ContentProfileCardProps) => {
+const ContentProfileCard = ({
+  item,
+  likedItems,
+  onLike,
+  onShare,
+  isAdminCard = false
+}: ContentProfileCardProps) => {
+  // Check if this is an admin or superadmin post (you may have role info in item.profile)
+  // For this demo, always show the badge if isAdminCard is true
+  // You can expand this by checking item.profile.role
+
   const { isOpen, imageSrc, imageAlt, openModal, closeModal } = useImageModal();
 
   const handleLike = (e: React.MouseEvent) => {
@@ -40,7 +50,21 @@ const ContentProfileCard = ({ item, likedItems, onLike, onShare }: ContentProfil
   const timeAgo = formatDistanceToNow(new Date(item.timestamp), { addSuffix: true });
 
   return (
-    <>
+    <div
+      className={
+        isAdminCard
+          ? 'relative bg-red-900/80 border-2 border-red-600 ring-2 ring-red-600 rounded-xl p-4 shadow-lg my-2'
+          : 'relative bg-gray-800 border border-gray-700 rounded-xl p-4 shadow'
+      }
+    >
+      {isAdminCard && (
+        <div className="absolute top-3 left-3 flex items-center gap-1 z-20">
+          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-red-700 text-white shadow">
+            <Shield className="w-4 h-4 mr-1" />
+            ADMIN
+          </span>
+        </div>
+      )}
       <Card className="bg-gray-800 border-gray-700 mb-4">
         {/* Content Header */}
         <div className="p-4 flex items-center justify-between">
@@ -172,7 +196,7 @@ const ContentProfileCard = ({ item, likedItems, onLike, onShare }: ContentProfil
         imageSrc={imageSrc}
         imageAlt={imageAlt}
       />
-    </>
+    </div>
   );
 };
 

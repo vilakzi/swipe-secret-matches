@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import ProfileCard from './ProfileCard';
 import PostCard from './PostCard';
 import ProviderProfileCard from './ProviderProfileCard';
@@ -55,18 +55,36 @@ const FeedContent = ({
   const { contentFeedItems, handleContentLike, handleContentShare } = useContentFeed();
   const { user } = useAuth();
 
-  // Combine regular feed items with content profile cards
-  const combinedFeedItems = [
-    ...contentFeedItems.map(item => ({ ...item, isContent: true })),
-    ...feedItems.map(item => ({ ...item, isContent: false }))
-  ].sort((a, b) => {
-    // Handle timestamp for content items vs regular items
-    const dateA = new Date(a.isContent && 'timestamp' in a ? a.timestamp : Date.now());
-    const dateB = new Date(b.isContent && 'timestamp' in b ? b.timestamp : Date.now());
-    return dateB.getTime() - dateA.getTime();
-  });
+  // Filter user/service_provider content with meaningful media only:
+  const filteredFeedItems = feedItems.filter(
+    (item: any) =>
+      item.type !== 'post' ||
+      (item.type === 'post' && item.postImage && (item.postImage.endsWith('.jpg') || item.postImage.endsWith('.jpeg') || item.postImage.endsWith('.png') || item.postImage.endsWith('.webp') || item.postImage.endsWith('.gif') || item.postImage.endsWith('.mp4') || item.postImage.endsWith('.mov') || item.postImage.endsWith('.webm'))
+  );
 
-  // Unified feed (no gender filter)
+  // Sort: Always float/inject isContent (admin/superadmin) items to the top, then rhythmically mix or after N posts
+  const adminFeed = contentFeedItems.map(item => ({ ...item, isContent: true }));
+  const userFeed = filteredFeedItems.map(item => ({ ...item, isContent: false }));
+
+  // For a rhythmic flow, interleave 1 admin after every 3 user posts (adjust as needed)
+  const combinedFeedItems: any[] = [];
+  let adminIdx = 0, userIdx = 0;
+  const userChunk = 3;
+  while (userIdx < userFeed.length || adminIdx < adminFeed.length) {
+    for (let i = 0; i < userChunk && userIdx < userFeed.length; i++) {
+      combinedFeedItems.push(userFeed[userIdx++]);
+    }
+    if (adminIdx < adminFeed.length) {
+      combinedFeedItems.push(adminFeed[adminIdx++]);
+    }
+  }
+  // If only admin content, show all admin items
+  if (!userFeed.length) {
+    adminFeed.forEach(item => {
+      if (!combinedFeedItems.includes(item)) combinedFeedItems.push(item);
+    });
+  }
+
   const filteredItems = combinedFeedItems;
 
   return (
@@ -74,7 +92,7 @@ const FeedContent = ({
       {/* Combined Feed Items */}
       {filteredItems.map((item: any) => {
         if (item.isContent) {
-          // Render content profile card
+          // Render content profile card with admin/superadmin marker
           return (
             <ContentProfileCard
               key={`content-${item.id}`}
@@ -82,6 +100,7 @@ const FeedContent = ({
               likedItems={likedItems}
               onLike={handleContentLike}
               onShare={handleContentShare}
+              isAdminCard
             />
           );
         } else {
