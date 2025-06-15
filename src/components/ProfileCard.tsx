@@ -1,4 +1,5 @@
-import { useState, useRef } from 'react';
+
+import React, { useState, useRef, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MapPin, MessageCircle, Heart, Lock } from 'lucide-react';
@@ -24,54 +25,48 @@ interface ProfileCardProps {
   isSubscribed?: boolean;
 }
 
-const ProfileCard = ({ profile, onSwipe, onNavigate, disabled = false, isSubscribed = false }: ProfileCardProps) => {
+const ProfileCard = React.memo(({ profile, onSwipe, onNavigate, disabled = false, isSubscribed = false }: ProfileCardProps) => {
   const { isUserOnline } = usePresence();
-  
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [rotation, setRotation] = useState(0);
   const cardRef = useRef<HTMLDivElement>(null);
   const startPos = useRef({ x: 0, y: 0 });
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  // Memoized handlers
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (disabled) return;
     setIsDragging(true);
     startPos.current = { x: e.clientX, y: e.clientY };
-  };
+  }, [disabled]);
 
-  const handleTouchStart = (e: React.TouchEvent) => {
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (disabled) return;
     setIsDragging(true);
     const touch = e.touches[0];
     startPos.current = { x: touch.clientX, y: touch.clientY };
-  };
+  }, [disabled]);
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!isDragging || disabled) return;
-    
     const deltaX = e.clientX - startPos.current.x;
     const deltaY = e.clientY - startPos.current.y;
-    
     setDragOffset({ x: deltaX, y: deltaY });
     setRotation(deltaX * 0.1);
-  };
+  }, [isDragging, disabled]);
 
-  const handleTouchMove = (e: React.TouchEvent) => {
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!isDragging || disabled) return;
-    
     const touch = e.touches[0];
     const deltaX = touch.clientX - startPos.current.x;
     const deltaY = touch.clientY - startPos.current.y;
-    
     setDragOffset({ x: deltaX, y: deltaY });
     setRotation(deltaX * 0.1);
-  };
+  }, [isDragging, disabled]);
 
-  const handleEnd = async () => {
+  const handleEnd = useCallback(async () => {
     if (!isDragging || disabled) return;
-    
     setIsDragging(false);
-    
     const threshold = 100;
     if (Math.abs(dragOffset.x) > threshold) {
       onSwipe(dragOffset.x > 0 ? 'right' : 'left');
@@ -79,24 +74,29 @@ const ProfileCard = ({ profile, onSwipe, onNavigate, disabled = false, isSubscri
       // If it's just a small movement, treat as navigation
       await onNavigate();
     }
-    
     setDragOffset({ x: 0, y: 0 });
     setRotation(0);
-  };
+  }, [isDragging, disabled, dragOffset.x, onSwipe, onNavigate]);
 
-  const handleWhatsAppClick = () => {
+  const handleWhatsAppClick = useCallback(() => {
     if (!isSubscribed) {
       onSwipe('right'); // This will trigger the paywall
       return;
     }
-    
     const message = encodeURIComponent(`Hi ${profile.name}! I saw your profile and would love to chat.`);
     window.open(`https://wa.me/${profile.whatsapp.replace('+', '')}?text=${message}`, '_blank');
-  };
+  }, [isSubscribed, onSwipe, profile.name, profile.whatsapp]);
 
-  const handleLikeClick = () => {
+  const handleLikeClick = useCallback(() => {
     onSwipe('right'); // This will trigger paywall check or like action
-  };
+  }, [onSwipe]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (disabled) return;
+    if (e.key === 'ArrowLeft') onSwipe('left');
+    if (e.key === 'ArrowRight') onSwipe('right');
+    if (e.key === 'Enter' && onNavigate) onNavigate();
+  }, [disabled, onSwipe, onNavigate]);
 
   const cardStyle = {
     transform: `translate(${dragOffset.x}px, ${dragOffset.y}px) rotate(${rotation}deg)`,
@@ -118,12 +118,7 @@ const ProfileCard = ({ profile, onSwipe, onNavigate, disabled = false, isSubscri
         tabIndex={0}
         aria-label={`Profile card for ${profile.name}, age ${profile.age}, location ${profile.location}`}
         role="article"
-        onKeyDown={(e) => {
-          if (disabled) return;
-          if (e.key === 'ArrowLeft') onSwipe('left');
-          if (e.key === 'ArrowRight') onSwipe('right');
-          if (e.key === 'Enter' && onNavigate) onNavigate();
-        }}
+        onKeyDown={handleKeyDown}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleEnd}
@@ -147,21 +142,18 @@ const ProfileCard = ({ profile, onSwipe, onNavigate, disabled = false, isSubscri
               className="bg-gray-900/50 rounded-full p-1"
             />
           </div>
-
           {/* Subscription Status */}
           {!isSubscribed && (
             <div className="absolute top-2 right-2 bg-yellow-500 rounded-full p-2" aria-label="Locked, subscription required">
               <Lock className="w-4 h-4 text-white" />
             </div>
           )}
-
           {/* Liked Indicator */}
           {profile.liked && (
             <div className="absolute bottom-2 right-2 bg-pink-500 rounded-full p-2" aria-label="You liked this profile">
               <Heart className="w-4 h-4 text-white fill-white" />
             </div>
           )}
-
           {/* Swipe Overlays */}
           {isDragging && (
             <>
@@ -179,7 +171,6 @@ const ProfileCard = ({ profile, onSwipe, onNavigate, disabled = false, isSubscri
             </>
           )}
         </div>
-
         {/* Profile Info */}
         <div className="p-4 space-y-3">
           <div className="flex items-center justify-between">
@@ -214,21 +205,18 @@ const ProfileCard = ({ profile, onSwipe, onNavigate, disabled = false, isSubscri
               </Button>
             </div>
           </div>
-          
           <div className="flex items-center text-gray-400 text-sm">
             <MapPin className="w-4 h-4 mr-1" aria-hidden="true" />
             {profile.location}
           </div>
-          
           <p className="text-gray-300 text-sm">{profile.bio}</p>
         </div>
       </Card>
-
       {/* Background Cards */}
       <Card className="absolute top-2 left-2 w-full h-full bg-gray-700 border-gray-600 -z-10" aria-hidden="true" />
       <Card className="absolute top-4 left-4 w-full h-full bg-gray-600 border-gray-500 -z-20" aria-hidden="true" />
     </div>
   );
-};
-
+});
+ProfileCard.displayName = 'ProfileCard';
 export default ProfileCard;

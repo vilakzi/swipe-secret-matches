@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+
+import React, { useState, useRef, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MapPin, MessageCircle, Heart, X, Star } from 'lucide-react';
@@ -20,7 +21,7 @@ interface SwipeCardProps {
   disabled?: boolean;
 }
 
-const SwipeCard = ({ profile, onSwipe, onTap, disabled = false }: SwipeCardProps) => {
+const SwipeCard = React.memo(({ profile, onSwipe, onTap, disabled = false }: SwipeCardProps) => {
   const { isUserOnline } = usePresence();
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -28,37 +29,39 @@ const SwipeCard = ({ profile, onSwipe, onTap, disabled = false }: SwipeCardProps
   const cardRef = useRef<HTMLDivElement>(null);
   const startPos = useRef({ x: 0, y: 0 });
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (disabled) return;
     setIsDragging(true);
     startPos.current = { x: e.clientX, y: e.clientY };
-  };
+  }, [disabled]);
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!isDragging || disabled) return;
-    
     const deltaX = e.clientX - startPos.current.x;
     const deltaY = e.clientY - startPos.current.y;
-    
     setDragOffset({ x: deltaX, y: deltaY });
     setRotation(deltaX * 0.1);
-  };
+  }, [isDragging, disabled]);
 
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     if (!isDragging || disabled) return;
-    
     setIsDragging(false);
-    
     const threshold = 100;
     if (Math.abs(dragOffset.x) > threshold) {
       onSwipe(dragOffset.x > 0 ? 'right' : 'left');
     } else if (onTap && Math.abs(dragOffset.x) < 10 && Math.abs(dragOffset.y) < 10) {
       onTap();
     }
-    
     setDragOffset({ x: 0, y: 0 });
     setRotation(0);
-  };
+  }, [isDragging, disabled, dragOffset.x, dragOffset.y, onSwipe, onTap]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (disabled) return;
+    if (e.key === 'ArrowLeft') onSwipe('left');
+    if (e.key === 'ArrowRight') onSwipe('right');
+    if (e.key === 'Enter' && onTap) onTap();
+  }, [disabled, onSwipe, onTap]);
 
   const cardStyle = {
     transform: `translate(${dragOffset.x}px, ${dragOffset.y}px) rotate(${rotation}deg)`,
@@ -78,12 +81,7 @@ const SwipeCard = ({ profile, onSwipe, onTap, disabled = false }: SwipeCardProps
         tabIndex={0}
         aria-label={`Swipe card for ${profile.name}, ${profile.age}, ${profile.location}.`}
         role="article"
-        onKeyDown={(e) => {
-          if (disabled) return;
-          if (e.key === 'ArrowLeft') onSwipe('left');
-          if (e.key === 'ArrowRight') onSwipe('right');
-          if (e.key === 'Enter' && onTap) onTap();
-        }}
+        onKeyDown={handleKeyDown}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -104,7 +102,6 @@ const SwipeCard = ({ profile, onSwipe, onTap, disabled = false }: SwipeCardProps
               className="bg-gray-900/50 rounded-full p-1"
             />
           </div>
-
           {/* Swipe Overlays */}
           {isDragging && (
             <div
@@ -120,7 +117,6 @@ const SwipeCard = ({ profile, onSwipe, onTap, disabled = false }: SwipeCardProps
             </div>
           )}
         </div>
-
         {/* Profile Info */}
         <div className="p-4 space-y-3">
           <div className="flex items-center justify-between">
@@ -129,14 +125,11 @@ const SwipeCard = ({ profile, onSwipe, onTap, disabled = false }: SwipeCardProps
             </h3>
             <OnlineStatus isOnline={isUserOnline(profile.id)} size="sm" />
           </div>
-          
           <div className="flex items-center text-gray-400 text-sm">
             <MapPin className="w-4 h-4 mr-1" aria-hidden="true" />
             {profile.location}
           </div>
-          
           <p className="text-gray-300 text-sm line-clamp-2">{profile.bio}</p>
-          
           {/* Interests */}
           {profile.interests && profile.interests.length > 0 && (
             <div className="flex flex-wrap gap-1">
@@ -151,7 +144,6 @@ const SwipeCard = ({ profile, onSwipe, onTap, disabled = false }: SwipeCardProps
             </div>
           )}
         </div>
-
         {/* Action Buttons */}
         <div className="absolute bottom-4 right-4 flex space-x-2">
           <Button
@@ -192,12 +184,11 @@ const SwipeCard = ({ profile, onSwipe, onTap, disabled = false }: SwipeCardProps
           </Button>
         </div>
       </Card>
-
       {/* Background Cards */}
       <Card className="absolute top-2 left-2 w-full h-full bg-gray-700 border-gray-600 -z-10" aria-hidden="true" />
       <Card className="absolute top-4 left-4 w-full h-full bg-gray-600 border-gray-500 -z-20" aria-hidden="true" />
     </div>
   );
-};
-
+});
+SwipeCard.displayName = 'SwipeCard';
 export default SwipeCard;
