@@ -13,6 +13,9 @@ import { getMaxUploadSize } from "@/utils/getMaxUploadSize";
 import EnhancedContentUploadForm from "./EnhancedContentUploadForm";
 import EnhancedContentFileDropzone from "./EnhancedContentFileDropzone";
 import EnhancedContentFilePreview from "./EnhancedContentFilePreview";
+import EnhancedContentBulkActions from "./EnhancedContentBulkActions";
+import EnhancedContentFileList from "./EnhancedContentFileList";
+import EnhancedContentFeatureInfo from "./EnhancedContentFeatureInfo";
 
 interface UploadFile {
   file: File;
@@ -180,7 +183,8 @@ const EnhancedContentUpload = () => {
         </p>
         <div className="mt-2">
           <span className="text-xs text-blue-600">
-            <strong>Tip:</strong> All files will be checked for duplicates and require admin approval. <span aria-live="polite">Scheduled posts will appear at the scheduled time.</span>
+            <strong>Tip:</strong> All files will be checked for duplicates and require admin approval.{" "}
+            <span aria-live="polite">Scheduled posts will appear at the scheduled time.</span>
           </span>
         </div>
       </CardHeader>
@@ -202,7 +206,6 @@ const EnhancedContentUpload = () => {
         <div className="text-xs text-gray-500 mb-2 pl-1" role="note" id="upload-helper-tip">
           Please fill in details for better search and categorization. Tags are comma-separated. Scheduling is optional.
         </div>
-
         {/* Drag & Drop Area */}
         <EnhancedContentFileDropzone
           onDrop={onDrop}
@@ -213,53 +216,18 @@ const EnhancedContentUpload = () => {
           maxSize={maxSize}
         />
         <div className="text-xs text-gray-500 ml-1" id="dropzone-helper-tip">
-          Drag & drop files or click to add files. Only approved types and size. 
+          Drag & drop files or click to add files. Only approved types and size.
         </div>
-
-        {/* File Previews */}
-        {uploadFiles.length > 0 && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium">
-                Files Ready for Upload ({uploadFiles.length})
-              </h3>
-              <Button 
-                onClick={handleBulkUpload} 
-                disabled={uploading}
-                aria-describedby="upload-helper-tip"
-                className="bg-purple-600 hover:bg-purple-700"
-              >
-                {uploading ? 'Processing...' : 'Upload All for Review'}
-              </Button>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {uploadFiles.map((uploadFile) => (
-                <EnhancedContentFilePreview
-                  key={uploadFile.id}
-                  uploadFile={uploadFile}
-                  onRemove={removeFile}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Feature Info */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4" role="region" aria-label="Enhanced Content Management Features">
-          <h4 className="font-medium text-blue-900 mb-2">Enhanced Content Management Features</h4>
-          <ul className="text-sm text-blue-700 space-y-1">
-            <li>• <CheckCircle className="w-3 h-3 inline mr-1" aria-hidden="true" /> Automatic duplicate detection prevents re-uploads</li>
-            <li>• <CheckCircle className="w-3 h-3 inline mr-1" aria-hidden="true" /> Content categorization and tagging system</li>
-            <li>• <CheckCircle className="w-3 h-3 inline mr-1" aria-hidden="true" /> Built-in approval workflow - all content needs review</li>
-            <li>• <CheckCircle className="w-3 h-3 inline mr-1" aria-hidden="true" /> Media optimization for different screen sizes</li>
-            <li>• <CheckCircle className="w-3 h-3 inline mr-1" aria-hidden="true" /> Content scheduling for future publication</li>
-            <li>• <CheckCircle className="w-3 h-3 inline mr-1" aria-hidden="true" /> Comprehensive edit and delete controls</li>
-          </ul>
-          <div className="mt-3 text-xs text-blue-700">
-            <span aria-live="polite">For help, contact admin@yourapp.com or check the admin dashboard guide.</span>
-          </div>
-        </div>
+        {/* Bulk Actions (Upload All button/bar) */}
+        <EnhancedContentBulkActions
+          uploadFiles={uploadFiles}
+          uploading={uploading}
+          handleBulkUpload={handleBulkUpload}
+        />
+        {/* File Previews List */}
+        <EnhancedContentFileList uploadFiles={uploadFiles} onRemove={removeFile} />
+        {/* Features Info/Panel */}
+        <EnhancedContentFeatureInfo />
       </CardContent>
     </Card>
   );
