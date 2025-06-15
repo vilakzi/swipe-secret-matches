@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useRealProfiles } from './useRealProfiles';
 import { useNewJoiners } from './useNewJoiners';
@@ -6,6 +5,7 @@ import { useFilteredFeedData } from './useFilteredFeedData';
 import { useFeedPagination } from './useFeedPagination';
 import { generateFeedItems, type FeedItem } from '@/utils/feedItemGenerator';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/integrations/auth';
 
 // Removed: import { useProfileFilters } from './useProfileFilters';
 
@@ -91,9 +91,25 @@ export const useFeedData = (itemsPerPage: number = 6) => {
       caption: post.caption
     }));
 
-    const mixed = [...postItems, ...profileItems].sort(() => Math.random() - 0.5);
+    // Separate out posts belonging to currently logged-in user
+    let myPostItems: FeedItem[] = [];
+    let otherPostItems: FeedItem[] = [];
+
+    if (user?.id) {
+      myPostItems = postItems.filter(item => item.profile.id === user.id);
+      otherPostItems = postItems.filter(item => item.profile.id !== user.id);
+    } else {
+      otherPostItems = postItems;
+    }
+
+    // Sort: your posts first, then all other posts mixed in
+    const mixed =
+      myPostItems.length > 0
+        ? [...myPostItems, ...shuffleArray([...otherPostItems, ...profileItems])]
+        : [...postItems, ...profileItems].sort(() => Math.random() - 0.5);
+
     return mixed;
-  }, [filteredProfiles, posts, shuffleKey]);
+  }, [filteredProfiles, posts, shuffleKey, user?.id]);
 
   // Handle pagination
   const {
