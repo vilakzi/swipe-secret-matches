@@ -1,14 +1,14 @@
 
 import React from "react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
-  Input,
-  Textarea,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui";
+} from "@/components/ui/select";
 import { ContentCategory } from "@/hooks/useEnhancedAdminContent";
 
 interface EnhancedContentUploadFormProps {
