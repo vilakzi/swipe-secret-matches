@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
@@ -14,7 +13,6 @@ import Auth from "@/pages/Auth";
 import Profile from "@/pages/Profile";
 import UserProfile from "@/pages/UserProfile";
 import Matches from "@/pages/Matches";
-import Messages from "@/pages/Messages";
 import Settings from "@/pages/Settings";
 import Onboarding from "@/pages/Onboarding";
 import ServiceProviderDashboard from "@/pages/ServiceProviderDashboard";
@@ -71,13 +69,6 @@ const MainApp = () => {
           <ProtectedRoute>
             <AppLayout>
               <Matches />
-            </AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/messages" element={
-          <ProtectedRoute>
-            <AppLayout>
-              <Messages />
             </AppLayout>
           </ProtectedRoute>
         } />

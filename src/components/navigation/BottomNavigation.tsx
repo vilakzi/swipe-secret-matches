@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Heart, MessageCircle, User, Compass, Settings, Briefcase, Shield } from 'lucide-react';
@@ -28,13 +27,7 @@ const BottomNavigation = () => {
       path: '/matches',
       show: !isServiceProvider && !isAdmin
     },
-    {
-      id: 'messages',
-      label: 'Messages',
-      icon: MessageCircle,
-      path: '/messages',
-      show: true
-    },
+    // Messages nav item is removed!
     {
       id: 'dashboard',
       label: 'Dashboard',
