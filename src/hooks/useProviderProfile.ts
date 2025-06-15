@@ -36,11 +36,16 @@ export function useProviderProfile(providerId?: string) {
       if (data) {
         setProvider({
           ...data,
-          serviceCategory: data.serviceCategory || 'Beauty & Wellness',
-          services: data.services || ['Massage Therapy', 'Facial Treatment', 'Body Therapy', 'Aromatherapy'],
+          serviceCategory: (data as any).serviceCategory || 'Beauty & Wellness', // fallback if not present
+          services: (data as any).services || [
+            'Massage Therapy',
+            'Facial Treatment',
+            'Body Therapy',
+            'Aromatherapy',
+          ],
           rating: 4.8,
           reviewCount: 127,
-          isAvailable: Math.random() > 0.3
+          isAvailable: Math.random() > 0.3,
         });
       } else {
         // Demo fallback
