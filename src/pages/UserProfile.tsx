@@ -12,6 +12,7 @@ import { demoProfiles } from '@/data/demoProfiles';
 import ImageModal from '@/components/ui/ImageModal';
 import { useImageModal } from '@/hooks/useImageModal';
 import OptimizedImage from '@/components/ui/OptimizedImage';
+import { canViewProfile } from '@/utils/profileVisibility';
 
 interface UserData {
   id: string;
