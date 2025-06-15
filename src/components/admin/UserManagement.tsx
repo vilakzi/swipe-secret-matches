@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -6,6 +5,7 @@ import { Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import UserManagementTable from "./UserManagementTable";
+import { useError } from '@/components/common/ErrorTaskBar';
 
 export interface UserOverview {
   id: string;
@@ -30,6 +30,8 @@ const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [removingContentUserId, setRemovingContentUserId] = useState<string | null>(null);
 
+  const { addError } = useError();
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -51,15 +53,9 @@ const UserManagement = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      console.log('Loaded users:', data);
       setUsers(data || []);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      toast({
-        title: "Error loading users",
-        description: "Failed to load user data",
-        variant: "destructive"
-      });
+    } catch (error: any) {
+      addError("Failed to load user data");
       setUsers([]);
     } finally {
       setLoading(false);
@@ -72,22 +68,14 @@ const UserManagement = () => {
         .from('profiles')
         .update({ is_blocked: !isBlocked })
         .eq('id', userId);
-
       if (error) throw error;
-
       toast({
         title: isBlocked ? "User unblocked" : "User blocked",
         description: `User has been ${isBlocked ? 'unblocked' : 'blocked'} successfully`,
       });
-
       await fetchUsers();
-    } catch (error) {
-      console.error('Error updating user block status:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update user status",
-        variant: "destructive"
-      });
+    } catch (error: any) {
+      addError("Failed to update user status");
     }
   };
 
@@ -116,13 +104,8 @@ const UserManagement = () => {
       });
 
       await fetchUsers();
-    } catch (error) {
-      console.error('Error removing user content:', error);
-      toast({
-        title: "Error",
-        description: "Failed to remove user content",
-        variant: "destructive"
-      });
+    } catch (error: any) {
+      addError("Failed to remove user content");
     } finally {
       setRemovingContentUserId(null);
     }

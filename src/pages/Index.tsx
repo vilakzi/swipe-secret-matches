@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import ProfileCompletionPrompt from '@/components/onboarding/ProfileCompletionPr
 import { usePresence } from '@/hooks/usePresence';
 import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from '@/hooks/use-toast';
+import { useError } from "@/components/common/ErrorTaskBar";
 
 const Index = () => {
   const { user, signOut } = useAuth();
@@ -18,6 +18,8 @@ const Index = () => {
   const navigate = useNavigate();
   const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
   const [refreshKey, setRefreshKey] = useState(0);
+
+  const { addError } = useError();
 
   // Check if user is logged in
   if (!user) {
@@ -41,16 +43,11 @@ const Index = () => {
   };
 
   const handleLike = (itemId: string, profileId: string) => {
-    // Role-based access control
     if (!isAdmin && role !== 'service_provider' && role !== 'user') {
-      toast({
-        title: "Access denied",
-        description: "You must be logged in with a valid role to like profiles.",
-        variant: "destructive",
-      });
+      // Show error via toast/global error
+      addError("You must be logged in with a valid role to like profiles.");
       return;
     }
-
     setLikedItems(prev => {
       const newLiked = new Set(prev);
       if (newLiked.has(itemId)) {
@@ -68,30 +65,18 @@ const Index = () => {
   };
 
   const handleContact = (profile: any) => {
-    // Role-based access control
     if (!isAdmin && role !== 'service_provider' && role !== 'user') {
-      toast({
-        title: "Access denied",
-        description: "You must be logged in with a valid role to contact profiles.",
-        variant: "destructive",
-      });
+      addError("You must be logged in with a valid role to contact profiles.");
       return;
     }
-
     window.open(`https://wa.me/${profile.whatsapp.replace(/[^0-9]/g, '')}`, '_blank');
   };
 
   const handleRefresh = () => {
-    // Role-based access control
     if (!isAdmin && role !== 'service_provider' && role !== 'user') {
-      toast({
-        title: "Access denied",
-        description: "You must be logged in with a valid role to refresh the feed.",
-        variant: "destructive",
-      });
+      addError("You must be logged in with a valid role to refresh the feed.");
       return;
     }
-
     console.log('Refreshing feed from Index component');
     setRefreshKey(prev => prev + 1);
     toast({
