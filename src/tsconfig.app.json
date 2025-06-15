@@ -19,12 +19,15 @@
     "typeRoots": []
   },
   "include": [
-    "src"
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",
     "dist",
     "**/*.test.ts",
-    "**/*.test.tsx"
+    "**/*.test.tsx",
+    "**/__tests__/**/*",
+    "**/jest-dom*",
+    "**/testing-library*"
   ]
 }
