@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { X, Image, Video, CheckCircle } from 'lucide-react';
@@ -14,6 +15,24 @@ interface FileUploadSectionProps {
 const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProps) => {
   const { role } = useUserRole();
   const maxSize = getMaxUploadSize(role);
+
+  // State for video and image previews
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Create preview URL when a file is selected
+    if (selectedFile) {
+      const url = URL.createObjectURL(selectedFile);
+      setPreviewUrl(url);
+
+      // Cleanup the object URL on unmount/change
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    } else {
+      setPreviewUrl(null);
+    }
+  }, [selectedFile]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -114,14 +133,25 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
               </Button>
             </div>
             
-            {selectedFile.type.startsWith('image/') && (
+            {/* Image or video preview */}
+            {selectedFile.type.startsWith('image/') && previewUrl && (
               <div className="mt-3 rounded-lg overflow-hidden">
                 <img
-                  src={URL.createObjectURL(selectedFile)}
+                  src={previewUrl}
                   alt="Preview"
                   className="w-full h-32 object-cover object-center rounded"
                   style={{ aspectRatio: '16/9' }}
-                  onLoad={() => URL.revokeObjectURL(URL.createObjectURL(selectedFile))}
+                />
+              </div>
+            )}
+            {selectedFile.type.startsWith('video/') && previewUrl && (
+              <div className="mt-3 rounded-lg overflow-hidden">
+                <video
+                  src={previewUrl}
+                  className="w-full h-32 object-cover object-center rounded"
+                  style={{ aspectRatio: '16/9' }}
+                  controls
+                  preload="metadata"
                 />
               </div>
             )}
