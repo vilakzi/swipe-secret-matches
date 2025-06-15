@@ -1,11 +1,13 @@
+
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useRealProfiles } from './useRealProfiles';
 import { useNewJoiners } from './useNewJoiners';
 import { useFilteredFeedData } from './useFilteredFeedData';
-import { useProfileFilters } from './useProfileFilters';
 import { useFeedPagination } from './useFeedPagination';
 import { generateFeedItems, type FeedItem } from '@/utils/feedItemGenerator';
 import { supabase } from '@/integrations/supabase/client';
+
+// Removed: import { useProfileFilters } from './useProfileFilters';
 
 export type { FeedItem };
 
