@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,6 +27,7 @@ import PaymentTracking from '@/components/admin/PaymentTracking';
 import AppAnalytics from '@/components/admin/AppAnalytics';
 import AdminSettings from '@/components/admin/AdminSettings';
 import SuperAdminDashboard from '@/components/admin/SuperAdminDashboard';
+import AdminListCard from '@/components/admin/AdminListCard';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -62,6 +62,8 @@ const AdminDashboard = () => {
       </div>
 
       <div className="max-w-7xl mx-auto p-6">
+        {/* --- ADMINS LIST CARD --- */}
+        <AdminListCard />
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-6 bg-black/20 backdrop-blur-md">
             <TabsTrigger value="overview" className="text-white data-[state=active]:bg-purple-600">
