@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Image, Video } from 'lucide-react';
@@ -19,12 +18,13 @@ const PostCard = ({ post }: PostCardProps) => {
     <Card className="bg-black/20 backdrop-blur-md border-gray-700 p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <div className="w-16 h-16 bg-gray-700 rounded-lg overflow-hidden">
+          <div className="w-16 h-16 bg-gray-700 rounded-lg overflow-hidden flex items-center justify-center">
             {post.post_type === 'image' ? (
               <img 
                 src={post.content_url} 
                 alt="Post content" 
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover object-center rounded"
+                style={{ aspectRatio: '1/1', maxHeight: '4rem' }}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">

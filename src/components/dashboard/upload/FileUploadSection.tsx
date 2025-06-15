@@ -119,7 +119,8 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
                 <img
                   src={URL.createObjectURL(selectedFile)}
                   alt="Preview"
-                  className="w-full h-32 object-cover"
+                  className="w-full h-32 object-cover object-center rounded"
+                  style={{ aspectRatio: '16/9' }}
                   onLoad={() => URL.revokeObjectURL(URL.createObjectURL(selectedFile))}
                 />
               </div>

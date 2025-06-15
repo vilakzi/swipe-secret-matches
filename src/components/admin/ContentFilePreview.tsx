@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Image, Video, X } from "lucide-react";
@@ -12,17 +11,19 @@ interface ContentFilePreviewProps {
 const ContentFilePreview = ({ uploadFile, onRemove }: ContentFilePreviewProps) => {
   return (
     <div className="relative group">
-      <div className="aspect-video rounded-lg overflow-hidden bg-gray-100">
+      <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
         {uploadFile.type === 'image' ? (
           <img
             src={uploadFile.preview}
             alt="Preview"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-center max-h-60"
+            style={{ aspectRatio: '16/9' }}
           />
         ) : (
           <video
             src={uploadFile.preview}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-center max-h-60"
+            style={{ aspectRatio: '16/9' }}
             controls
           />
         )}

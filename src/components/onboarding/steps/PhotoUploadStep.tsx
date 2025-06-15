@@ -144,7 +144,8 @@ const PhotoUploadStep = ({ profileData, updateProfileData }: PhotoUploadStepProp
             <img
               src={photo}
               alt={`Profile ${index + 1}`}
-              className="w-full h-full object-cover rounded-lg"
+              className="w-full h-full object-cover object-center rounded-lg max-h-56"
+              style={{ aspectRatio: '1/1' }}
             />
             
             {/* Photo Controls */}

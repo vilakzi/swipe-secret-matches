@@ -24,8 +24,9 @@ const ProviderPortfolio = ({ portfolio, onImageClick }: ProviderPortfolioProps) 
               key={index}
               src={image}
               alt={`Portfolio ${index + 1}`}
-              className="w-full h-20 object-cover rounded cursor-pointer hover:opacity-80 hover:scale-105 transition-all duration-200"
+              className="w-full aspect-square max-h-28 object-cover object-center rounded cursor-pointer hover:opacity-80 hover:scale-105 transition-all duration-200"
               onClick={() => handlePortfolioImageClick(image, index)}
+              style={{ aspectRatio: '1/1' }}
             />
           ))}
         </div>

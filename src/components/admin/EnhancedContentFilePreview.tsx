@@ -26,17 +26,19 @@ const EnhancedContentFilePreview = ({
 
   return (
     <div className="relative group" aria-label={altText} tabIndex={0}>
-      <div className="aspect-video rounded-lg overflow-hidden bg-gray-100">
+      <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
         {uploadFile.type === "image" ? (
           <img
             src={uploadFile.preview}
             alt={altText}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-center max-h-60"
+            style={{ aspectRatio: '16/9' }}
           />
         ) : (
           <video
             src={uploadFile.preview}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-center max-h-60"
+            style={{ aspectRatio: '16/9' }}
             aria-label={altText}
             controls
           />
