@@ -11,7 +11,7 @@ describe("EnhancedContentFilePreview", () => {
       id: "file-1",
       file: mockFile,
       preview: "blob:http://localhost/fake-url",
-      type: "image",
+      type: "image" as "image" | "video",
     },
     onRemove: jest.fn(),
   };
@@ -47,7 +47,7 @@ describe("EnhancedContentFilePreview", () => {
         {...baseProps}
         uploadFile={{
           ...baseProps.uploadFile,
-          type: "video",
+          type: "video" as "image" | "video",
           preview: "blob:http://localhost/fake-url",
         }}
       />
