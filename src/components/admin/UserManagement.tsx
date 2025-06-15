@@ -14,6 +14,7 @@ import {
 import { Ban, Eye, Search, UserCheck, AlertTriangle, Trash2, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import UserManagementTable from "./UserManagementTable";
 
 interface UserOverview {
   id: string;
@@ -175,109 +176,12 @@ const UserManagement = () => {
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-gray-700">
-                <TableHead className="text-gray-300">User</TableHead>
-                <TableHead className="text-gray-300">Type</TableHead>
-                <TableHead className="text-gray-300">Status</TableHead>
-                <TableHead className="text-gray-300">Activity</TableHead>
-                <TableHead className="text-gray-300">Last Active</TableHead>
-                <TableHead className="text-gray-300">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredUsers.map((user) => (
-                <TableRow key={user.id} className="border-gray-700">
-                  <TableCell>
-                    <div>
-                      <div className="font-medium text-white">
-                        {user.display_name || 'No name'}
-                      </div>
-                      <div className="text-sm text-gray-400">{user.email}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={`${getUserTypeColor(user.user_type)} text-white`}>
-                      {user.user_type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col space-y-1">
-                      {user.is_blocked && (
-                        <Badge className="bg-red-600 text-white">
-                          <Ban className="w-3 h-3 mr-1" />
-                          Blocked
-                        </Badge>
-                      )}
-                      {user.subscribed && (
-                        <Badge className="bg-green-600 text-white">
-                          <UserCheck className="w-3 h-3 mr-1" />
-                          Subscribed
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm text-gray-300">
-                      <div>Swipes: {user.total_swipes}</div>
-                      <div>Matches: {user.total_matches}</div>
-                      <div>Posts: {user.total_posts}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm text-gray-300">
-                      {user.last_active ? 
-                        new Date(user.last_active).toLocaleDateString() : 
-                        'Never'
-                      }
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button
-                        size="sm"
-                        variant={user.is_blocked ? "default" : "destructive"}
-                        onClick={() => handleBlockUser(user.id, user.is_blocked)}
-                      >
-                        {user.is_blocked ? (
-                          <>
-                            <UserCheck className="w-3 h-3 mr-1" />
-                            Unblock
-                          </>
-                        ) : (
-                          <>
-                            <Ban className="w-3 h-3 mr-1" />
-                            Block
-                          </>
-                        )}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleRemoveContent(user.id)}
-                        disabled={removingContentUserId === user.id}
-                        className="flex items-center"
-                        aria-label={`Remove all content posted by ${user.display_name || user.email}`}
-                      >
-                        {removingContentUserId === user.id ? (
-                          <>
-                            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                            Removing...
-                          </>
-                        ) : (
-                          <>
-                            <Trash2 className="w-3 h-3 mr-1" />
-                            Remove Content
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <UserManagementTable
+            users={filteredUsers}
+            removingContentUserId={removingContentUserId}
+            onBlockUser={handleBlockUser}
+            onRemoveContent={handleRemoveContent}
+          />
         </div>
       </CardContent>
     </Card>
