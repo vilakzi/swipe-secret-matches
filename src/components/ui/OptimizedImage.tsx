@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -31,6 +30,7 @@ const OptimizedImage = ({
   const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
+    console.log("[OptimizedImage] Preparing to load", { src, fallback });
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -46,7 +46,7 @@ const OptimizedImage = ({
     }
 
     return () => observer.disconnect();
-  }, []);
+  }, [src, fallback]);
 
   const handleLoad = () => {
     setIsLoading(false);
@@ -56,6 +56,7 @@ const OptimizedImage = ({
   const handleError = () => {
     setIsLoading(false);
     setHasError(true);
+    console.error(`[OptimizedImage] Failed to load image`, { src, fallback });
     onError?.();
   };
 
@@ -70,6 +71,7 @@ const OptimizedImage = ({
       className={`relative overflow-hidden ${className} ${expandable || onClick ? 'cursor-pointer' : ''}`} 
       ref={imgRef}
       onClick={handleClick}
+      style={{ border: '2px dashed #ff00ff' }} // debug border to make image box visible
     >
       {isLoading && (
         <Skeleton className="absolute inset-0 bg-gray-700" />
@@ -85,6 +87,7 @@ const OptimizedImage = ({
           onLoad={handleLoad}
           onError={handleError}
           loading={loading}
+          style={{ border: '1px solid #00ff00' }} // extra image border for debug
         />
       )}
     </div>

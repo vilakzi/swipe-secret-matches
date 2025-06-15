@@ -75,9 +75,11 @@ const ProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact }: Prof
   const isNewJoiner = item.profile.isRealAccount && 
     new Date(Date.now() - 24 * 60 * 60 * 1000) < new Date();
 
+  // For debug: show which image we're trying to render
   const displayImage = item.profile.posts && item.profile.posts.length > 0 
     ? item.profile.posts[0] 
     : item.profile.image;
+  console.log("[ProfileCard] Rendering image for", item.profile.name, ":", displayImage);
 
   return (
     <>
@@ -134,7 +136,7 @@ const ProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact }: Prof
               expandable
             />
           ) : (
-            <div className="w-full h-72 bg-gray-700 flex items-center justify-center">
+            <div className="w-full h-72 bg-gray-700 flex items-center justify-center" style={{ border: '2px dashed #00ff00' }}>
               <div className="text-center">
                 <p className="text-gray-400 text-sm">No posts yet</p>
                 <p className="text-gray-500 text-xs mt-1">Check back later for content</p>
