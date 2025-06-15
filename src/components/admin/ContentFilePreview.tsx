@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Image, Video, X } from "lucide-react";
@@ -25,7 +26,17 @@ const ContentFilePreview = ({ uploadFile, onRemove }: ContentFilePreviewProps) =
             className="w-full h-full object-cover object-center max-h-60"
             style={{ aspectRatio: '16/9' }}
             controls
-          />
+            preload="metadata"
+            playsInline
+            onError={(e) => {
+              console.error('[ContentFilePreview] Video error:', e);
+            }}
+            onCanPlay={() => {
+              console.log('[ContentFilePreview] Video can play:', uploadFile.preview);
+            }}
+          >
+            Your browser does not support the video tag.
+          </video>
         )}
       </div>
       <div className="absolute top-2 right-2">
