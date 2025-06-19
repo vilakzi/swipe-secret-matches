@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Loader2 } from 'lucide-react';
 
@@ -22,8 +21,12 @@ const LoadingSpinner = ({ size = 'md', text, className = '' }: LoadingSpinnerPro
   };
 
   return (
-    <div className={`flex flex-col items-center justify-center space-y-2 ${className}`}>
-      <Loader2 className={`animate-spin text-purple-500 ${sizeClasses[size]}`} />
+    <div
+      className={`flex flex-col items-center justify-center space-y-2 ${className}`}
+      role="status"
+      aria-live="polite"
+    >
+      <Loader2 className={`animate-spin text-purple-500 ${sizeClasses[size]}`} aria-label="Loading" />
       {text && (
         <p className={`text-gray-400 ${textSizeClasses[size]}`}>
           {text}
