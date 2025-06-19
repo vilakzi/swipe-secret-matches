@@ -74,6 +74,8 @@ const SwipeCard = React.memo(({ profile, onSwipe, onTap, disabled = false }: Swi
   const overlayOpacity = Math.min(Math.abs(dragOffset.x) / 100, 1);
   const isLikeDirection = dragOffset.x > 0;
 
+  if (!profile) return null;
+
   return (
     <div className="relative w-80 h-96 mx-auto select-none">
       <Card
