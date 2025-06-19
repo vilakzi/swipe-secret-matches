@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 
@@ -22,7 +21,10 @@ const ContentBulkActions = ({
 }: ContentBulkActionsProps) => {
   if (uploadFiles.length === 0) return null;
   return (
-    <div className="flex items-center justify-between mt-1 mb-3">
+    <div
+      className="flex items-center justify-between mt-1 mb-3"
+      aria-busy={uploading}
+    >
       <h3 className="text-lg font-medium">
         Files Ready for Upload ({uploadFiles.length})
       </h3>
@@ -31,6 +33,7 @@ const ContentBulkActions = ({
         disabled={uploading}
         className="bg-purple-600 hover:bg-purple-700"
         aria-describedby="classic-upload-helper-tip"
+        aria-busy={uploading}
       >
         {uploading ? "Uploading..." : "Upload All"}
       </Button>
