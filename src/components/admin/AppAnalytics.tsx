@@ -26,29 +26,23 @@ const AppAnalytics = () => {
 
   const fetchAnalytics = async () => {
     try {
+      // Use the correct table or view name: 'content_analytics'
       const { data, error } = await supabase
-        .from('analytics')
+        .from('content_analytics')
         .select('date,total_users,total_subscribers,active_users_7d,total_posts')
         .order('date', { ascending: true })
         .limit(30);
 
-      if (error) throw error;
+      if (error) {
+        setAnalyticsData([]);
+        throw error;
+      }
 
-      // Validate data shape before setting state
-      if (
-        Array.isArray(data) &&
-        data.every(
-          d =>
-            typeof d.date === "string" &&
-            typeof d.total_users === "number" &&
-            typeof d.total_subscribers === "number" &&
-            typeof d.active_users_7d === "number" &&
-            typeof d.total_posts === "number"
-        )
-      ) {
+      if (Array.isArray(data)) {
         setAnalyticsData(data as AnalyticsData[]);
       } else {
-        throw new Error("Invalid analytics data format");
+        setAnalyticsData([]);
+        throw new Error("Analytics data is not an array");
       }
     } catch (error) {
       console.error('Error fetching analytics:', error);
