@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,14 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { 
   Edit, 
   Trash2, 
   Eye, 
   Clock, 
-  Calendar,
   Globe,
   Lock,
   Users,
@@ -63,30 +61,48 @@ const ContentManager = () => {
 
   const handleSaveEdit = async () => {
     if (!editingContent) return;
-    
-    await updateContent(editingContent.id, editingContent);
-    setIsEditDialogOpen(false);
-    setEditingContent(null);
+    try {
+      await updateContent(editingContent.id, editingContent);
+    } catch (error) {
+      // Optionally show a toast or error message here
+      console.error("Failed to update content", error);
+    } finally {
+      setIsEditDialogOpen(false);
+      setEditingContent(null);
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this content?')) {
-      await deleteContent(id);
+      try {
+        await deleteContent(id);
+      } catch (error) {
+        // Optionally show a toast or error message here
+        console.error("Failed to delete content", error);
+      }
     }
   };
 
   const handlePublish = async (item: AdminContent) => {
-    await updateContent(item.id, {
-      status: 'published',
-      published_at: new Date().toISOString(),
-    });
+    try {
+      await updateContent(item.id, {
+        status: 'published',
+        published_at: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Failed to publish content", error);
+    }
   };
 
   const handleSchedule = async (item: AdminContent, scheduledDate: string) => {
-    await updateContent(item.id, {
-      status: 'scheduled',
-      scheduled_at: scheduledDate,
-    });
+    try {
+      await updateContent(item.id, {
+        status: 'scheduled',
+        scheduled_at: scheduledDate,
+      });
+    } catch (error) {
+      console.error("Failed to schedule content", error);
+    }
   };
 
   if (loading) {
@@ -117,7 +133,6 @@ const ContentManager = () => {
                     controls
                   />
                 )}
-                
                 {/* Status Badge */}
                 <div className="absolute top-2 left-2">
                   <Badge className={`${getStatusColor(item.status)} text-white`}>
@@ -125,7 +140,6 @@ const ContentManager = () => {
                     <span className="ml-1 capitalize">{item.status}</span>
                   </Badge>
                 </div>
-                
                 {/* Content Type Badge */}
                 <div className="absolute top-2 right-2">
                   <Badge variant="secondary">
@@ -138,7 +152,6 @@ const ContentManager = () => {
                   </Badge>
                 </div>
               </div>
-              
               {/* Content Info */}
               <div className="p-4">
                 <h3 className="font-medium text-lg mb-2 truncate">{item.title}</h3>
@@ -147,7 +160,6 @@ const ContentManager = () => {
                     {item.description}
                   </p>
                 )}
-                
                 {/* Stats */}
                 <div className="flex justify-between text-sm text-gray-500 mb-3">
                   <span className="flex items-center gap-1">
@@ -159,7 +171,6 @@ const ContentManager = () => {
                     {item.visibility}
                   </span>
                 </div>
-                
                 {/* Actions */}
                 <div className="flex justify-between">
                   <div className="flex gap-2">
@@ -178,7 +189,6 @@ const ContentManager = () => {
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
-                  
                   {item.status === 'draft' && (
                     <Button
                       size="sm"
@@ -193,14 +203,12 @@ const ContentManager = () => {
             </div>
           ))}
         </div>
-
         {/* Edit Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Edit Content</DialogTitle>
             </DialogHeader>
-            
             {editingContent && (
               <div className="space-y-4">
                 <div>
@@ -214,7 +222,6 @@ const ContentManager = () => {
                     })}
                   />
                 </div>
-                
                 <div>
                   <Label htmlFor="description">Description</Label>
                   <Textarea
@@ -226,7 +233,6 @@ const ContentManager = () => {
                     })}
                   />
                 </div>
-                
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="status">Status</Label>
@@ -248,7 +254,6 @@ const ContentManager = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  
                   <div>
                     <Label htmlFor="visibility">Visibility</Label>
                     <Select
@@ -269,7 +274,6 @@ const ContentManager = () => {
                     </Select>
                   </div>
                 </div>
-                
                 {editingContent.status === 'scheduled' && (
                   <div>
                     <Label htmlFor="scheduled_at">Scheduled Date</Label>
@@ -286,7 +290,6 @@ const ContentManager = () => {
                     />
                   </div>
                 )}
-                
                 <div className="flex justify-end gap-2">
                   <Button
                     variant="outline"
