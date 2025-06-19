@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-const DashboardHeader = () => {
+function DashboardHeader() {
   const navigate = useNavigate();
 
   const handleBackToFeed = () => {
@@ -17,6 +16,7 @@ const DashboardHeader = () => {
         onClick={handleBackToFeed}
         variant="ghost"
         className="text-white hover:bg-white/10 flex items-center space-x-2"
+        aria-label="Back to Feed"
       >
         <ArrowLeft className="w-4 h-4" />
         <span>Back to Feed</span>
@@ -27,9 +27,9 @@ const DashboardHeader = () => {
         <p className="text-gray-400">Manage your posts and promotions</p>
       </div>
       
-      <div className="w-32"></div> {/* Spacer to balance the layout */}
+      <div className="w-32" aria-hidden="true"></div>
     </div>
   );
-};
+}
 
 export default DashboardHeader;
