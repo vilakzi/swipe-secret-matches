@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Clock, Crown } from 'lucide-react';
@@ -22,6 +21,8 @@ const PromotionTypeSelector = ({ promotionType, onPromotionTypeChange }: Promoti
           variant={promotionType === 'free_2h' ? "default" : "outline"}
           className="flex flex-col items-center p-4 h-auto"
           onClick={() => onPromotionTypeChange('free_2h')}
+          aria-pressed={promotionType === 'free_2h'}
+          aria-label="Select Free 2 Hours Promotion"
         >
           <Clock className="w-5 h-5 mb-1" />
           <span className="text-sm">2 Hours</span>
@@ -32,6 +33,8 @@ const PromotionTypeSelector = ({ promotionType, onPromotionTypeChange }: Promoti
           variant={promotionType === 'paid_8h' ? "default" : "outline"}
           className="flex flex-col items-center p-4 h-auto"
           onClick={() => onPromotionTypeChange('paid_8h')}
+          aria-pressed={promotionType === 'paid_8h'}
+          aria-label="Select Paid 8 Hours Promotion"
         >
           <Crown className="w-5 h-5 mb-1" />
           <span className="text-sm">8 Hours</span>
@@ -42,6 +45,8 @@ const PromotionTypeSelector = ({ promotionType, onPromotionTypeChange }: Promoti
           variant={promotionType === 'paid_12h' ? "default" : "outline"}
           className="flex flex-col items-center p-4 h-auto"
           onClick={() => onPromotionTypeChange('paid_12h')}
+          aria-pressed={promotionType === 'paid_12h'}
+          aria-label="Select Paid 12 Hours Promotion"
         >
           <Crown className="w-5 h-5 mb-1" />
           <span className="text-sm">12 Hours</span>
