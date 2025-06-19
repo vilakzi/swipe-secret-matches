@@ -1,10 +1,18 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import PostCard from './PostCard';
 
+interface Post {
+  id: string;
+  content_url: string;
+  post_type: string;
+  expires_at: string;
+  payment_status: string;
+  promotion_type: string;
+}
+
 interface PostsListProps {
-  posts: any[];
+  posts: Post[];
 }
 
 const PostsList = ({ posts }: PostsListProps) => {
