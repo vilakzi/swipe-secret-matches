@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -16,9 +15,10 @@ const CaptionSection = ({ caption, onCaptionChange }: CaptionSectionProps) => {
       <Textarea
         value={caption}
         onChange={(e) => onCaptionChange(e.target.value)}
-        placeholder="Write a caption for your post..."
+        placeholder="Write a caption for your post (optional)"
         className="bg-gray-800 border-gray-600 text-white"
         rows={3}
+        aria-label="Caption or description"
       />
     </div>
   );
