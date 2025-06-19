@@ -12,11 +12,10 @@ import PostCard from './PostCard';
 interface PostUploadFormProps {
   onUploadSuccess: () => void;
   onShowPayment: (post: any) => void;
-  onAddPostToFeed: (post: any) => void; // <-- Add this prop
+  onAddPostToFeed: (post: any) => void;
 }
 
 type PromotionType = 'free_2h' | 'paid_8h' | 'paid_12h';
-
 type Step = 1 | 2 | 3;
 
 const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: PostUploadFormProps) => {
@@ -28,6 +27,15 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
   const [step, setStep] = useState<Step>(1);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [newPost, setNewPost] = useState<any>(null);
+
+  const resetForm = () => {
+    setSelectedFile(null);
+    setCaption('');
+    setPromotionType('free_2h');
+    setPreviewUrl(null);
+    setNewPost(null);
+    setStep(1);
+  };
 
   // Step 1: Select file
   const handleFileChange = (file: File | null) => {
@@ -169,6 +177,12 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
       <Card className="bg-black/20 backdrop-blur-md border-gray-700 p-6 mb-8">
         <h2 className="text-xl font-bold text-white mb-4">Your Post is Live!</h2>
         <PostCard post={newPost} />
+        <button
+          className="mt-6 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+          onClick={resetForm}
+        >
+          Post another
+        </button>
       </Card>
     );
   }
@@ -214,7 +228,7 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
           <button
             type="button"
             className="text-gray-400 underline ml-4"
-            onClick={() => handleFileChange(null)}
+            onClick={resetForm}
             disabled={uploading}
           >
             Cancel
