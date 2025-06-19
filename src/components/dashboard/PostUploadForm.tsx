@@ -7,35 +7,44 @@ import FileUploadSection from './upload/FileUploadSection';
 import CaptionSection from './upload/CaptionSection';
 import PromotionTypeSelector from './upload/PromotionTypeSelector';
 import UploadButton from './upload/UploadButton';
+import PostCard from './PostCard';
 
 interface PostUploadFormProps {
   onUploadSuccess: () => void;
   onShowPayment: (post: any) => void;
+  onAddPostToFeed: (post: any) => void; // <-- Add this prop
 }
 
 type PromotionType = 'free_2h' | 'paid_8h' | 'paid_12h';
 
-const PostUploadForm = ({ onUploadSuccess, onShowPayment }: PostUploadFormProps) => {
+type Step = 1 | 2 | 3;
+
+const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: PostUploadFormProps) => {
   const { user } = useAuth();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [caption, setCaption] = useState('');
   const [promotionType, setPromotionType] = useState<PromotionType>('free_2h');
   const [uploading, setUploading] = useState(false);
+  const [step, setStep] = useState<Step>(1);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [newPost, setNewPost] = useState<any>(null);
 
-  const calculateExpiryTime = (type: string) => {
-    const now = new Date();
-    switch (type) {
-      case 'free_2h':
-        return new Date(now.getTime() + 2 * 60 * 60 * 1000);
-      case 'paid_8h':
-        return new Date(now.getTime() + 8 * 60 * 60 * 1000);
-      case 'paid_12h':
-        return new Date(now.getTime() + 12 * 60 * 60 * 1000);
-      default:
-        return new Date(now.getTime() + 2 * 60 * 60 * 1000);
+  // Step 1: Select file
+  const handleFileChange = (file: File | null) => {
+    setSelectedFile(file);
+    setCaption('');
+    setPromotionType('free_2h');
+    setNewPost(null);
+    if (file) {
+      setPreviewUrl(URL.createObjectURL(file));
+      setStep(2);
+    } else {
+      setPreviewUrl(null);
+      setStep(1);
     }
   };
 
+  // Step 2: Preview & details, then upload
   const handleUpload = async () => {
     if (!selectedFile || !user) {
       toast({
@@ -111,6 +120,11 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment }: PostUploadFormProps)
         return;
       }
 
+      // Step 3: Show post in feed immediately (optimistic update)
+      setNewPost(postData);
+      onAddPostToFeed(postData);
+      setStep(3);
+
       if (promotionType !== 'free_2h') {
         onShowPayment(postData);
       } else {
@@ -123,6 +137,7 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment }: PostUploadFormProps)
 
       setSelectedFile(null);
       setCaption('');
+      setPreviewUrl(null);
     } catch (error: any) {
       toast({
         title: "Upload failed",
@@ -134,29 +149,89 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment }: PostUploadFormProps)
     }
   };
 
-  return (
-    <Card className="bg-black/20 backdrop-blur-md border-gray-700 p-6 mb-8">
-      <h2 className="text-xl font-bold text-white mb-4">Create New Post</h2>
-      <div className="space-y-4">
-        <FileUploadSection 
-          selectedFile={selectedFile}
-          onFileChange={setSelectedFile}
-        />
-        <CaptionSection 
+  const calculateExpiryTime = (type: string) => {
+    const now = new Date();
+    switch (type) {
+      case 'free_2h':
+        return new Date(now.getTime() + 2 * 60 * 60 * 1000);
+      case 'paid_8h':
+        return new Date(now.getTime() + 8 * 60 * 60 * 1000);
+      case 'paid_12h':
+        return new Date(now.getTime() + 12 * 60 * 60 * 1000);
+      default:
+        return new Date(now.getTime() + 2 * 60 * 60 * 1000);
+    }
+  };
+
+  // Step 3: Show the new post
+  if (step === 3 && newPost) {
+    return (
+      <Card className="bg-black/20 backdrop-blur-md border-gray-700 p-6 mb-8">
+        <h2 className="text-xl font-bold text-white mb-4">Your Post is Live!</h2>
+        <PostCard post={newPost} />
+      </Card>
+    );
+  }
+
+  // Step 2: Preview & details
+  if (step === 2 && selectedFile) {
+    return (
+      <Card className="bg-black/20 backdrop-blur-md border-gray-700 p-6 mb-8">
+        <h2 className="text-xl font-bold text-white mb-4">Preview Your Post</h2>
+        <div className="mb-4">
+          {selectedFile.type.startsWith('image/') && previewUrl && (
+            <img
+              src={previewUrl}
+              alt="Preview"
+              className="w-full max-h-64 object-contain rounded mb-2"
+              style={{ aspectRatio: '16/9' }}
+            />
+          )}
+          {selectedFile.type.startsWith('video/') && previewUrl && (
+            <video
+              src={previewUrl}
+              controls
+              className="w-full max-h-64 object-contain rounded mb-2"
+              style={{ aspectRatio: '16/9' }}
+            />
+          )}
+        </div>
+        <CaptionSection
           caption={caption}
           onCaptionChange={setCaption}
         />
-        <PromotionTypeSelector 
+        <PromotionTypeSelector
           promotionType={promotionType}
           onPromotionTypeChange={setPromotionType}
         />
-        <UploadButton 
-          selectedFile={selectedFile}
-          uploading={uploading}
-          promotionType={promotionType}
-          onUpload={handleUpload}
-        />
-      </div>
+        <div className="flex space-x-2 mt-4">
+          <UploadButton
+            selectedFile={selectedFile}
+            uploading={uploading}
+            promotionType={promotionType}
+            onUpload={handleUpload}
+          />
+          <button
+            type="button"
+            className="text-gray-400 underline ml-4"
+            onClick={() => handleFileChange(null)}
+            disabled={uploading}
+          >
+            Cancel
+          </button>
+        </div>
+      </Card>
+    );
+  }
+
+  // Step 1: Select file
+  return (
+    <Card className="bg-black/20 backdrop-blur-md border-gray-700 p-6 mb-8">
+      <h2 className="text-xl font-bold text-white mb-4">Create New Post</h2>
+      <FileUploadSection
+        selectedFile={selectedFile}
+        onFileChange={handleFileChange}
+      />
     </Card>
   );
 };
