@@ -1,13 +1,14 @@
 import React from "react";
 import { Upload } from "lucide-react";
+
 /**
  * Accepts the dropzone props from useDropzone,
  * adds ARIA and keyboard support.
  */
 interface ContentFileDropzoneProps {
   onDrop: (acceptedFiles: File[]) => void;
-  getRootProps?: any;
-  getInputProps?: any;
+  getRootProps?: () => any;
+  getInputProps?: () => any;
   isDragActive?: boolean;
 }
 
@@ -28,7 +29,7 @@ const ContentFileDropzone = ({
         role="button"
         aria-label="Drag and drop files here, or click to select"
         aria-describedby="classic-dropzone-description"
-        onKeyDown={(e) => {
+        onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             document.getElementById("classic-dropzone-input")?.click();
@@ -45,7 +46,7 @@ const ContentFileDropzone = ({
             if (e.target.files) onDrop(Array.from(e.target.files));
           }}
         />
-        <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+        <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" aria-hidden="true" />
         <div>
           <p className="text-lg font-medium text-gray-700 mb-2">
             Drag & drop files here, or click to select
