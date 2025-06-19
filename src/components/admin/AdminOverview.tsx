@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -9,7 +8,6 @@ import {
   Activity,
   Calendar,
   Heart
-  // MessageCircle // <-- Removed as messages stat is gone
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -22,7 +20,6 @@ interface OverviewStats {
   activeUsers7d: number;
   totalRevenue: number;
   totalMatches: number;
-  // totalMessages: number;  // Removed
 }
 
 const AdminOverview = () => {
@@ -34,7 +31,6 @@ const AdminOverview = () => {
     activeUsers7d: 0,
     totalRevenue: 0,
     totalMatches: 0
-    // totalMessages: 0
   });
   const [loading, setLoading] = useState(true);
 
@@ -43,65 +39,51 @@ const AdminOverview = () => {
   }, []);
 
   const fetchOverviewStats = async () => {
+    setLoading(true);
     try {
-      // Fetch total users
-      const { count: totalUsers } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
-
-      // Fetch total subscribers
-      const { count: totalSubscribers } = await supabase
-        .from('subscribers')
-        .select('*', { count: 'exact', head: true })
-        .eq('subscribed', true);
-
-      // Fetch service providers
-      const { count: totalServiceProviders } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_type', 'service_provider');
-
-      // Fetch total posts
-      const { count: totalPosts } = await supabase
-        .from('posts')
-        .select('*', { count: 'exact', head: true });
-
-      // Fetch active users (last 7 days)
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      
-      const { count: activeUsers7d } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .gte('last_active', sevenDaysAgo.toISOString());
 
-      // Fetch revenue data
-      const { data: revenueData } = await supabase
-        .from('post_payments')
-        .select('amount')
-        .eq('payment_status', 'completed');
+      // Run all queries in parallel
+      const [
+        usersRes,
+        subscribersRes,
+        providersRes,
+        postsRes,
+        activeUsersRes,
+        revenueRes,
+        matchesRes
+      ] = await Promise.all([
+        supabase.from('profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('subscribers').select('*', { count: 'exact', head: true }).eq('subscribed', true),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('user_type', 'service_provider'),
+        supabase.from('posts').select('*', { count: 'exact', head: true }),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('last_active', sevenDaysAgo.toISOString()),
+        supabase.from('post_payments').select('amount').eq('payment_status', 'completed'),
+        supabase.from('matches').select('*', { count: 'exact', head: true })
+      ]);
 
-      // Fetch matches count
-      const { count: matchesCount } = await supabase
-        .from('matches')
-        .select('*', { count: 'exact', head: true });
+      // Check for errors
+      if (
+        usersRes.error || subscribersRes.error || providersRes.error ||
+        postsRes.error || activeUsersRes.error || revenueRes.error || matchesRes.error
+      ) {
+        throw new Error('Failed to fetch one or more stats');
+      }
 
-      // // Fetch messages count (REMOVED)
-      // const { count: messagesCount } = await supabase
-      //   .from('messages')
-      //   .select('*', { count: 'exact', head: true });
-
-      const totalRevenue = revenueData?.reduce((sum, payment) => sum + payment.amount, 0) || 0;
+      const totalRevenue = (revenueRes.data || []).reduce(
+        (sum: number, payment: { amount: number }) => sum + (Number(payment.amount) || 0),
+        0
+      );
 
       setStats({
-        totalUsers: totalUsers || 0,
-        totalSubscribers: totalSubscribers || 0,
-        totalServiceProviders: totalServiceProviders || 0,
-        totalPosts: totalPosts || 0,
-        activeUsers7d: activeUsers7d || 0,
+        totalUsers: usersRes.count || 0,
+        totalSubscribers: subscribersRes.count || 0,
+        totalServiceProviders: providersRes.count || 0,
+        totalPosts: postsRes.count || 0,
+        activeUsers7d: activeUsersRes.count || 0,
         totalRevenue,
-        totalMatches: matchesCount || 0
-        // totalMessages: messagesCount || 0
+        totalMatches: matchesRes.count || 0
       });
     } catch (error) {
       console.error('Error fetching overview stats:', error);
@@ -172,13 +154,6 @@ const AdminOverview = () => {
       icon: Heart,
       color: 'text-pink-400'
     }
-    // Removed messages card
-    // {
-    //   title: 'Total Messages',
-    //   value: stats.totalMessages.toLocaleString(),
-    //   icon: MessageCircle,
-    //   color: 'text-cyan-400'
-    // }
   ];
 
   return (
