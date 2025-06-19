@@ -17,7 +17,11 @@ const AppAnalytics = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchAnalytics();
+    // Wrap async call in a function
+    const fetchData = async () => {
+      await fetchAnalytics();
+    };
+    fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
