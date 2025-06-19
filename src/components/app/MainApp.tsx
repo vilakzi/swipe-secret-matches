@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
+// If you use Sonner, keep it; otherwise, remove the next line
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ServiceProviderRoute from "@/components/ServiceProviderRoute";
@@ -26,6 +27,7 @@ const MainApp = () => {
   return (
     <>
       <Toaster />
+      {/* Remove Sonner below if you only use one notification system */}
       <Sonner />
       <AgeVerificationBanner />
       <Routes>
