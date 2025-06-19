@@ -18,13 +18,14 @@ const AppAnalytics = () => {
 
   useEffect(() => {
     fetchAnalytics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchAnalytics = async () => {
     try {
       const { data, error } = await supabase
         .from('analytics')
-        .select('*')
+        .select('date,total_users,total_subscribers,active_users_7d,total_posts')
         .order('date', { ascending: true })
         .limit(30);
 
@@ -52,6 +53,14 @@ const AppAnalytics = () => {
             </CardContent>
           </Card>
         ))}
+      </div>
+    );
+  }
+
+  if (!analyticsData.length) {
+    return (
+      <div className="text-center py-8 text-gray-400">
+        No analytics data available.
       </div>
     );
   }
@@ -132,7 +141,7 @@ const AppAnalytics = () => {
           </CardContent>
         </Card>
 
-        {/* Service Providers Chart */}
+        {/* Content Activity Chart */}
         <Card className="bg-black/20 backdrop-blur-md border-gray-700">
           <CardHeader>
             <CardTitle className="text-white">Content Activity</CardTitle>
@@ -164,7 +173,7 @@ const AppAnalytics = () => {
           </CardContent>
         </Card>
 
-        {/* Posts Chart */}
+        {/* Engagement Trends Chart */}
         <Card className="bg-black/20 backdrop-blur-md border-gray-700">
           <CardHeader>
             <CardTitle className="text-white">Engagement Trends</CardTitle>
