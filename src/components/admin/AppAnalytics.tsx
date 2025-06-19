@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
@@ -23,25 +22,14 @@ const AppAnalytics = () => {
 
   const fetchAnalytics = async () => {
     try {
-      // Generate sample analytics data for the last 30 days
-      const data: AnalyticsData[] = [];
-      const today = new Date();
-      
-      for (let i = 29; i >= 0; i--) {
-        const date = new Date(today);
-        date.setDate(date.getDate() - i);
-        
-        // Generate sample data (in a real app, this would come from your analytics table)
-        data.push({
-          date: date.toISOString().split('T')[0],
-          total_users: Math.floor(Math.random() * 1000) + 500,
-          total_subscribers: Math.floor(Math.random() * 200) + 100,
-          active_users_7d: Math.floor(Math.random() * 300) + 150,
-          total_posts: Math.floor(Math.random() * 50) + 25
-        });
-      }
+      const { data, error } = await supabase
+        .from('analytics')
+        .select('*')
+        .order('date', { ascending: true })
+        .limit(30);
 
-      setAnalyticsData(data);
+      if (error) throw error;
+      setAnalyticsData(data as AnalyticsData[]);
     } catch (error) {
       console.error('Error fetching analytics:', error);
       toast({
