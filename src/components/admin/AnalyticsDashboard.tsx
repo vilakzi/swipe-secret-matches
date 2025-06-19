@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   TrendingUp, 
@@ -30,6 +30,19 @@ const AnalyticsDashboard = () => {
   const total_views = analytics.total_views ?? 0;
   const total_likes = analytics.total_likes ?? 0;
   const total_shares = analytics.total_shares ?? 0;
+
+  // Memoize derived values
+  const engagementRate = useMemo(() => (
+    total_content > 0 && total_views > 0
+      ? (((total_likes + total_shares) / total_views) * 100).toFixed(2)
+      : '0.00'
+  ), [total_content, total_views, total_likes, total_shares]);
+
+  const avgViewsPerContent = useMemo(() => (
+    total_content > 0
+      ? Math.round(total_views / total_content)
+      : 0
+  ), [total_content, total_views]);
 
   const stats = [
     {
@@ -75,14 +88,6 @@ const AnalyticsDashboard = () => {
       bgColor: 'bg-indigo-100',
     },
   ];
-
-  const engagementRate = total_content > 0 && total_views > 0
-    ? (((total_likes + total_shares) / total_views) * 100).toFixed(2)
-    : '0.00';
-
-  const avgViewsPerContent = total_content > 0
-    ? Math.round(total_views / total_content)
-    : 0;
 
   return (
     <div className="space-y-6">
