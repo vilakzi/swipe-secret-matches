@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Image, Video, X } from "lucide-react";
@@ -13,26 +12,26 @@ const ContentFilePreview = ({ uploadFile, onRemove }: ContentFilePreviewProps) =
   return (
     <div className="relative group">
       <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
-        {uploadFile.type === 'image' ? (
+        {uploadFile.type === "image" ? (
           <img
             src={uploadFile.preview}
             alt="Preview"
             className="w-full h-full object-cover object-center max-h-60"
-            style={{ aspectRatio: '16/9' }}
+            style={{ aspectRatio: "16/9" }}
           />
         ) : (
           <video
             src={uploadFile.preview}
             className="w-full h-full object-cover object-center max-h-60"
-            style={{ aspectRatio: '16/9' }}
+            style={{ aspectRatio: "16/9" }}
             controls
             preload="metadata"
             playsInline
             onError={(e) => {
-              console.error('[ContentFilePreview] Video error:', e);
+              console.error("[ContentFilePreview] Video error:", e);
             }}
             onCanPlay={() => {
-              console.log('[ContentFilePreview] Video can play:', uploadFile.preview);
+              console.log("[ContentFilePreview] Video can play:", uploadFile.preview);
             }}
           >
             Your browser does not support the video tag.
@@ -51,8 +50,11 @@ const ContentFilePreview = ({ uploadFile, onRemove }: ContentFilePreviewProps) =
         </Button>
       </div>
       <div className="absolute bottom-2 left-2">
-        <div className="bg-black/70 text-white px-2 py-1 rounded text-xs flex items-center gap-1">
-          {uploadFile.type === 'image' ? (
+        <div
+          className="bg-black/70 text-white px-2 py-1 rounded text-xs flex items-center gap-1"
+          title={uploadFile.type === "image" ? "Image file" : "Video file"}
+        >
+          {uploadFile.type === "image" ? (
             <Image className="w-3 h-3" />
           ) : (
             <Video className="w-3 h-3" />
@@ -61,9 +63,7 @@ const ContentFilePreview = ({ uploadFile, onRemove }: ContentFilePreviewProps) =
         </div>
       </div>
       <div className="mt-2">
-        <p className="text-sm font-medium truncate">
-          {uploadFile.file.name}
-        </p>
+        <p className="text-sm font-medium truncate">{uploadFile.file.name}</p>
         <p className="text-xs text-gray-500">
           {(uploadFile.file.size / 1024 / 1024).toFixed(2)} MB
         </p>
