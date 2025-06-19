@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -24,57 +23,65 @@ const AnalyticsDashboard = () => {
     return <div className="text-center py-8">No analytics data available</div>;
   }
 
+  // Fallbacks for missing analytics fields
+  const total_content = analytics.total_content ?? 0;
+  const published_content = analytics.published_content ?? 0;
+  const draft_content = analytics.draft_content ?? 0;
+  const total_views = analytics.total_views ?? 0;
+  const total_likes = analytics.total_likes ?? 0;
+  const total_shares = analytics.total_shares ?? 0;
+
   const stats = [
     {
       title: 'Total Content',
-      value: analytics.total_content,
+      value: total_content,
       icon: FileText,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100',
     },
     {
       title: 'Published Content',
-      value: analytics.published_content,
+      value: published_content,
       icon: CheckCircle,
       color: 'text-green-600',
       bgColor: 'bg-green-100',
     },
     {
       title: 'Draft Content',
-      value: analytics.draft_content,
+      value: draft_content,
       icon: Clock,
       color: 'text-yellow-600',
       bgColor: 'bg-yellow-100',
     },
     {
       title: 'Total Views',
-      value: analytics.total_views,
+      value: total_views,
       icon: Eye,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100',
     },
     {
       title: 'Total Likes',
-      value: analytics.total_likes,
+      value: total_likes,
       icon: Heart,
       color: 'text-red-600',
       bgColor: 'bg-red-100',
     },
     {
       title: 'Total Shares',
-      value: analytics.total_shares,
+      value: total_shares,
       icon: Share2,
       color: 'text-indigo-600',
       bgColor: 'bg-indigo-100',
     },
   ];
 
-  const engagementRate = analytics.total_content > 0 
-    ? ((analytics.total_likes + analytics.total_shares) / analytics.total_views * 100).toFixed(2)
+  const engagementRate = total_content > 0 && total_views > 0
+    ? (((total_likes + total_shares) / total_views) * 100).toFixed(2)
     : '0.00';
 
-  const avgViewsPerContent = analytics.total_content > 0
-    ? Math.round(analytics.total_views / analytics.total_content)
+  const avgViewsPerContent = total_content > 0
+    ? Math.round(total_views / total_content)
     : 0;
 
   return (
@@ -155,8 +162,8 @@ const AnalyticsDashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center p-4 border rounded-lg">
               <div className="text-2xl font-bold text-green-600 mb-2">
-                {analytics.total_content > 0 
-                  ? Math.round((analytics.published_content / analytics.total_content) * 100)
+                {total_content > 0 
+                  ? Math.round((published_content / total_content) * 100)
                   : 0}%
               </div>
               <p className="text-sm text-gray-600">Content Published</p>
@@ -164,8 +171,8 @@ const AnalyticsDashboard = () => {
             
             <div className="text-center p-4 border rounded-lg">
               <div className="text-2xl font-bold text-blue-600 mb-2">
-                {analytics.total_views > 0
-                  ? Math.round((analytics.total_likes / analytics.total_views) * 100)
+                {total_views > 0
+                  ? Math.round((total_likes / total_views) * 100)
                   : 0}%
               </div>
               <p className="text-sm text-gray-600">Like Rate</p>
@@ -173,8 +180,8 @@ const AnalyticsDashboard = () => {
             
             <div className="text-center p-4 border rounded-lg">
               <div className="text-2xl font-bold text-purple-600 mb-2">
-                {analytics.total_views > 0
-                  ? Math.round((analytics.total_shares / analytics.total_views) * 100)
+                {total_views > 0
+                  ? Math.round((total_shares / total_views) * 100)
                   : 0}%
               </div>
               <p className="text-sm text-gray-600">Share Rate</p>
