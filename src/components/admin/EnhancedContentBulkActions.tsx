@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 
@@ -10,6 +9,7 @@ interface UploadFile {
   isDuplicate?: boolean;
   hash?: string;
 }
+
 interface EnhancedContentBulkActionsProps {
   uploadFiles: UploadFile[];
   uploading: boolean;
