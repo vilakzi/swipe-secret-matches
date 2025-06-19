@@ -1,4 +1,3 @@
-
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,7 +30,11 @@ class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
-        return this.props.fallback;
+        return (
+          <div className="flex items-center justify-center min-h-screen p-4">
+            {this.props.fallback}
+          </div>
+        );
       }
 
       return (
@@ -47,15 +50,13 @@ class ErrorBoundary extends Component<Props, State> {
               <p className="text-gray-400">
                 We encountered an unexpected error. Please try refreshing the page.
               </p>
-              
               {process.env.NODE_ENV === 'development' && this.state.error && (
                 <div className="bg-gray-800 border border-gray-600 rounded p-3 text-left">
                   <p className="text-red-400 text-sm font-mono">
-                    {this.state.error.message}
+                    {this.state.error.message || 'Unknown error'}
                   </p>
                 </div>
               )}
-
               <Button
                 onClick={() => window.location.reload()}
                 className="w-full bg-purple-600 hover:bg-purple-700"
