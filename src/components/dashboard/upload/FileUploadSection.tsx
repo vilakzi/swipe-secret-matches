@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -16,16 +15,12 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
   const { role } = useUserRole();
   const maxSize = getMaxUploadSize(role);
 
-  // State for video and image previews
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    // Create preview URL when a file is selected
     if (selectedFile) {
       const url = URL.createObjectURL(selectedFile);
       setPreviewUrl(url);
-
-      // Cleanup the object URL on unmount/change
       return () => {
         URL.revokeObjectURL(url);
       };
@@ -39,7 +34,7 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
     if (file) {
       const isImage = file.type.startsWith('image/');
       const isVideo = file.type.startsWith('video/');
-      
+
       if (!isImage && !isVideo) {
         toast({
           title: "Invalid file type",
@@ -52,7 +47,7 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
       if (file.size > maxSize) {
         toast({
           title: "File too large",
-          description: `Maximum allowed: ${Math.round(maxSize / (1024*1024))}MB (${role === "admin" ? "Admin" : "Provider/User"} limit)`,
+          description: `Maximum allowed: ${Math.round(maxSize / (1024*1024))}MB`,
           variant: "destructive",
         });
         return;
@@ -88,7 +83,6 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
         <label className="block text-sm font-medium text-gray-300 mb-2">
           Upload Image or Video
         </label>
-        
         {!selectedFile ? (
           <>
             <Input
@@ -98,7 +92,7 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
               className="bg-gray-800 border-gray-600 text-white file:bg-purple-600 file:text-white file:border-0 file:rounded file:px-3 file:py-1 file:mr-3 cursor-pointer"
             />
             <p className="text-xs text-gray-400 mt-1">
-              Images: Any size | Videos: Max {Math.round(maxSize / (1024*1024))}MB ({role})
+              Max file size: {Math.round(maxSize / (1024*1024))}MB
             </p>
           </>
         ) : (
@@ -132,7 +126,6 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
                 <X className="w-4 h-4" />
               </Button>
             </div>
-            
             {/* Image or video preview */}
             {selectedFile.type.startsWith('image/') && previewUrl && (
               <div className="mt-3 rounded-lg overflow-hidden">
@@ -158,7 +151,6 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
           </div>
         )}
       </div>
-      
       {selectedFile && (
         <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-3">
           <div className="flex items-center space-x-2">
