@@ -1,5 +1,4 @@
-
-import React, { createContext, useContext, useRef } from 'react';
+import React, { createContext, useContext, useRef, ReactNode } from 'react';
 import { useToast } from "@/hooks/use-toast";
 
 interface ErrorContextType {
@@ -9,7 +8,7 @@ interface ErrorContextType {
 const ErrorContext = createContext<ErrorContextType | undefined>(undefined);
 
 // Provide all app errors as sharp toasts (uses shadcn/ui)
-export const ErrorProvider = ({ children }: { children: React.ReactNode }) => {
+export const ErrorProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   // Debounce duplicate error toasts
@@ -48,4 +47,6 @@ export const useError = () => {
   }
   return context;
 };
+
+export default ErrorProvider;
 
