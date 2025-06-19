@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { Image, Video } from 'lucide-react';
+import { Video } from 'lucide-react';
 
 interface PostCardProps {
   post: {
@@ -26,6 +26,14 @@ const PostCard = ({ post }: PostCardProps) => {
                 className="w-full h-full object-cover object-center rounded"
                 style={{ aspectRatio: '1/1', maxHeight: '4rem' }}
               />
+            ) : post.post_type === 'video' ? (
+              <video
+                src={post.content_url}
+                className="w-full h-full object-cover object-center rounded"
+                style={{ aspectRatio: '1/1', maxHeight: '4rem' }}
+                controls
+                preload="metadata"
+              />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
                 <Video className="w-8 h-8 text-gray-400" />
@@ -34,7 +42,11 @@ const PostCard = ({ post }: PostCardProps) => {
           </div>
           <div>
             <p className="text-white font-medium">
-              {post.post_type === 'image' ? 'Image' : 'Video'} Post
+              {post.post_type === 'image'
+                ? 'Image'
+                : post.post_type === 'video'
+                ? 'Video'
+                : 'Post'} Post
             </p>
             <p className="text-sm text-gray-400">
               Expires: {new Date(post.expires_at).toLocaleString()}
@@ -48,10 +60,17 @@ const PostCard = ({ post }: PostCardProps) => {
           <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
             post.promotion_type === 'free_2h' 
               ? 'bg-green-500/20 text-green-400' 
-              : 'bg-purple-500/20 text-purple-400'
+              : post.promotion_type === 'paid_8h'
+              ? 'bg-purple-500/20 text-purple-400'
+              : 'bg-purple-700/20 text-purple-300'
           }`}>
-            {post.promotion_type === 'free_2h' ? '2H Free' : 
-             post.promotion_type === 'paid_8h' ? '8H Promoted' : '12H Promoted'}
+            {post.promotion_type === 'free_2h'
+              ? '2H Free'
+              : post.promotion_type === 'paid_8h'
+              ? '8H Promoted'
+              : post.promotion_type === 'paid_12h'
+              ? '12H Promoted'
+              : post.promotion_type}
           </span>
         </div>
       </div>
