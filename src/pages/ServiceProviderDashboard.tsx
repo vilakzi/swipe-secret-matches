@@ -39,6 +39,10 @@ const ServiceProviderDashboard = () => {
     setShowPaymentModal(true);
   };
 
+  const handleAddPostToFeed = (newPost: any) => {
+    setPosts((prev) => [newPost, ...prev]);
+  };
+
   const handlePaymentSuccess = async () => {
     if (pendingPost) {
       await supabase
@@ -64,6 +68,7 @@ const ServiceProviderDashboard = () => {
         <PostUploadForm 
           onUploadSuccess={fetchPosts}
           onShowPayment={handleShowPayment}
+          onAddPostToFeed={handleAddPostToFeed}
         />
 
         <PostsList posts={posts} />

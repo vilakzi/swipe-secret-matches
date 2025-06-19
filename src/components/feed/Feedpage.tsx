@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import PostUploadForm from '@/components/PostUploadForm';
+import PostUploadForm from '@/components/dashboard/PostUploadForm';
 import FeedContent from '@/components/FeedContent';
 import { supabase } from '@/integrations/supabase/client';
 
