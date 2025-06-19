@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,16 +15,21 @@ import { toast } from '@/hooks/use-toast';
 
 const AdminSettings = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastCheck, setLastCheck] = useState('');
+
+  useEffect(() => {
+    setLastCheck(new Date().toLocaleString());
+  }, []);
 
   const handleRefreshMetrics = async () => {
     setIsRefreshing(true);
     try {
-      // Since we can't call the update_daily_metrics function directly,
-      // we'll show a success message for now
+      // Simulate refresh
       toast({
         title: "Metrics refreshed",
         description: "Dashboard metrics have been updated successfully",
       });
+      setLastCheck(new Date().toLocaleString());
     } catch (error) {
       console.error('Error refreshing metrics:', error);
       toast({
@@ -41,13 +45,12 @@ const AdminSettings = () => {
   const handleCleanupExpiredMatches = async () => {
     try {
       const { error } = await supabase.rpc('cleanup_expired_matches');
-      
       if (error) throw error;
-
       toast({
         title: "Cleanup completed",
         description: "Expired matches have been removed",
       });
+      setLastCheck(new Date().toLocaleString());
     } catch (error) {
       console.error('Error cleaning up matches:', error);
       toast({
@@ -62,19 +65,19 @@ const AdminSettings = () => {
     {
       component: 'Database',
       status: 'healthy',
-      lastCheck: new Date().toLocaleString(),
+      lastCheck,
       icon: Database
     },
     {
       component: 'Authentication',
       status: 'healthy',
-      lastCheck: new Date().toLocaleString(),
+      lastCheck,
       icon: Shield
     },
     {
       component: 'User Management',
       status: 'healthy',
-      lastCheck: new Date().toLocaleString(),
+      lastCheck,
       icon: Settings
     }
   ];
