@@ -7,8 +7,8 @@ import { Upload } from "lucide-react";
  */
 interface ContentFileDropzoneProps {
   onDrop: (acceptedFiles: File[]) => void;
-  getRootProps?: () => any;
-  getInputProps?: () => any;
+  getRootProps?: (options?: any) => any;
+  getInputProps?: (options?: any) => any;
   isDragActive?: boolean;
 }
 
