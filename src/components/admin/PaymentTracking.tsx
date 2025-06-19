@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -54,7 +53,6 @@ const PaymentTracking = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
       setPayments(data || []);
     } catch (error) {
       console.error('Error fetching payments:', error);
