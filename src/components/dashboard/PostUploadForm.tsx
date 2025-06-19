@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
@@ -52,7 +51,6 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment }: PostUploadFormProps)
     try {
       const fileExt = selectedFile.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-      console.log('[Upload] Starting upload:', fileName);
 
       // Upload file to Supabase Storage
       const { data: uploadData, error: uploadError } = await supabase.storage
@@ -60,7 +58,6 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment }: PostUploadFormProps)
         .upload(fileName, selectedFile);
 
       if (uploadError) {
-        console.error('[Upload] Storage upload error:', uploadError);
         toast({
           title: "Storage upload failed",
           description: uploadError.message,
@@ -69,7 +66,6 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment }: PostUploadFormProps)
         setUploading(false);
         return;
       }
-      console.log('[Upload] Storage upload successful:', uploadData);
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
@@ -85,7 +81,6 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment }: PostUploadFormProps)
         setUploading(false);
         return;
       }
-      console.log('[Upload] Public URL:', publicUrl);
 
       const expiresAt = calculateExpiryTime(promotionType);
       const postType = selectedFile.type.startsWith('image/') ? 'image' : 'video';
@@ -107,7 +102,6 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment }: PostUploadFormProps)
         .single();
 
       if (postError) {
-        console.error('[Upload] DB insert error:', postError);
         toast({
           title: "Feed DB insert failed",
           description: postError.message,
@@ -116,7 +110,6 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment }: PostUploadFormProps)
         setUploading(false);
         return;
       }
-      console.log('[Upload] DB insert complete, postData:', postData);
 
       if (promotionType !== 'free_2h') {
         onShowPayment(postData);
@@ -131,7 +124,6 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment }: PostUploadFormProps)
       setSelectedFile(null);
       setCaption('');
     } catch (error: any) {
-      console.error('[Upload] UNEXPECTED error:', error);
       toast({
         title: "Upload failed",
         description: error.message ?? String(error),
@@ -145,23 +137,19 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment }: PostUploadFormProps)
   return (
     <Card className="bg-black/20 backdrop-blur-md border-gray-700 p-6 mb-8">
       <h2 className="text-xl font-bold text-white mb-4">Create New Post</h2>
-      
       <div className="space-y-4">
         <FileUploadSection 
           selectedFile={selectedFile}
           onFileChange={setSelectedFile}
         />
-
         <CaptionSection 
           caption={caption}
           onCaptionChange={setCaption}
         />
-
         <PromotionTypeSelector 
           promotionType={promotionType}
           onPromotionTypeChange={setPromotionType}
         />
-
         <UploadButton 
           selectedFile={selectedFile}
           uploading={uploading}
