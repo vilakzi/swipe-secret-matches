@@ -18,7 +18,6 @@ const EnhancedContentFilePreview = ({
   uploadFile,
   onRemove,
 }: EnhancedContentFilePreviewProps) => {
-  // Add descriptive alt text and aria for improved accessibility.
   const altText =
     uploadFile.type === "image"
       ? `Preview of image file ${uploadFile.file.name}`
