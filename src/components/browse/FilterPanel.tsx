@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,8 +18,19 @@ const FilterPanel = ({ isOpen, onClose }: FilterPanelProps) => {
 
   if (!isOpen) return null;
 
+  // Prevent rendering if preferences are not loaded yet
+  if (!preferences) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <Card className="w-full max-w-md bg-gray-900 border-gray-700">
+          <CardContent className="p-6 text-center text-gray-400">Loading preferences...</CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" aria-modal="true" role="dialog">
       <Card className="w-full max-w-md bg-gray-900 border-gray-700">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -33,6 +43,7 @@ const FilterPanel = ({ isOpen, onClose }: FilterPanelProps) => {
               size="sm"
               onClick={onClose}
               className="text-gray-400 hover:text-white"
+              aria-label="Close filter panel"
             >
               <X className="w-4 h-4" />
             </Button>
@@ -51,23 +62,27 @@ const FilterPanel = ({ isOpen, onClose }: FilterPanelProps) => {
                 <div>
                   <Label className="text-sm text-gray-400">Minimum Age</Label>
                   <Slider
-                    value={[preferences.min_age]}
+                    value={[preferences.min_age ?? 18]}
                     onValueChange={([value]) => updatePreferences({ min_age: value })}
                     min={18}
                     max={65}
                     step={1}
                     className="mt-1"
+                    disabled={loading}
+                    aria-label="Minimum age"
                   />
                 </div>
                 <div>
                   <Label className="text-sm text-gray-400">Maximum Age</Label>
                   <Slider
-                    value={[preferences.max_age]}
+                    value={[preferences.max_age ?? 65]}
                     onValueChange={([value]) => updatePreferences({ max_age: value })}
                     min={18}
                     max={65}
                     step={1}
                     className="mt-1"
+                    disabled={loading}
+                    aria-label="Maximum age"
                   />
                 </div>
               </div>
@@ -80,12 +95,14 @@ const FilterPanel = ({ isOpen, onClose }: FilterPanelProps) => {
               Maximum Distance: {preferences.max_distance}km
             </Label>
             <Slider
-              value={[preferences.max_distance]}
+              value={[preferences.max_distance ?? 10]}
               onValueChange={([value]) => updatePreferences({ max_distance: value })}
               min={1}
               max={100}
               step={1}
               className="mt-2"
+              disabled={loading}
+              aria-label="Maximum distance"
             />
           </div>
 
@@ -93,8 +110,9 @@ const FilterPanel = ({ isOpen, onClose }: FilterPanelProps) => {
           <div>
             <Label className="text-white font-medium">Show Me</Label>
             <Select 
-              value={preferences.show_me} 
+              value={preferences.show_me ?? "everyone"} 
               onValueChange={(value) => updatePreferences({ show_me: value as any })}
+              disabled={loading}
             >
               <SelectTrigger className="mt-2 bg-gray-800 border-gray-600 text-white">
                 <SelectValue />
@@ -114,8 +132,10 @@ const FilterPanel = ({ isOpen, onClose }: FilterPanelProps) => {
               <p className="text-sm text-gray-400">Enable location-based matching</p>
             </div>
             <Switch
-              checked={preferences.location_enabled}
+              checked={preferences.location_enabled ?? false}
               onCheckedChange={(checked) => updatePreferences({ location_enabled: checked })}
+              disabled={loading}
+              aria-label="Enable location-based matching"
             />
           </div>
 
@@ -125,6 +145,7 @@ const FilterPanel = ({ isOpen, onClose }: FilterPanelProps) => {
               variant="outline"
               onClick={onClose}
               className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-800"
+              disabled={loading}
             >
               Cancel
             </Button>
