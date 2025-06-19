@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload } from 'lucide-react';
@@ -47,7 +46,6 @@ const EnhancedContentUpload = () => {
     maxSize,
   } = useEnhancedContentUpload();
 
-  // Use react-dropzone here and forward all dropzone props
   const {
     getRootProps,
     getInputProps,
