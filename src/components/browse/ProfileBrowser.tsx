@@ -42,8 +42,10 @@ const ProfileBrowser = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
 
-  const currentProfile = profiles[currentIndex];
-  const hasMoreProfiles = currentIndex < profiles.length - 1;
+  // Ensure currentIndex is always valid
+  const safeIndex = Math.min(currentIndex, Math.max(0, profiles.length - 1));
+  const currentProfile = profiles[safeIndex] || null;
+  const hasMoreProfiles = safeIndex < profiles.length - 1;
 
   const handleSwipe = (direction: 'left' | 'right', isSuperLike = false) => {
     if (!currentProfile) return;
@@ -68,11 +70,10 @@ const ProfileBrowser = ({
     }
 
     onSwipe(currentProfile.id, direction, isSuperLike);
-    
+
     if (hasMoreProfiles) {
       setCurrentIndex(prev => prev + 1);
     } else {
-      // No more profiles
       toast({
         title: "No more profiles",
         description: "You've seen all available profiles for now"
@@ -89,7 +90,7 @@ const ProfileBrowser = ({
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500" aria-label="Loading" />
         <p className="text-gray-400">Loading profiles...</p>
       </div>
     );
@@ -103,6 +104,7 @@ const ProfileBrowser = ({
           onClick={onRefresh}
           variant="outline"
           className="border-gray-600 text-gray-300 hover:bg-gray-800"
+          aria-label="Refresh profiles"
         >
           <RotateCcw className="w-4 h-4 mr-2" />
           Refresh
@@ -120,6 +122,7 @@ const ProfileBrowser = ({
           variant="outline"
           size="sm"
           className="border-gray-600 text-gray-300 hover:bg-gray-800"
+          aria-label="Open filters"
         >
           <Filter className="w-4 h-4 mr-2" />
           Filters
@@ -127,7 +130,7 @@ const ProfileBrowser = ({
         
         <div className="text-center">
           <p className="text-gray-400 text-sm">
-            {currentIndex + 1} of {profiles.length}
+            {safeIndex + 1} of {profiles.length}
           </p>
         </div>
 
@@ -136,6 +139,7 @@ const ProfileBrowser = ({
           variant="outline"
           size="sm"
           className="border-gray-600 text-gray-300 hover:bg-gray-800"
+          aria-label="Refresh profiles"
         >
           <RotateCcw className="w-4 h-4" />
         </Button>
