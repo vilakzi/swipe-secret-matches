@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,7 +20,7 @@ import {
 import { useEnhancedAdminContent, EnhancedAdminContent } from '@/hooks/useEnhancedAdminContent';
 
 const ContentModerationPanel = () => {
-  const { content, loading, approveContent, rejectContent, scheduleContent } = useEnhancedAdminContent();
+  const { content, loading, approveContent, rejectContent } = useEnhancedAdminContent();
   const [selectedContent, setSelectedContent] = useState<EnhancedAdminContent | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [moderationNotes, setModerationNotes] = useState('');
@@ -69,9 +68,15 @@ const ContentModerationPanel = () => {
   };
 
   const handleApprove = async (id: string) => {
-    await approveContent(id, moderationNotes);
-    setModerationNotes('');
-    setSelectedContent(null);
+    try {
+      await approveContent(id, moderationNotes);
+    } catch (error) {
+      // Optionally show a toast or error message here
+      console.error("Failed to approve content", error);
+    } finally {
+      setModerationNotes('');
+      setSelectedContent(null);
+    }
   };
 
   const handleReject = async (id: string) => {
@@ -79,10 +84,16 @@ const ContentModerationPanel = () => {
       alert('Please provide a rejection reason');
       return;
     }
-    await rejectContent(id, rejectionReason, moderationNotes);
-    setRejectionReason('');
-    setModerationNotes('');
-    setSelectedContent(null);
+    try {
+      await rejectContent(id, rejectionReason, moderationNotes);
+    } catch (error) {
+      // Optionally show a toast or error message here
+      console.error("Failed to reject content", error);
+    } finally {
+      setRejectionReason('');
+      setModerationNotes('');
+      setSelectedContent(null);
+    }
   };
 
   if (loading) {
@@ -134,7 +145,6 @@ const ContentModerationPanel = () => {
                       controls
                     />
                   )}
-                  
                   {/* Status Badge */}
                   <div className="absolute top-2 left-2">
                     <Badge className={`${getStatusColor(item.approval_status)} text-white`}>
@@ -142,7 +152,6 @@ const ContentModerationPanel = () => {
                       <span className="ml-1 capitalize">{item.approval_status}</span>
                     </Badge>
                   </div>
-                  
                   {/* Content Type Badge */}
                   <div className="absolute top-2 right-2">
                     <Badge variant="secondary">
@@ -155,18 +164,15 @@ const ContentModerationPanel = () => {
                     </Badge>
                   </div>
                 </div>
-                
                 {/* Content Info */}
                 <div className="p-4">
                   <h3 className="font-medium text-lg mb-2 truncate">{item.title}</h3>
-                  
                   {/* Category */}
                   <div className="mb-2">
                     <Badge className={getCategoryColor(item.category)}>
                       {item.category}
                     </Badge>
                   </div>
-
                   {/* Tags */}
                   {item.tags && item.tags.length > 0 && (
                     <div className="mb-3 flex flex-wrap gap-1">
@@ -183,13 +189,11 @@ const ContentModerationPanel = () => {
                       )}
                     </div>
                   )}
-                  
                   {item.description && (
                     <p className="text-sm text-gray-600 mb-3 line-clamp-2">
                       {item.description}
                     </p>
                   )}
-                  
                   {/* Stats */}
                   <div className="flex justify-between text-sm text-gray-500 mb-3">
                     <span className="flex items-center gap-1">
@@ -201,7 +205,6 @@ const ContentModerationPanel = () => {
                       {new Date(item.created_at).toLocaleDateString()}
                     </span>
                   </div>
-
                   {/* File Size Info */}
                   <div className="text-xs text-gray-500 mb-3">
                     Size: {item.file_size ? (item.file_size / 1024 / 1024).toFixed(2) + ' MB' : 'Unknown'}
@@ -209,14 +212,12 @@ const ContentModerationPanel = () => {
                       <div className="truncate">Hash: {item.content_hash.slice(0, 16)}...</div>
                     )}
                   </div>
-
                   {/* Rejection Reason */}
                   {item.approval_status === 'rejected' && item.rejection_reason && (
                     <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded text-sm">
                       <strong>Rejection Reason:</strong> {item.rejection_reason}
                     </div>
                   )}
-                  
                   {/* Actions */}
                   {item.approval_status === 'pending' && (
                     <div className="flex gap-2">
@@ -256,7 +257,6 @@ const ContentModerationPanel = () => {
                           </div>
                         </DialogContent>
                       </Dialog>
-
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button
@@ -310,7 +310,6 @@ const ContentModerationPanel = () => {
                       </Dialog>
                     </div>
                   )}
-
                   {item.approval_status === 'approved' && (
                     <Badge className="w-full bg-green-500 text-white justify-center">
                       <CheckCircle className="w-4 h-4 mr-1" />
