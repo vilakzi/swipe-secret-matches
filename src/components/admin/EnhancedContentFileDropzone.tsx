@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Upload } from "lucide-react";
 
@@ -18,7 +17,6 @@ const EnhancedContentFileDropzone = ({
   role,
   maxSize,
 }: EnhancedContentFileDropzoneProps) => {
-  // Add ARIA: instructions, role, focus style, etc.
   return (
     <div
       {...getRootProps({
@@ -29,7 +27,6 @@ const EnhancedContentFileDropzone = ({
           : "Drag and drop files here, or click to select",
         "aria-describedby": "dropzone-description dropzone-limit",
         onKeyDown: (e: React.KeyboardEvent) => {
-          // Support Enter/Space for keyboard activation
           if (e.key === " " || e.key === "Enter") {
             e.preventDefault();
             getInputProps().onClick?.(e);
