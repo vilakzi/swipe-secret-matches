@@ -11,11 +11,11 @@ interface UploadButtonProps {
   onUpload: () => void;
 }
 
-const UploadButton = ({ selectedFile, uploading, promotionType, onUpload }: UploadButtonProps) => {
+function UploadButton({ selectedFile, uploading, promotionType, onUpload }: UploadButtonProps) {
   const { role } = useUserRole();
   const maxSize = getMaxUploadSize(role);
 
-  const getPromotionPrice = (type: string) => {
+  function getPromotionPrice(type: string) {
     switch (type) {
       case 'paid_8h':
         return 'R20';
@@ -24,7 +24,7 @@ const UploadButton = ({ selectedFile, uploading, promotionType, onUpload }: Uplo
       default:
         return 'Free';
     }
-  };
+  }
 
   const isReady = selectedFile && !uploading;
   const isDisabled = !selectedFile || uploading;
@@ -80,6 +80,6 @@ const UploadButton = ({ selectedFile, uploading, promotionType, onUpload }: Uplo
       )}
     </div>
   );
-};
+}
 
 export default UploadButton;
