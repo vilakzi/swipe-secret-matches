@@ -17,7 +17,6 @@ const AppAnalytics = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Wrap async call in a function
     const fetchData = async () => {
       await fetchAnalytics();
     };
@@ -34,7 +33,23 @@ const AppAnalytics = () => {
         .limit(30);
 
       if (error) throw error;
-      setAnalyticsData(data as AnalyticsData[]);
+
+      // Validate data shape before setting state
+      if (
+        Array.isArray(data) &&
+        data.every(
+          d =>
+            typeof d.date === "string" &&
+            typeof d.total_users === "number" &&
+            typeof d.total_subscribers === "number" &&
+            typeof d.active_users_7d === "number" &&
+            typeof d.total_posts === "number"
+        )
+      ) {
+        setAnalyticsData(data as AnalyticsData[]);
+      } else {
+        throw new Error("Invalid analytics data format");
+      }
     } catch (error) {
       console.error('Error fetching analytics:', error);
       toast({
