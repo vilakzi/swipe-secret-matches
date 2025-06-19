@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import PostUploadForm from '@/components/dashboard/PostUploadForm';
-import FeedContent from '@/components/FeedContent';
+import FeedContent from '@/components/feed/FeedContent';
 import { supabase } from '@/integrations/supabase/client';
 
 const Feed = () => {

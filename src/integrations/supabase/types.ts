@@ -161,29 +161,44 @@ export type Database = {
       }
       content_analytics: {
         Row: {
+          active_users_7d: number | null
           content_id: string
+          date: string | null
           id: string
           metadata: Json | null
           metric_type: string
           timestamp: string
+          total_posts: number | null
+          total_subscribers: number | null
+          total_users: number | null
           user_id: string | null
           value: number
         }
         Insert: {
+          active_users_7d?: number | null
           content_id: string
+          date?: string | null
           id?: string
           metadata?: Json | null
           metric_type: string
           timestamp?: string
+          total_posts?: number | null
+          total_subscribers?: number | null
+          total_users?: number | null
           user_id?: string | null
           value?: number
         }
         Update: {
+          active_users_7d?: number | null
           content_id?: string
+          date?: string | null
           id?: string
           metadata?: Json | null
           metric_type?: string
           timestamp?: string
+          total_posts?: number | null
+          total_subscribers?: number | null
+          total_users?: number | null
           user_id?: string | null
           value?: number
         }
@@ -382,6 +397,56 @@ export type Database = {
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_likes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "admin_user_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "new_joiners_feed"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

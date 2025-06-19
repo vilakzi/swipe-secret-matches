@@ -1,296 +1,246 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Star, MapPin, Phone, MessageCircle, Heart, Share, Lock } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
-import OnlineStatus from '@/components/OnlineStatus';
-import { usePresence } from '@/hooks/usePresence';
-import { demoProfiles } from '@/data/demoProfiles';
-import ImageModal from '@/components/ui/ImageModal';
-import { useImageModal } from '@/hooks/useImageModal';
-import OptimizedImage from '@/components/ui/OptimizedImage';
-import { canViewProfile } from '@/utils/profileVisibility';
 
-interface UserData {
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { MapPin, Calendar, Heart, MessageCircle, Shield } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { RelationshipStatus } from '@/components/feed/types/feedTypes';
+
+interface UserProfile {
   id: string;
   display_name: string;
+  age: number;
   bio: string;
   location: string;
-  whatsapp: string;
   profile_image_url: string;
-  profile_images: string[];
-  age: number;
-  gender: string;
   interests: string[];
+  user_type: 'user' | 'service_provider';
+  created_at: string;
+  last_active: string;
+  verifications: {
+    emailVerified: boolean;
+    phoneVerified: boolean;
+    photoVerified: boolean;
+    locationVerified: boolean;
+    premiumUser: boolean;
+  };
+  privacy_settings: {
+    showContact: boolean;
+    showLastSeen: boolean;
+    showLocation: boolean;
+    profileVisibility: string;
+  };
+  relationship_status?: RelationshipStatus;
 }
-
-const getMockRelationshipStatus = (userId: string): RelationshipStatus => {
-  // TODO: Replace this with real follower/approval check in a real app!
-  // For demo: everyone is "not-followed" except userId === "approved-demo-id"
-  if (userId === "approved-demo-id") return "approved";
-  return "not-followed";
-};
 
 const UserProfile = () => {
   const { userId } = useParams<{ userId: string }>();
-  const navigate = useNavigate();
-  const { isUserOnline } = usePresence();
-  const [user, setUser] = useState<UserData | null>(null);
+  const { user: currentUser } = useAuth();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const { isOpen, imageSrc, imageAlt, openModal, closeModal } = useImageModal();
+  const [isLiked, setIsLiked] = useState(false);
 
   useEffect(() => {
     if (userId) {
-      fetchUserData();
+      fetchProfile();
+      checkIfLiked();
     }
   }, [userId]);
 
-  const fetchUserData = async () => {
+  const fetchProfile = async () => {
     try {
-      // First try to get from Supabase
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .maybeSingle();
+        .single();
 
-      if (data) {
-        setUser(data);
-      } else {
-        // If not found in Supabase, check demo profiles
-        const demoProfile = demoProfiles.find(profile => profile.id === userId);
-        if (demoProfile) {
-          setUser({
-            id: demoProfile.id,
-            display_name: demoProfile.name,
-            bio: demoProfile.bio,
-            location: demoProfile.location,
-            whatsapp: demoProfile.whatsapp,
-            profile_image_url: demoProfile.image,
-            profile_images: demoProfile.posts || [],
-            age: demoProfile.age,
-            gender: demoProfile.gender || '',
-            interests: []
-          });
-        } else {
-          throw new Error('User not found');
-        }
-      }
+      if (error) throw error;
+      
+      setProfile(data);
     } catch (error: any) {
-      console.error('Error loading profile:', error);
+      console.error('Error fetching profile:', error);
       toast({
-        title: "Error loading profile",
-        description: error.message,
-        variant: "destructive"
+        title: "Error",
+        description: "Failed to load profile",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleProfileImageClick = () => {
-    if (user?.profile_image_url) {
-      openModal(user.profile_image_url, `${user.display_name}'s profile photo`);
+  const checkIfLiked = async () => {
+    if (!currentUser || !userId) return;
+
+    try {
+      const { data } = await supabase
+        .from('swipes')
+        .select('liked')
+        .eq('user_id', currentUser.id)
+        .eq('target_user_id', userId)
+        .single();
+
+      setIsLiked(data?.liked || false);
+    } catch (error) {
+      // User hasn't swiped on this profile yet
+      setIsLiked(false);
     }
   };
 
-  const handleGalleryImageClick = (imageUrl: string, index: number) => {
-    openModal(imageUrl, `${user?.display_name}'s photo ${index + 2}`);
-  };
+  const handleLike = async () => {
+    if (!currentUser || !userId) return;
 
-  const handleContact = () => {
-    if (user?.whatsapp) {
-      const message = encodeURIComponent(`Hi ${user.display_name}! I saw your profile and would love to chat.`);
-      window.open(`https://wa.me/${user.whatsapp.replace(/[^0-9]/g, '')}?text=${message}`, '_blank');
+    try {
+      const { error } = await supabase
+        .from('swipes')
+        .upsert({
+          user_id: currentUser.id,
+          target_user_id: userId,
+          liked: !isLiked
+        });
+
+      if (error) throw error;
+
+      setIsLiked(!isLiked);
+      toast({
+        title: isLiked ? "Like removed" : "Profile liked!",
+        description: isLiked ? "You unliked this profile" : "Your like has been sent!",
+      });
+    } catch (error: any) {
+      console.error('Error updating like:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update like",
+        variant: "destructive",
+      });
     }
   };
-
-  const handleBack = () => {
-    navigate(-1);
-  };
-
-  // Determine if viewer is approved or not (placeholder logic)
-  const viewerRelationship = user?.id ? getMockRelationshipStatus(user.id) : "not-followed";
-  const profileVisibility = (user as any)?.privacy_settings?.profileVisibility || "public";
-  const profileIsViewable = canViewProfile(profileVisibility, viewerRelationship);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+        <div className="text-white">Loading profile...</div>
       </div>
     );
   }
 
-  if (!user) {
+  if (!profile) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center">
-        <div className="text-center text-white">
-          <h2 className="text-2xl font-bold mb-4">User not found</h2>
-          <Button onClick={handleBack} className="bg-purple-600 hover:bg-purple-700">
-            Go Back
-          </Button>
-        </div>
+        <div className="text-white">Profile not found</div>
       </div>
     );
   }
 
   return (
-    <>
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900">
-        {/* Header */}
-        <div className="sticky top-0 z-10 bg-black/80 backdrop-blur-md border-b border-gray-700">
-          <div className="flex items-center justify-between p-4 max-w-4xl mx-auto">
-            <Button
-              onClick={handleBack}
-              variant="ghost"
-              className="text-white hover:bg-white/10"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-            <h1 className="text-xl font-bold text-white">{user.display_name}</h1>
-            <div className="flex space-x-2">
-              <Button
-                onClick={handleContact}
-                size="sm"
-                className="bg-green-600 hover:bg-green-700"
-              >
-                <MessageCircle className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="sm" className="text-white">
-                <Share className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        <div className="max-w-4xl mx-auto p-4 pt-8">
-          {(!profileIsViewable) ? (
-            <div className="rounded-lg bg-gray-800/80 p-8 mb-8 text-center flex flex-col items-center">
-              <Lock className="w-12 h-12 text-yellow-400 mb-2" />
-              <h2 className="text-2xl font-bold text-white mb-2">This profile is private</h2>
-              <p className="text-gray-400">Only approved followers can see this user's profile information.</p>
-            </div>
-          ) : (
-            <>
-              {/* Profile Header */}
-              <Card className="bg-black/20 backdrop-blur-md border-gray-700 mb-6">
-                <CardContent className="p-6">
-                  <div className="flex items-start space-x-6">
-                    <div className="relative">
-                      <OptimizedImage
-                        src={user.profile_image_url || '/placeholder.svg'}
-                        alt={user.display_name}
-                        className="w-32 h-32 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={handleProfileImageClick}
-                        expandable
-                      />
-                      <OnlineStatus 
-                        isOnline={isUserOnline(user.id)} 
-                        size="lg"
-                        className="absolute -bottom-2 -right-2"
-                      />
-                    </div>
-                    
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <h1 className="text-3xl font-bold text-white">{user.display_name}</h1>
-                        {user.age && (
-                          <span className="text-2xl text-gray-300">{user.age}</span>
-                        )}
-                      </div>
-
-                      {user.gender && (
-                        <Badge className="bg-purple-600 text-white mb-3">
-                          {user.gender}
-                        </Badge>
-                      )}
-
-                      <div className="flex items-center text-gray-400 text-sm mb-4">
-                        <MapPin className="w-4 h-4 mr-1" />
-                        {user.location}
-                      </div>
-
-                      <div className="flex space-x-3">
-                        <Button
-                          onClick={handleContact}
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          <MessageCircle className="w-4 h-4 mr-2" />
-                          Contact
-                        </Button>
-                        <Button variant="outline" className="border-gray-600 text-white hover:bg-white/10">
-                          <Heart className="w-4 h-4 mr-2" />
-                          Like
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* About Section */}
-              <Card className="bg-black/20 backdrop-blur-md border-gray-700 mb-6">
-                <CardHeader>
-                  <CardTitle className="text-white">About</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-300 mb-4">{user.bio || 'No bio available.'}</p>
-                  
-                  {/* Interests */}
-                  {user.interests && user.interests.length > 0 && (
-                    <div>
-                      <h3 className="text-white font-semibold mb-3">Interests</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {user.interests.map((interest, index) => (
-                          <Badge key={index} variant="secondary" className="bg-purple-600/20 text-purple-300">
-                            {interest}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 p-4">
+      <div className="max-w-4xl mx-auto">
+        <Card className="bg-black/20 backdrop-blur-md border-gray-700">
+          <CardHeader>
+            <div className="flex items-start gap-6">
+              <img
+                src={profile.profile_image_url || '/placeholder.svg'}
+                alt={profile.display_name}
+                className="w-32 h-32 rounded-full object-cover border-4 border-purple-500"
+              />
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <CardTitle className="text-2xl text-white">{profile.display_name}</CardTitle>
+                  <Badge variant={profile.user_type === 'service_provider' ? 'default' : 'secondary'}>
+                    {profile.user_type === 'service_provider' ? 'Service Provider' : 'User'}
+                  </Badge>
+                  {profile.verifications?.photoVerified && (
+                    <Shield className="w-5 h-5 text-blue-500" />
                   )}
-                </CardContent>
-              </Card>
+                </div>
+                <p className="text-gray-300 mb-2">Age: {profile.age}</p>
+                {profile.privacy_settings?.showLocation && profile.location && (
+                  <div className="flex items-center gap-1 text-gray-300 mb-2">
+                    <MapPin className="w-4 h-4" />
+                    <span>{profile.location}</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-1 text-gray-300 mb-4">
+                  <Calendar className="w-4 h-4" />
+                  <span>Joined {new Date(profile.created_at).toLocaleDateString()}</span>
+                </div>
+                {currentUser && currentUser.id !== userId && (
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleLike}
+                      variant={isLiked ? "destructive" : "default"}
+                      className="flex items-center gap-2"
+                    >
+                      <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+                      {isLiked ? 'Unlike' : 'Like'}
+                    </Button>
+                    <Button variant="outline" className="text-white border-white/20">
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Message
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {profile.bio && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-white mb-2">About</h3>
+                <p className="text-gray-300">{profile.bio}</p>
+              </div>
+            )}
+            
+            {profile.interests && profile.interests.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-white mb-2">Interests</h3>
+                <div className="flex flex-wrap gap-2">
+                  {profile.interests.map((interest, index) => (
+                    <Badge key={index} variant="outline" className="text-gray-300 border-gray-600">
+                      {interest}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
 
-              {/* Photos */}
-              {user.profile_images && user.profile_images.length > 1 && (
-                <Card className="bg-black/20 backdrop-blur-md border-gray-700">
-                  <CardHeader>
-                    <CardTitle className="text-white">Photos</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                      {user.profile_images.slice(1).map((image, index) => (
-                        <OptimizedImage
-                          key={index}
-                          src={image}
-                          alt={`${user.display_name} ${index + 2}`}
-                          className="w-full aspect-square object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => handleGalleryImageClick(image, index)}
-                          expandable
-                        />
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-2">Verifications</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${profile.verifications?.emailVerified ? 'bg-green-500' : 'bg-gray-500'}`} />
+                    <span className="text-gray-300">Email Verified</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${profile.verifications?.phoneVerified ? 'bg-green-500' : 'bg-gray-500'}`} />
+                    <span className="text-gray-300">Phone Verified</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${profile.verifications?.photoVerified ? 'bg-green-500' : 'bg-gray-500'}`} />
+                    <span className="text-gray-300">Photo Verified</span>
+                  </div>
+                </div>
+              </div>
+              
+              {profile.privacy_settings?.showLastSeen && (
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-2">Activity</h3>
+                  <p className="text-gray-300">
+                    Last active: {new Date(profile.last_active).toLocaleDateString()}
+                  </p>
+                </div>
               )}
-            </>
-          )}
-        </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-
-      <ImageModal
-        isOpen={isOpen}
-        onClose={closeModal}
-        imageSrc={imageSrc}
-        imageAlt={imageAlt}
-      />
-    </>
+    </div>
   );
 };
 

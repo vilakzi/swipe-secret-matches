@@ -38,6 +38,7 @@ const FeedContent = ({
   // Enrich feed items with role/joinDate for easier checks
   const enrichedFeedItems = feedItems.map(item => ({
     ...item,
+    isAdminCard: false,
     profile: {
       ...item.profile,
       role: item.profile.role || item.profile.userType,

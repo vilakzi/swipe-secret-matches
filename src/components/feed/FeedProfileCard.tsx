@@ -11,8 +11,33 @@ interface FeedProfileCardProps {
   onContact: (profile: Profile) => void;
 }
 
+interface ProfileCardProps {
+  item: {
+    profile: {
+      userType: "user" | "service_provider";
+      [key: string]: any;
+    };
+    [key: string]: any;
+  };
+  likedItems: Set<string>;
+  isSubscribed: boolean;
+  onLike: (itemId: string, profileId: string) => void;
+  onContact: (profile: Profile) => void;
+}
+
 const FeedProfileCard = (props: FeedProfileCardProps) => {
-  return <ProfileCard {...props} />;
+  // Filter out admin/superadmin roles for ProfileCard compatibility
+  const filteredItem = {
+    ...props.item,
+    profile: {
+      ...props.item.profile,
+      userType: ['admin', 'superadmin'].includes(props.item.profile.userType) 
+        ? 'service_provider' as const 
+        : props.item.profile.userType as "user" | "service_provider"
+    }
+  };
+
+  return <ProfileCard {...props} item={filteredItem} />;
 };
 
 export default FeedProfileCard;

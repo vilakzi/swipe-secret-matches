@@ -10,7 +10,7 @@ import FeedPostCard from "./FeedPostCard";
 import { FeedItem, Profile } from "./types/feedTypes";
 
 interface NormalFeedListProps {
-  userFeed: FeedItem[];
+  userFeed: (FeedItem & { isAdminCard?: boolean; isWelcome?: boolean })[];
   likedItems: Set<string>;
   isSubscribed: boolean;
   onLike: (itemId: string, profileId: string) => void;

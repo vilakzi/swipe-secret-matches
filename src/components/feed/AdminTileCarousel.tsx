@@ -1,29 +1,23 @@
 
-import React, { useEffect, useRef, useState } from "react";
-import ContentProfileCard from "./ContentProfileCard";
-import PostCard from "./PostCard";
-import ProfileCard from "./ProfileCard";
-
-// Respect explicit type if you have one!
-type FeedItem = any; // Accepts adminFeed feed item with isAdminCard, isContent, etc.
+import React, { useState, useEffect } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import PostCard from './PostCard';
+import ProfileCard from './ProfileCard';
+import ContentProfileCard from './ContentProfileCard';
+import { FeedItem, Profile } from './types/feedTypes';
 
 interface AdminTileCarouselProps {
-  adminFeed: FeedItem[];
+  adminFeed: any[];
   likedItems: Set<string>;
   isSubscribed: boolean;
   onLike: (itemId: string, profileId: string) => void;
-  onContact: (profile: any) => void;
-  onContentLike: (itemId: string, profileId: string) => void;
-  onContentShare: (itemId: string) => void;
-  tilesToShow?: number; // How many tiles to display at once
-  rotationIntervalMs?: number; // ms per rotation
+  onContact: (profile: Profile) => void;
+  onContentLike: (contentId: string) => void;
+  onContentShare: (contentId: string) => void;
+  tilesToShow: number;
+  rotationIntervalMs: number;
 }
-
-// Utility to check for admin/superadmin
-const isAdminOrSuperAdmin = (item: FeedItem) =>
-  item?.profile?.role &&
-  (item.profile.role.toLowerCase() === "admin" ||
-    item.profile.role.toLowerCase() === "superadmin");
 
 const AdminTileCarousel: React.FC<AdminTileCarouselProps> = ({
   adminFeed,
@@ -36,117 +30,146 @@ const AdminTileCarousel: React.FC<AdminTileCarouselProps> = ({
   tilesToShow = 2,
   rotationIntervalMs = 5000,
 }) => {
-  // --- Filter ONLY admin/superadmin tiles from ALL time, and never deduplicate/remove
-  // Each admin/superadmin post or real content will always be unique by id
-  const adminTiles = adminFeed.filter(isAdminOrSuperAdmin);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
-  // Safety: sort by timestamp so latest admin posts come up first for extra dominance
-  adminTiles.sort((a, b) => {
-    // Try all possible timestamp properties
-    const tA =
-      a.timestamp ||
-      a.created_at ||
-      (a.profile && a.profile.created_at) ||
-      new Date(0);
-    const tB =
-      b.timestamp ||
-      b.created_at ||
-      (b.profile && b.profile.created_at) ||
-      new Date(0);
+  // Auto-rotation logic
+  useEffect(() => {
+    if (isPaused || adminFeed.length <= tilesToShow) return;
 
-    return new Date(tB).getTime() - new Date(tA).getTime();
-  });
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) => 
+        (prevIndex + tilesToShow) % adminFeed.length
+      );
+    }, rotationIntervalMs);
 
-  // Main persistent rotation queue ("permanent operator panel" for admin/superadmin)
-  const [startIndex, setStartIndex] = useState(0);
-  const feedLength = adminTiles.length;
-  const intervalRef = useRef<number | null>(null);
+    return () => clearInterval(interval);
+  }, [isPaused, adminFeed.length, tilesToShow, rotationIntervalMs]);
 
-  // Build visible rotating slice (never deduplicate; all admin/superadmin get their tile)
-  const visibleTiles = [];
-  for (let i = 0; i < Math.min(tilesToShow, feedLength); i++) {
-    visibleTiles.push(adminTiles[(startIndex + i) % feedLength]);
+  const goToPrevious = () => {
+    setCurrentIndex((prevIndex) => 
+      prevIndex === 0 
+        ? Math.max(0, adminFeed.length - tilesToShow)
+        : Math.max(0, prevIndex - tilesToShow)
+    );
+  };
+
+  const goToNext = () => {
+    setCurrentIndex((prevIndex) => 
+      (prevIndex + tilesToShow) % adminFeed.length
+    );
+  };
+
+  if (adminFeed.length === 0) {
+    return null;
   }
 
-  // Rotation logic: infinite loop, never discard
-  useEffect(() => {
-    if (feedLength <= tilesToShow) return; // No need to rotate if not enough tiles
-    intervalRef.current = window.setInterval(() => {
-      setStartIndex((prev) => (prev + 1) % feedLength);
-    }, rotationIntervalMs);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [feedLength, tilesToShow, rotationIntervalMs]);
-
-  if (!feedLength) return null;
+  const visibleItems = adminFeed.slice(currentIndex, currentIndex + tilesToShow);
+  const showNavigation = adminFeed.length > tilesToShow;
 
   return (
-    <div
-      className="flex gap-4 overflow-x-auto transition-all duration-700 animate-fade-in py-2"
-      style={{ borderRadius: 12 }}
-      role="region"
-      aria-label="Admin and superadmin posts"
+    <div 
+      className="relative bg-gradient-to-r from-purple-900/20 to-blue-900/20 rounded-lg p-4 mb-6"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
     >
-      {visibleTiles.map((item, idx) => {
-        // Unique tile per post (per spec). Add red border for admin/superadmin dominance.
-        const isAdminCard = isAdminOrSuperAdmin(item);
-
-        if (item.isContent) {
-          return (
-            <div
-              key={`admin-content-tile-${item.id}`}
-              className={`w-full min-w-0 max-w-md border-2 ${isAdminCard ? "border-red-600 bg-red-950/60" : ""} rounded-lg shadow-md`}
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold text-white">Featured Content</h2>
+        {showNavigation && (
+          <div className="flex space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={goToPrevious}
+              className="text-white border-white/20 hover:bg-white/10"
             >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={goToNext}
+              className="text-white border-white/20 hover:bg-white/10"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {visibleItems.map((item, index) => {
+          const key = `${item.id || item.profile?.id || 'unknown'}-${currentIndex + index}`;
+          
+          if (item.isContent) {
+            return (
               <ContentProfileCard
+                key={key}
                 item={item}
-                likedItems={likedItems}
                 onLike={onContentLike}
                 onShare={onContentShare}
-                isAdminCard
               />
-            </div>
-          );
-        }
-        if (item.type === "post") {
-          return (
-            <div
-              key={`admin-post-tile-${item.id}`}
-              className={`w-full min-w-0 max-w-md border-2 ${isAdminCard ? "border-red-600 bg-red-950/60" : ""} rounded-lg shadow-md`}
-            >
+            );
+          }
+          
+          if (item.type === 'post') {
+            return (
               <PostCard
+                key={key}
                 item={item}
                 likedItems={likedItems}
                 isSubscribed={isSubscribed}
                 onLike={onLike}
                 onContact={onContact}
-                isAdminCard={isAdminCard}
               />
-            </div>
-          );
-        }
-        if (item.type === "profile") {
-          return (
-            <div
-              key={`admin-profile-tile-${item.id}`}
-              className={`w-full min-w-0 max-w-md border-2 ${isAdminCard ? "border-red-600 bg-red-950/60" : ""} rounded-lg shadow-md`}
-            >
+            );
+          }
+          
+          if (item.type === 'profile') {
+            // Filter out admin/superadmin roles for ProfileCard compatibility
+            const filteredItem = {
+              ...item,
+              profile: {
+                ...item.profile,
+                userType: ['admin', 'superadmin'].includes(item.profile.userType) 
+                  ? 'service_provider' as const 
+                  : item.profile.userType as "user" | "service_provider"
+              }
+            };
+            
+            return (
               <ProfileCard
-                item={item}
+                key={key}
+                item={filteredItem}
                 likedItems={likedItems}
                 isSubscribed={isSubscribed}
                 onLike={onLike}
                 onContact={onContact}
-                isAdminCard={isAdminCard}
               />
-            </div>
-          );
-        }
-        return null;
-      })}
+            );
+          }
+          
+          return null;
+        })}
+      </div>
+
+      {showNavigation && (
+        <div className="flex justify-center mt-4 space-x-2">
+          {Array.from({ length: Math.ceil(adminFeed.length / tilesToShow) }).map((_, index) => (
+            <button
+              key={index}
+              className={`w-2 h-2 rounded-full transition-colors ${
+                Math.floor(currentIndex / tilesToShow) === index
+                  ? 'bg-white'
+                  : 'bg-white/30'
+              }`}
+              onClick={() => setCurrentIndex(index * tilesToShow)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
 
 export default AdminTileCarousel;
-
