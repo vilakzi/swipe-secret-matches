@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,17 +8,7 @@ import { usePresence } from '@/hooks/usePresence';
 import ProfileImage from '@/components/profile/ProfileImage';
 import ProfileInfo from '@/components/profile/ProfileInfo';
 import ActionButtons from '@/components/profile/ActionButtons';
-
-interface Profile {
-  id: number;
-  name: string;
-  age: number;
-  image: string;
-  bio: string;
-  whatsapp: string;
-  location: string;
-  liked?: boolean;
-}
+import { Profile } from '@/components/feed/types/feedTypes';
 
 interface ProfileCardProps {
   profile: Profile;
