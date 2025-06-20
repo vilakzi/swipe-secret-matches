@@ -1,13 +1,5 @@
 
-import { Profile } from '@/data/demoProfiles';
-
-export interface FeedItem {
-  id: string;
-  type: 'profile' | 'post';
-  profile: Profile;
-  postImage?: string;
-  caption?: string;
-}
+import { Profile, FeedItem } from '@/components/feed/types/feedTypes';
 
 // Fisher-Yates shuffle algorithm for randomizing array order
 export const shuffleArray = <T>(array: T[]): T[] => {

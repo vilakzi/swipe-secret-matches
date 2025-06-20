@@ -35,6 +35,15 @@ const FeedContent = ({
 
   const adminRoles = ["admin", "superadmin"];
 
+  // Create wrapper functions to match expected signatures
+  const handleContentLikeWrapper = async (contentId: string) => {
+    handleContentLike(contentId);
+  };
+
+  const handleContentShareWrapper = async (contentId: string) => {
+    handleContentShare(contentId);
+  };
+
   // Enrich feed items with role/joinDate for easier checks
   const enrichedFeedItems = feedItems.map(item => ({
     ...item,
@@ -102,8 +111,8 @@ const FeedContent = ({
           isSubscribed={isSubscribed}
           onLike={onLike}
           onContact={onContact}
-          onContentLike={handleContentLike}
-          onContentShare={handleContentShare}
+          onContentLike={handleContentLikeWrapper}
+          onContentShare={handleContentShareWrapper}
           tilesToShow={2}
           rotationIntervalMs={5000}
         />

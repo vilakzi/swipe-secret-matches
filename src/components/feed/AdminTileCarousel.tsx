@@ -106,6 +106,7 @@ const AdminTileCarousel: React.FC<AdminTileCarouselProps> = ({
               <ContentProfileCard
                 key={key}
                 item={item}
+                likedItems={likedItems}
                 onLike={onContentLike}
                 onShare={onContentShare}
               />

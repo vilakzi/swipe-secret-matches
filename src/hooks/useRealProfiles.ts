@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Profile } from '@/data/demoProfiles';
+import { Profile } from '@/components/feed/types/feedTypes';
 
 export const useRealProfiles = () => {
   const [realProfiles, setRealProfiles] = useState<Profile[]>([]);
@@ -35,7 +35,7 @@ export const useRealProfiles = () => {
             location: profile.location || 'Unknown location',
             gender: profile.gender as 'male' | 'female' || 'male',
             posts: profile.profile_images || [],
-            userType: profile.user_type as 'user' | 'service_provider' || 'user',
+            userType: (profile.user_type as 'user' | 'service_provider' | 'admin' | 'superadmin') || 'user',
             isRealAccount: true // Mark as real account
           }));
 

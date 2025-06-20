@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -61,7 +60,38 @@ const UserProfile = () => {
 
       if (error) throw error;
       
-      setProfile(data);
+      // Transform the data to match UserProfile interface
+      const transformedProfile: UserProfile = {
+        id: data.id,
+        display_name: data.display_name || 'Anonymous',
+        age: data.age || 25,
+        bio: data.bio || '',
+        location: data.location || '',
+        profile_image_url: data.profile_image_url || '',
+        interests: data.interests || [],
+        user_type: data.user_type || 'user',
+        created_at: data.created_at,
+        last_active: data.last_active,
+        verifications: typeof data.verifications === 'object' && data.verifications !== null 
+          ? data.verifications as any
+          : {
+              emailVerified: false,
+              phoneVerified: false,
+              photoVerified: false,
+              locationVerified: false,
+              premiumUser: false
+            },
+        privacy_settings: typeof data.privacy_settings === 'object' && data.privacy_settings !== null
+          ? data.privacy_settings as any
+          : {
+              showContact: false,
+              showLastSeen: true,
+              showLocation: true,
+              profileVisibility: 'public'
+            }
+      };
+      
+      setProfile(transformedProfile);
     } catch (error: any) {
       console.error('Error fetching profile:', error);
       toast({
