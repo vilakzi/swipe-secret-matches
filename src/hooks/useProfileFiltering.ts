@@ -2,7 +2,7 @@
 import { useMemo } from 'react';
 import { useUserRole } from './useUserRole';
 import { useAuth } from '@/contexts/AuthContext';
-import { Profile } from '@/data/demoProfiles';
+import { Profile } from '@/components/feed/types/feedTypes';
 
 export const useProfileFiltering = (allProfiles: Profile[]) => {
   const { role, isAdmin, isServiceProvider, isUser } = useUserRole();

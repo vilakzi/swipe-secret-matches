@@ -6,11 +6,9 @@ import { useRealProfiles } from './useRealProfiles';
 import { useNewJoiners } from './useNewJoiners';
 import { useFilteredFeedData } from './useFilteredFeedData';
 import { useFeedPagination } from './useFeedPagination';
-import { generateFeedItems, type FeedItem } from '@/utils/feedItemGenerator';
+import { generateFeedItems } from '@/utils/feedItemGenerator';
+import { FeedItem } from '@/components/feed/types/feedTypes';
 import { supabase } from '@/integrations/supabase/client';
-
-// You may need to import getAuth or the equivalent Supabase auth getter if not present
-// import { getAuth } from '...'
 
 export type { FeedItem };
 
@@ -170,4 +168,3 @@ function shuffleArray<T>(array: T[]): T[] {
   }
   return arr;
 }
-

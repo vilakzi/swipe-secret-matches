@@ -14,6 +14,13 @@ export interface Profile {
   liked?: boolean;
   posts?: string[];
   isRealAccount?: boolean;
+  // Provider-specific properties
+  serviceCategory?: string;
+  portfolio?: string[];
+  rating?: number;
+  reviewCount?: number;
+  isAvailable?: boolean;
+  services?: string[];
 }
 
 export interface FeedItem {

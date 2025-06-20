@@ -11,20 +11,6 @@ interface FeedProfileCardProps {
   onContact: (profile: Profile) => void;
 }
 
-interface ProfileCardProps {
-  item: {
-    profile: {
-      userType: "user" | "service_provider";
-      [key: string]: any;
-    };
-    [key: string]: any;
-  };
-  likedItems: Set<string>;
-  isSubscribed: boolean;
-  onLike: (itemId: string, profileId: string) => void;
-  onContact: (profile: Profile) => void;
-}
-
 const FeedProfileCard = (props: FeedProfileCardProps) => {
   // Filter out admin/superadmin roles for ProfileCard compatibility
   const filteredItem = {

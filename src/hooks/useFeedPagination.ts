@@ -1,6 +1,6 @@
 
 import { useState, useMemo, useCallback } from 'react';
-import { FeedItem } from '@/utils/feedItemGenerator';
+import { FeedItem } from '@/components/feed/types/feedTypes';
 
 export const useFeedPagination = (allFeedItems: FeedItem[], itemsPerPage: number) => {
   const [currentPage, setCurrentPage] = useState(1);

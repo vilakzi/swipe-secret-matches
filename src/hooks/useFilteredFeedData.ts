@@ -1,7 +1,7 @@
 
 import { useMemo } from 'react';
 import { useUserRole } from './useUserRole';
-import { Profile } from '@/data/demoProfiles';
+import { Profile } from '@/components/feed/types/feedTypes';
 
 export const useFilteredFeedData = (allProfiles: Profile[], newJoiners: any[], posts: any[]) => {
   const { role, isAdmin, isServiceProvider, isUser } = useUserRole();

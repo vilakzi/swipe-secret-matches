@@ -36,8 +36,8 @@ const FeedContent = ({
   const adminRoles = ["admin", "superadmin"];
 
   // Create wrapper functions to match expected signatures
-  const handleContentLikeWrapper = async (contentId: string) => {
-    handleContentLike(contentId);
+  const handleContentLikeWrapper = async (contentId: string, profileId: string) => {
+    handleContentLike(contentId, profileId);
   };
 
   const handleContentShareWrapper = async (contentId: string) => {

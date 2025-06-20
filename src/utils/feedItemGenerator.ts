@@ -50,3 +50,6 @@ export const generateFeedItems = (profiles: Profile[], shuffleKey: number): Feed
   console.log('Total feed items created from real accounts:', items.length);
   return items;
 };
+
+// Re-export types for convenience
+export type { FeedItem, Profile } from '@/components/feed/types/feedTypes';

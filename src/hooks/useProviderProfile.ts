@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { demoProfiles } from '@/data/demoProfiles';
 import { toast } from '@/hooks/use-toast';
 import { ProviderData, ProviderPost } from '@/types/provider';
 
@@ -48,26 +47,7 @@ export function useProviderProfile(providerId?: string) {
           isAvailable: Math.random() > 0.3,
         });
       } else {
-        // Demo fallback
-        const demoProvider = demoProfiles.find(profile => profile.id === providerId);
-        if (demoProvider) {
-          setProvider({
-            id: demoProvider.id,
-            display_name: demoProvider.name,
-            bio: demoProvider.bio,
-            location: demoProvider.location,
-            whatsapp: demoProvider.whatsapp,
-            profile_image_url: demoProvider.image,
-            profile_images: demoProvider.portfolio || [demoProvider.image],
-            serviceCategory: demoProvider.serviceCategory,
-            services: demoProvider.services,
-            rating: demoProvider.rating,
-            reviewCount: demoProvider.reviewCount,
-            isAvailable: demoProvider.isAvailable
-          });
-        } else {
-          throw new Error('Provider not found');
-        }
+        throw new Error('Provider not found');
       }
     } catch (error: any) {
       setError(error instanceof Error ? error : new Error(String(error)));
@@ -91,23 +71,7 @@ export function useProviderProfile(providerId?: string) {
 
       if (error) throw error;
       
-      if (!data || data.length === 0) {
-        const demoProvider = demoProfiles.find(profile => profile.id === providerId);
-        if (demoProvider && demoProvider.posts) {
-          const demoPosts: ProviderPost[] = demoProvider.posts.map((postUrl: string, index: number) => ({
-            id: `demo-post-${demoProvider.id}-${index}`,
-            content_url: postUrl,
-            post_type: 'image',
-            created_at: new Date().toISOString(),
-            promotion_type: 'free_2h'
-          }));
-          setPosts(demoPosts);
-        } else {
-          setPosts([]);
-        }
-      } else {
-        setPosts(data || []);
-      }
+      setPosts(data || []);
     } catch (error: any) {
       setPosts([]);
       setError(error instanceof Error ? error : new Error(String(error)));

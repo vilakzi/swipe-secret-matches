@@ -13,7 +13,7 @@ interface AdminTileCarouselProps {
   isSubscribed: boolean;
   onLike: (itemId: string, profileId: string) => void;
   onContact: (profile: Profile) => void;
-  onContentLike: (contentId: string) => void;
+  onContentLike: (contentId: string, profileId: string) => void;
   onContentShare: (contentId: string) => void;
   tilesToShow: number;
   rotationIntervalMs: number;
@@ -107,7 +107,7 @@ const AdminTileCarousel: React.FC<AdminTileCarouselProps> = ({
                 key={key}
                 item={item}
                 likedItems={likedItems}
-                onLike={onContentLike}
+                onLike={(contentId: string) => onContentLike(contentId, item.profile?.id || '')}
                 onShare={onContentShare}
               />
             );
