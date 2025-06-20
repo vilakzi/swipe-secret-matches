@@ -1,3 +1,4 @@
+
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Heart, MessageCircle, Lock, BadgeCheck } from 'lucide-react';
@@ -8,35 +9,7 @@ import OptimizedImage from '@/components/ui/OptimizedImage';
 import ImageModal from '@/components/ui/ImageModal';
 import { useImageModal } from '@/hooks/useImageModal';
 import NewJoinerBadge from './NewJoinerBadge';
-
-interface Profile {
-  id: string;
-  name: string;
-  age: number;
-  image: string;
-  bio: string;
-  whatsapp: string;
-  location: string;
-  gender?: 'male' | 'female';
-  userType?: 'user' | 'service_provider';
-  serviceCategory?: string;
-  portfolio?: string[];
-  rating?: number;
-  reviewCount?: number;
-  isAvailable?: boolean;
-  services?: string[];
-  liked?: boolean;
-  posts?: string[];
-  isRealAccount?: boolean;
-}
-
-interface FeedItem {
-  id: string;
-  type: 'profile' | 'post';
-  profile: Profile;
-  postImage?: string;
-  caption?: string;
-}
+import { Profile, FeedItem } from './types/feedTypes';
 
 interface ProfileCardProps {
   item: FeedItem;
