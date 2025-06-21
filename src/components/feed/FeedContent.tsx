@@ -1,7 +1,6 @@
 
 import React from 'react';
 import AdminTileCarousel from './AdminTileCarousel';
-import AutoRotatingFeed from './AutoRotatingFeed';
 import { useAuth } from '@/contexts/AuthContext';
 import { useContentFeed } from '@/hooks/useContentFeed';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -10,6 +9,7 @@ import { isValidMedia } from '@/utils/feed/mediaUtils';
 import { isProfileImageChanged } from '@/utils/feed/profileUtils';
 import { isNewJoiner } from '@/utils/feed/joinerUtils';
 import { FeedItem, Profile } from './types/feedTypes';
+import NormalFeedList from './NormalFeedList';
 
 interface FeedContentProps {
   feedItems: FeedItem[];
@@ -81,7 +81,7 @@ const FeedContent = ({
     }))
   ];
 
-  // All feed items combined for auto-rotation
+  // All feed items combined for normal display
   const allFeedItems = [
     ...contentAsRegularFeed,
     ...enrichedFeedItems.filter(item => {
@@ -115,7 +115,7 @@ const FeedContent = ({
         />
       )}
       
-      <AutoRotatingFeed
+      <NormalFeedList
         feedItems={allFeedItems}
         likedItems={likedItems}
         isSubscribed={isSubscribed}
@@ -123,8 +123,6 @@ const FeedContent = ({
         onContact={onContact}
         onContentLike={handleContentLikeWrapper}
         onContentShare={handleContentShareWrapper}
-        itemsPerView={4}
-        showControls={true}
       />
     </div>
   );
