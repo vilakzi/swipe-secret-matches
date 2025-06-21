@@ -65,13 +65,14 @@ export const useFeedData = (itemsPerPage: number = 8) => {
         return;
       }
 
-      // Enhanced post processing for better rotation
+      // Enhanced post processing for better prioritization
       const processedPosts = (postsData || []).map(post => ({
         ...post,
         // Add priority flag for admin posts
         isAdminPost: ['admin', 'superadmin'].includes(post.profiles?.role?.toLowerCase() || ''),
-        // Add rotation weight
-        rotationWeight: ['admin', 'superadmin'].includes(post.profiles?.role?.toLowerCase() || '') ? 3 : 1
+        // Add priority weight for super admin posts
+        priorityWeight: post.profiles?.role?.toLowerCase() === 'superadmin' ? 5 : 
+                      post.profiles?.role?.toLowerCase() === 'admin' ? 3 : 1
       }));
 
       setPosts(processedPosts);
@@ -95,7 +96,7 @@ export const useFeedData = (itemsPerPage: number = 8) => {
   // All profiles are used; no further filtering
   const filteredProfiles = roleFilteredProfiles;
 
-  // Create all feed items with enhanced admin prioritization
+  // Create all feed items with enhanced super admin prioritization
   const allFeedItems = useMemo(() => {
     const profileItems = generateFeedItems(filteredProfiles, shuffleKey);
 
@@ -119,7 +120,7 @@ export const useFeedData = (itemsPerPage: number = 8) => {
       postImage: post.content_url,
       caption: post.caption,
       isAdminPost: post.isAdminPost,
-      rotationWeight: post.rotationWeight
+      priorityWeight: post.priorityWeight
     }));
 
     // Separate user posts
@@ -133,25 +134,27 @@ export const useFeedData = (itemsPerPage: number = 8) => {
       otherPostItems = postItems;
     }
 
-    // Enhanced shuffling with admin post prioritization
+    // Enhanced shuffling with super admin post prioritization
     const combinedItems = [...otherPostItems, ...profileItems];
     
-    // Create weighted array for better admin distribution
-    const weightedItems: FeedItem[] = [];
+    // Create prioritized array where super admin posts appear more frequently
+    const prioritizedItems: FeedItem[] = [];
     combinedItems.forEach(item => {
-      const weight = (item as any).rotationWeight || 
-                    (['admin', 'superadmin'].includes(item.profile.role?.toLowerCase() || '') ? 2 : 1);
+      const weight = (item as any).priorityWeight || 
+                    (item.profile.role?.toLowerCase() === 'superadmin' ? 5 : 
+                     item.profile.role?.toLowerCase() === 'admin' ? 3 : 1);
       
+      // Add multiple copies based on priority weight
       for (let i = 0; i < weight; i++) {
-        weightedItems.push(item);
+        prioritizedItems.push(item);
       }
     });
 
-    const shuffledWeighted = shuffleArray(weightedItems);
+    const shuffledPrioritized = shuffleArray(prioritizedItems);
     
     return myPostItems.length > 0
-      ? [...myPostItems, ...shuffledWeighted]
-      : shuffledWeighted;
+      ? [...myPostItems, ...shuffledPrioritized]
+      : shuffledPrioritized;
   }, [filteredProfiles, posts, shuffleKey, user?.id]);
 
   // Handle pagination with increased default
@@ -165,9 +168,9 @@ export const useFeedData = (itemsPerPage: number = 8) => {
 
   const isLoadingMore = paginationLoading || profilesLoading || newJoinersLoading;
 
-  // Enhanced refresh with rotation consideration
+  // Enhanced refresh with super admin prioritization
   const handleRefresh = useCallback(() => {
-    console.log('Refreshing feed with rotation support');
+    console.log('Refreshing feed with super admin prioritization');
     resetPagination();
     fetchPosts();
     setShuffleKey(prev => prev + 1);
