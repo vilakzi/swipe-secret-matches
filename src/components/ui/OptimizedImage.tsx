@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -27,6 +28,7 @@ const OptimizedImage = ({
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [isInView, setIsInView] = useState(false);
+  const [aspectRatio, setAspectRatio] = useState<string>('auto');
   const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
@@ -48,7 +50,19 @@ const OptimizedImage = ({
     return () => observer.disconnect();
   }, [src, fallback]);
 
-  const handleLoad = () => {
+  const handleLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    const ratio = img.naturalWidth / img.naturalHeight;
+    
+    // Determine best fit for container
+    if (ratio > 1.5) {
+      setAspectRatio('16/9'); // Wide images
+    } else if (ratio < 0.8) {
+      setAspectRatio('9/16'); // Tall images
+    } else {
+      setAspectRatio('1/1'); // Square-ish images
+    }
+    
     setIsLoading(false);
     onLoad?.();
   };
@@ -71,7 +85,7 @@ const OptimizedImage = ({
       className={`relative overflow-hidden ${className} ${expandable || onClick ? 'cursor-pointer' : ''}`} 
       ref={imgRef}
       onClick={handleClick}
-      style={{ border: '2px dashed #ff00ff' }} // debug border to make image box visible
+      style={{ aspectRatio }}
     >
       {isLoading && (
         <Skeleton className="absolute inset-0 bg-gray-700" />
@@ -81,13 +95,12 @@ const OptimizedImage = ({
         <img
           src={hasError ? fallback : src}
           alt={alt}
-          className={`w-full h-full object-cover transition-opacity duration-300 ${
+          className={`w-full h-full object-contain transition-opacity duration-300 ${
             isLoading ? 'opacity-0' : 'opacity-100'
           } ${expandable || onClick ? 'hover:scale-105 transition-transform duration-200' : ''}`}
           onLoad={handleLoad}
           onError={handleError}
           loading={loading}
-          style={{ border: '1px solid #00ff00' }} // extra image border for debug
         />
       )}
     </div>

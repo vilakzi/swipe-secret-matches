@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { Play, Pause } from 'lucide-react';
+import { Play, Pause, Maximize, Minimize } from 'lucide-react';
 
 interface PostVideoPlayerProps {
   src: string;
@@ -11,7 +11,9 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
   const [videoError, setVideoError] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showControls, setShowControls] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   console.log("[PostVideoPlayer] src:", src);
 
@@ -30,12 +32,49 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
     handlePlay();
   };
 
+  const handleFullscreen = async () => {
+    if (!containerRef.current) return;
+
+    try {
+      if (!isFullscreen) {
+        if (containerRef.current.requestFullscreen) {
+          await containerRef.current.requestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        }
+      }
+    } catch (error) {
+      console.error('Fullscreen error:', error);
+    }
+  };
+
+  // Listen for fullscreen changes
+  React.useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
   return (
-    <div className="relative w-full h-72 bg-black rounded-lg overflow-hidden">
+    <div 
+      ref={containerRef}
+      className={`relative w-full bg-black rounded-lg overflow-hidden ${
+        isFullscreen ? 'h-screen flex items-center justify-center' : 'h-72'
+      }`}
+    >
       <video
         ref={videoRef}
         src={src}
-        className="w-full h-full object-cover cursor-pointer"
+        className={`cursor-pointer ${
+          isFullscreen 
+            ? 'max-w-full max-h-full object-contain' 
+            : 'w-full h-full object-cover'
+        }`}
         poster={posterUrl}
         preload="metadata"
         playsInline
@@ -102,6 +141,18 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
               <Play className="w-5 h-5" />
             )}
             <span className="text-sm">{isPlaying ? 'Pause' : 'Play'}</span>
+          </button>
+          
+          <button
+            onClick={handleFullscreen}
+            className="flex items-center space-x-2 hover:text-gray-300"
+          >
+            {isFullscreen ? (
+              <Minimize className="w-5 h-5" />
+            ) : (
+              <Maximize className="w-5 h-5" />
+            )}
+            <span className="text-sm">{isFullscreen ? 'Exit' : 'Fullscreen'}</span>
           </button>
         </div>
       </div>
