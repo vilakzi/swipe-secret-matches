@@ -1,18 +1,8 @@
 
 import { EnhancedAdminContent } from '@/hooks/useEnhancedAdminContent';
+import { Profile } from '@/components/feed/types/feedTypes';
 
-export interface ContentProfile {
-  id: string;
-  name: string;
-  age: number;
-  image: string;
-  bio: string;
-  whatsapp: string;
-  location: string;
-  gender?: 'male' | 'female';
-  userType?: 'user' | 'service_provider';
-  isRealAccount?: boolean;
-  posts?: string[];
+export interface ContentProfile extends Profile {
   contentType?: 'image' | 'video';
   timestamp?: string;
   likes?: number;
@@ -42,12 +32,15 @@ export interface ContentFeedItem {
 export const generateContentProfileCard = (adminContent: EnhancedAdminContent): ContentFeedItem => {
   const contentProfile: ContentProfile = {
     id: `content-${adminContent.id}`,
-    name: "Content",
+    name: "Official Content",
     age: 0, // Not applicable for content profiles
     image: "/placeholder.svg", // Default content logo - could be customized per category
     bio: adminContent.description || "Official content",
     whatsapp: "", // Not applicable
     location: "Official",
+    gender: "male", // Default value to satisfy required type
+    userType: "admin", // Set as admin type for content
+    role: "admin", // Set role as admin
     isRealAccount: true, // Always verified for admin content
     posts: [adminContent.file_url],
     contentType: adminContent.content_type as 'image' | 'video',

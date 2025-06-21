@@ -54,12 +54,23 @@ const FeedContent = ({
     }
   }));
 
+  // Convert content feed items to FeedItem type compatible format
+  const contentAsRegularFeed = contentFeedItems.filter(
+    c => !!c && !!c.id && isValidMedia(c.postImage)
+  ).map(item => ({
+    ...item,
+    isContent: true,
+    isAdminCard: true,
+    // Ensure the profile matches FeedItem's Profile type
+    profile: {
+      ...item.profile,
+      userType: item.profile.userType as "user" | "service_provider" | "admin" | "superadmin"
+    }
+  } as FeedItem & { isContent: true; isAdminCard: true }));
+
   // Admin carousel: posts from admin/superadmin, and published content feed
   const adminFeed = [
-    ...(contentFeedItems.filter(
-      c => !!c && !!c.id && isValidMedia(c.postImage)
-    )
-      .map(item => ({ ...item, isContent: true, isAdminCard: true }))),
+    ...contentAsRegularFeed,
     ...enrichedFeedItems.filter(item =>
       adminRoles.includes(String(item.profile.role).toLowerCase()) &&
       ((item.type === 'post' && isValidMedia(item.postImage)) ||
@@ -72,9 +83,7 @@ const FeedContent = ({
 
   // All feed items combined for auto-rotation
   const allFeedItems = [
-    ...(contentFeedItems.filter(
-      c => !!c && !!c.id && isValidMedia(c.postImage)
-    ).map(item => ({ ...item, isContent: true }))),
+    ...contentAsRegularFeed,
     ...enrichedFeedItems.filter(item => {
       const hasMedia = (item.profile.posts && item.profile.posts.some(isValidMedia)) || 
                       (item.type === 'post' && isValidMedia(item.postImage));
