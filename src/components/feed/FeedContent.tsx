@@ -1,4 +1,3 @@
-
 import React from 'react';
 import AdminTileCarousel from './AdminTileCarousel';
 import { useAuth } from '@/contexts/AuthContext';
@@ -116,7 +115,7 @@ const FeedContent = ({
       )}
       
       <NormalFeedList
-        feedItems={allFeedItems}
+        userFeed={allFeedItems}
         likedItems={likedItems}
         isSubscribed={isSubscribed}
         onLike={onLike}
