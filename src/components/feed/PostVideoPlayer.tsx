@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Play, Pause, Maximize, Minimize } from 'lucide-react';
 
 interface PostVideoPlayerProps {
@@ -12,19 +12,26 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
   const [isPlaying, setIsPlaying] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isBuffering, setIsBuffering] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   console.log("[PostVideoPlayer] src:", src);
 
-  const handlePlay = () => {
+  const handlePlay = async () => {
     if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
+      try {
+        if (isPlaying) {
+          videoRef.current.pause();
+        } else {
+          setIsBuffering(true);
+          await videoRef.current.play();
+        }
+      } catch (error) {
+        console.error('[PostVideoPlayer] Play error:', error);
+        setVideoError('Failed to play video');
       }
-      setIsPlaying(!isPlaying);
     }
   };
 
@@ -51,7 +58,7 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
   };
 
   // Listen for fullscreen changes
-  React.useEffect(() => {
+  useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
     };
@@ -73,22 +80,41 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
         className={`cursor-pointer ${
           isFullscreen 
             ? 'max-w-full max-h-full object-contain' 
-            : 'w-full h-full object-cover'
+            : 'w-full h-full object-contain'
         }`}
         poster={posterUrl}
-        preload="metadata"
+        preload="auto"
         playsInline
+        webkit-playsinline="true"
         onError={(e) => {
           setVideoError('Failed to load video. Please check the file format and URL.');
+          setIsLoading(false);
+          setIsBuffering(false);
           console.error('[PostVideoPlayer] Video failed to load:', src, e);
+        }}
+        onLoadStart={() => {
+          setIsLoading(true);
+          setVideoError(null);
+          console.log('[PostVideoPlayer] Video loading started:', src);
+        }}
+        onLoadedData={() => {
+          setIsLoading(false);
+          console.log('[PostVideoPlayer] Video data loaded:', src);
         }}
         onCanPlay={() => {
           setVideoError(null);
+          setIsLoading(false);
+          setIsBuffering(false);
           console.log('[PostVideoPlayer] Video can be played:', src);
+        }}
+        onCanPlayThrough={() => {
+          setIsBuffering(false);
+          console.log('[PostVideoPlayer] Video can play through:', src);
         }}
         onPlay={() => {
           setIsPlaying(true);
           setShowControls(false);
+          setIsBuffering(false);
         }}
         onPause={() => {
           setIsPlaying(false);
@@ -97,6 +123,21 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
         onEnded={() => {
           setIsPlaying(false);
           setShowControls(true);
+        }}
+        onWaiting={() => {
+          setIsBuffering(true);
+          console.log('[PostVideoPlayer] Video is buffering:', src);
+        }}
+        onPlaying={() => {
+          setIsBuffering(false);
+          console.log('[PostVideoPlayer] Video is playing:', src);
+        }}
+        onStalled={() => {
+          setIsBuffering(true);
+          console.log('[PostVideoPlayer] Video stalled:', src);
+        }}
+        onSuspend={() => {
+          console.log('[PostVideoPlayer] Video suspended:', src);
         }}
         onClick={handleVideoClick}
         controls={false}
@@ -112,12 +153,20 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
           </div>
         </div>
       )}
+
+      {/* Loading indicator */}
+      {(isLoading || isBuffering) && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-10">
+          <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
       
-      {showControls && !videoError && (
+      {showControls && !videoError && !isLoading && (
         <div className="absolute inset-0 flex items-center justify-center">
           <button
             onClick={handlePlay}
             className="bg-black/50 rounded-full p-4 hover:bg-black/70 transition-colors"
+            disabled={isBuffering}
           >
             {isPlaying ? (
               <Pause className="w-12 h-12 text-white" />
@@ -134,13 +183,16 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
           <button
             onClick={handlePlay}
             className="flex items-center space-x-2 hover:text-gray-300"
+            disabled={isBuffering || isLoading}
           >
             {isPlaying ? (
               <Pause className="w-5 h-5" />
             ) : (
               <Play className="w-5 h-5" />
             )}
-            <span className="text-sm">{isPlaying ? 'Pause' : 'Play'}</span>
+            <span className="text-sm">
+              {isBuffering ? 'Buffering...' : isPlaying ? 'Pause' : 'Play'}
+            </span>
           </button>
           
           <button
