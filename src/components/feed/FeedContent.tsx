@@ -1,9 +1,8 @@
 
 import React from 'react';
 import AdminTileCarousel from './AdminTileCarousel';
-import NormalFeedList from './NormalFeedList';
+import AutoRotatingFeed from './AutoRotatingFeed';
 import { useAuth } from '@/contexts/AuthContext';
-import ContentProfileCard from './ContentProfileCard';
 import { useContentFeed } from '@/hooks/useContentFeed';
 import { useUserRole } from '@/hooks/useUserRole';
 // Utility imports
@@ -71,39 +70,28 @@ const FeedContent = ({
     }))
   ];
 
-  // Normal users: include valid posts, profile image updates, or new joiners (60 min)
-  const normalFeed = enrichedFeedItems.filter(item => {
-    if (adminRoles.includes(String(item.profile.role).toLowerCase())) return false;
-    const hasMedia = (item.profile.posts && item.profile.posts.some(isValidMedia)) || (item.type === 'post' && isValidMedia(item.postImage));
-    const imgChanged = isProfileImageChanged(item.profile.image);
-
-    if (hasMedia || imgChanged) return true;
-    if (isNewJoiner(item.profile.joinDate)) return true;
-    return false;
-  }).map(item => ({
-    ...item,
-    isAdminCard: false,
-    isWelcome: isNewJoiner(item.profile.joinDate) && (!item.profile.posts || item.profile.posts.length === 0) && !isProfileImageChanged(item.profile.image)
-  }));
-
-  // Compose combined feed, preserve original chunk design (2 admin : 1 user)
-  const combinedFeed: any[] = [];
-  let ai = 0, ui = 0;
-  const adminChunk = 2;
-  const userChunk = 1;
-  while (ai < adminFeed.length || ui < normalFeed.length) {
-    for (let a = 0; a < adminChunk && ai < adminFeed.length; a++) {
-      combinedFeed.push(adminFeed[ai++]);
-    }
-    for (let u = 0; u < userChunk && ui < normalFeed.length; u++) {
-      combinedFeed.push(normalFeed[ui++]);
-    }
-  }
-  while (ai < adminFeed.length) combinedFeed.push(adminFeed[ai++]);
-  while (ui < normalFeed.length) combinedFeed.push(normalFeed[ui++]);
+  // All feed items combined for auto-rotation
+  const allFeedItems = [
+    ...(contentFeedItems.filter(
+      c => !!c && !!c.id && isValidMedia(c.postImage)
+    ).map(item => ({ ...item, isContent: true }))),
+    ...enrichedFeedItems.filter(item => {
+      const hasMedia = (item.profile.posts && item.profile.posts.some(isValidMedia)) || 
+                      (item.type === 'post' && isValidMedia(item.postImage));
+      const imgChanged = isProfileImageChanged(item.profile.image);
+      const newJoiner = isNewJoiner(item.profile.joinDate);
+      
+      return hasMedia || imgChanged || newJoiner;
+    }).map(item => ({
+      ...item,
+      isWelcome: isNewJoiner(item.profile.joinDate) && 
+                 (!item.profile.posts || item.profile.posts.length === 0) && 
+                 !isProfileImageChanged(item.profile.image)
+    }))
+  ];
 
   return (
-    <div className="space-y-4 px-4 pb-6" role="list" aria-label="Social feed items">
+    <div className="space-y-6 px-4 pb-6" role="list" aria-label="Social feed items">
       {adminFeed.length > 0 && (
         <AdminTileCarousel
           adminFeed={adminFeed}
@@ -117,12 +105,17 @@ const FeedContent = ({
           rotationIntervalMs={5000}
         />
       )}
-      <NormalFeedList
-        userFeed={combinedFeed}
+      
+      <AutoRotatingFeed
+        feedItems={allFeedItems}
         likedItems={likedItems}
         isSubscribed={isSubscribed}
         onLike={onLike}
         onContact={onContact}
+        onContentLike={handleContentLikeWrapper}
+        onContentShare={handleContentShareWrapper}
+        itemsPerView={4}
+        showControls={true}
       />
     </div>
   );

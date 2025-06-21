@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export type { FeedItem };
 
-export const useFeedData = (itemsPerPage: number = 6) => {
+export const useFeedData = (itemsPerPage: number = 8) => {
   // ---- User detection must be at the top of the hook, before any other hooks ---- //
   const { user } = useAuth() || {};
 
@@ -52,7 +52,8 @@ export const useFeedData = (itemsPerPage: number = 6) => {
             age,
             bio,
             whatsapp,
-            gender
+            gender,
+            role
           )
         `)
         .gt('expires_at', new Date().toISOString())
@@ -64,7 +65,16 @@ export const useFeedData = (itemsPerPage: number = 6) => {
         return;
       }
 
-      setPosts(postsData || []);
+      // Enhanced post processing for better rotation
+      const processedPosts = (postsData || []).map(post => ({
+        ...post,
+        // Add priority flag for admin posts
+        isAdminPost: ['admin', 'superadmin'].includes(post.profiles?.role?.toLowerCase() || ''),
+        // Add rotation weight
+        rotationWeight: ['admin', 'superadmin'].includes(post.profiles?.role?.toLowerCase() || '') ? 3 : 1
+      }));
+
+      setPosts(processedPosts);
     } catch (error) {
       console.error('Error in fetchPosts:', error);
     }
@@ -85,11 +95,11 @@ export const useFeedData = (itemsPerPage: number = 6) => {
   // All profiles are used; no further filtering
   const filteredProfiles = roleFilteredProfiles;
 
-  // Create all feed items (including posts)
+  // Create all feed items with enhanced admin prioritization
   const allFeedItems = useMemo(() => {
     const profileItems = generateFeedItems(filteredProfiles, shuffleKey);
 
-    // Convert posts to feed items
+    // Convert posts to feed items with admin prioritization
     const postItems: FeedItem[] = posts.map(post => ({
       id: `post-${post.id}`,
       type: 'post' as const,
@@ -103,35 +113,48 @@ export const useFeedData = (itemsPerPage: number = 6) => {
         location: post.profiles?.location || 'Unknown',
         gender: post.profiles?.gender as 'male' | 'female' || 'male',
         userType: post.profiles?.user_type as 'user' | 'service_provider' || 'user',
+        role: post.profiles?.role || post.profiles?.user_type,
         isRealAccount: true
       },
       postImage: post.content_url,
-      caption: post.caption
+      caption: post.caption,
+      isAdminPost: post.isAdminPost,
+      rotationWeight: post.rotationWeight
     }));
 
-    // Separate out posts belonging to currently logged-in user
+    // Separate user posts
     let myPostItems: FeedItem[] = [];
     let otherPostItems: FeedItem[] = [];
     
-    if (user) {
-      if (user.id) {
-        myPostItems = postItems.filter(item => item.profile.id === user.id);
-        otherPostItems = postItems.filter(item => item.profile.id !== user.id);
-      } else {
-        otherPostItems = postItems;
-      }
-
-      // Sort: your posts first, then mix in others and profile items
-      return myPostItems.length > 0
-        ? [...myPostItems, ...shuffleArray([...otherPostItems, ...profileItems])]
-        : [...postItems, ...profileItems].sort(() => Math.random() - 0.5);
+    if (user?.id) {
+      myPostItems = postItems.filter(item => item.profile.id === user.id);
+      otherPostItems = postItems.filter(item => item.profile.id !== user.id);
     } else {
-      // No user: just mix everything (should not occur with the above guard, but fallback)
-      return [...postItems, ...profileItems].sort(() => Math.random() - 0.5);
+      otherPostItems = postItems;
     }
+
+    // Enhanced shuffling with admin post prioritization
+    const combinedItems = [...otherPostItems, ...profileItems];
+    
+    // Create weighted array for better admin distribution
+    const weightedItems: FeedItem[] = [];
+    combinedItems.forEach(item => {
+      const weight = (item as any).rotationWeight || 
+                    (['admin', 'superadmin'].includes(item.profile.role?.toLowerCase() || '') ? 2 : 1);
+      
+      for (let i = 0; i < weight; i++) {
+        weightedItems.push(item);
+      }
+    });
+
+    const shuffledWeighted = shuffleArray(weightedItems);
+    
+    return myPostItems.length > 0
+      ? [...myPostItems, ...shuffledWeighted]
+      : shuffledWeighted;
   }, [filteredProfiles, posts, shuffleKey, user?.id]);
 
-  // Handle pagination
+  // Handle pagination with increased default
   const {
     displayedItems,
     hasMoreItems,
@@ -142,9 +165,9 @@ export const useFeedData = (itemsPerPage: number = 6) => {
 
   const isLoadingMore = paginationLoading || profilesLoading || newJoinersLoading;
 
-  // Unified, only refresh-related handler
+  // Enhanced refresh with rotation consideration
   const handleRefresh = useCallback(() => {
-    console.log('Refreshing feed');
+    console.log('Refreshing feed with rotation support');
     resetPagination();
     fetchPosts();
     setShuffleKey(prev => prev + 1);
@@ -159,7 +182,7 @@ export const useFeedData = (itemsPerPage: number = 6) => {
   };
 };
 
-// --- Utility --- //
+// Enhanced shuffle with better distribution
 function shuffleArray<T>(array: T[]): T[] {
   const arr = [...array];
   for (let i = arr.length - 1; i > 0; i--) {
