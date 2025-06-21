@@ -49,16 +49,28 @@ const ImageModal = ({ isOpen, onClose, imageSrc, imageAlt }: ImageModalProps) =>
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
         ref={containerRef}
-        className={`max-w-[95vw] w-full ${isFullscreen ? 'h-screen max-h-screen' : 'h-[90vh] max-h-[90vh]'} bg-black/95 border-gray-700 p-2`}
+        className={`max-w-[95vw] w-fit ${
+          isFullscreen 
+            ? 'h-screen max-h-screen max-w-screen' 
+            : 'h-[90vh] max-h-[90vh]'
+        } bg-black/95 border-gray-700 p-4 flex items-center justify-center`}
       >
         <div className="relative w-full h-full flex items-center justify-center">
           <img
             src={imageSrc}
             alt={imageAlt}
-            className="max-w-full max-h-full object-contain"
+            className={`${
+              isFullscreen 
+                ? 'max-w-full max-h-full object-contain' 
+                : 'max-w-[85vw] max-h-[80vh] object-contain'
+            }`}
+            style={{
+              width: 'auto',
+              height: 'auto'
+            }}
           />
           
-          <div className="absolute top-4 right-4 flex space-x-2">
+          <div className="absolute top-4 right-4 flex space-x-2 z-10">
             <button
               onClick={handleFullscreen}
               className="bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
