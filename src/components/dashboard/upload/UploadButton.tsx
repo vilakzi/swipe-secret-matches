@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Upload, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Upload, CheckCircle, AlertTriangle, Wifi, WifiOff } from 'lucide-react';
 import { useUserRole } from "@/hooks/useUserRole";
 import { getMaxUploadSize } from "@/utils/getMaxUploadSize";
 
@@ -24,6 +24,7 @@ function UploadButton({
 }: UploadButtonProps) {
   const { role } = useUserRole();
   const maxSize = getMaxUploadSize(role);
+  const isOnline = navigator.onLine;
 
   function getPromotionPrice(type: string) {
     switch (type) {
@@ -36,12 +37,24 @@ function UploadButton({
     }
   }
 
-  const isReady = selectedFile && !uploading && !validationError && !isValidating;
-  const isDisabled = !selectedFile || uploading || !!validationError || isValidating;
+  const isReady = selectedFile && !uploading && !validationError && !isValidating && isOnline;
+  const isDisabled = !selectedFile || uploading || !!validationError || isValidating || !isOnline;
 
   return (
     <div className="space-y-3">
-      {selectedFile && !uploading && !validationError && !isValidating && (
+      {/* Network Status Warning */}
+      {!isOnline && (
+        <div className="bg-red-900/20 border border-red-600/30 rounded-lg p-3">
+          <div className="flex items-center space-x-2">
+            <WifiOff className="w-4 h-4 text-red-400" />
+            <span className="text-red-400 text-sm font-medium">
+              No internet connection - Upload unavailable
+            </span>
+          </div>
+        </div>
+      )}
+
+      {selectedFile && !uploading && !validationError && !isValidating && isOnline && (
         <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-3">
           <div className="flex items-center space-x-2">
             <CheckCircle className="w-4 h-4 text-green-400" />
@@ -49,6 +62,11 @@ function UploadButton({
               Ready to upload: {selectedFile.name}
             </span>
           </div>
+          {selectedFile.size > 10 * 1024 * 1024 && (
+            <div className="mt-2 text-yellow-400 text-xs">
+              Large file detected - upload may take longer on mobile
+            </div>
+          )}
         </div>
       )}
 
@@ -83,7 +101,12 @@ function UploadButton({
             : 'bg-gray-600 hover:bg-gray-700 text-gray-300 cursor-not-allowed'
         }`}
       >
-        {uploading ? (
+        {!isOnline ? (
+          <div className="flex items-center space-x-2">
+            <WifiOff className="w-4 h-4" />
+            <span>No Connection</span>
+          </div>
+        ) : uploading ? (
           <div className="flex items-center space-x-2">
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
             <span>Uploading...</span>
@@ -111,9 +134,21 @@ function UploadButton({
         )}
       </Button>
       
-      <p className="text-center text-gray-400 text-xs">
-        Max file size: {Math.round(maxSize / (1024*1024))}MB ({role})
-      </p>
+      <div className="flex items-center justify-between">
+        <p className="text-center text-gray-400 text-xs">
+          Max file size: {Math.round(maxSize / (1024*1024))}MB ({role})
+        </p>
+        <div className="flex items-center space-x-1">
+          {isOnline ? (
+            <Wifi className="w-3 h-3 text-green-400" />
+          ) : (
+            <WifiOff className="w-3 h-3 text-red-400" />
+          )}
+          <span className="text-xs text-gray-400">
+            {isOnline ? 'Online' : 'Offline'}
+          </span>
+        </div>
+      </div>
       
       {!selectedFile && (
         <p className="text-center text-gray-400 text-xs">
@@ -124,6 +159,12 @@ function UploadButton({
       {validationError && (
         <p className="text-center text-red-400 text-xs">
           Please select a different file
+        </p>
+      )}
+
+      {!isOnline && (
+        <p className="text-center text-red-400 text-xs">
+          Internet connection required for uploads
         </p>
       )}
     </div>

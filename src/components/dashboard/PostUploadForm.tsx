@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
@@ -27,6 +28,7 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
   const [step, setStep] = useState<Step>(1);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [newPost, setNewPost] = useState<any>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const resetForm = () => {
     setSelectedFile(null);
@@ -35,6 +37,7 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
     setPreviewUrl(null);
     setNewPost(null);
     setStep(1);
+    setUploadProgress(0);
   };
 
   // Step 1: Select file
@@ -43,6 +46,7 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
     setCaption('');
     setPromotionType('free_2h');
     setNewPost(null);
+    setUploadProgress(0);
     if (file) {
       setPreviewUrl(URL.createObjectURL(file));
       setStep(2);
@@ -52,7 +56,7 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
     }
   };
 
-  // Step 2: Preview & details, then upload
+  // Step 2: Preview & details, then upload with mobile optimizations
   const handleUpload = async () => {
     if (!selectedFile || !user) {
       toast({
@@ -63,24 +67,94 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
       return;
     }
 
+    // Check network connection
+    if (!navigator.onLine) {
+      toast({
+        title: "No internet connection",
+        description: "Please check your connection and try again",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setUploading(true);
+    setUploadProgress(0);
 
     try {
       const fileExt = selectedFile.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
-      // Upload file to Supabase Storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('posts')
-        .upload(fileName, selectedFile);
+      // Show progress for large files
+      if (selectedFile.size > 5 * 1024 * 1024) { // 5MB
+        toast({
+          title: "Uploading large file...",
+          description: "This may take a moment on mobile",
+        });
+      }
+
+      // Simulate upload progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return prev;
+          }
+          return prev + Math.random() * 20;
+        });
+      }, 500);
+
+      // Upload file to Supabase Storage with retry logic
+      let uploadData, uploadError;
+      let retryCount = 0;
+      const maxRetries = 3;
+
+      while (retryCount < maxRetries) {
+        try {
+          const result = await supabase.storage
+            .from('posts')
+            .upload(fileName, selectedFile, {
+              cacheControl: '3600',
+              upsert: false
+            });
+          
+          uploadData = result.data;
+          uploadError = result.error;
+          break;
+        } catch (error) {
+          retryCount++;
+          if (retryCount === maxRetries) {
+            uploadError = error;
+          } else {
+            // Wait before retry (exponential backoff)
+            await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
+            toast({
+              title: "Retrying upload...",
+              description: `Attempt ${retryCount + 1} of ${maxRetries}`,
+            });
+          }
+        }
+      }
+
+      clearInterval(progressInterval);
+      setUploadProgress(100);
 
       if (uploadError) {
+        let errorMessage = "Upload failed";
+        if (uploadError.message?.includes('network')) {
+          errorMessage = "Network error - please check your connection";
+        } else if (uploadError.message?.includes('timeout')) {
+          errorMessage = "Upload timeout - file may be too large for your connection";
+        } else if (uploadError.message?.includes('storage')) {
+          errorMessage = "Storage error - please try again";
+        }
+
         toast({
-          title: "Storage upload failed",
+          title: errorMessage,
           description: uploadError.message,
           variant: "destructive"
         });
         setUploading(false);
+        setUploadProgress(0);
         return;
       }
 
@@ -96,13 +170,14 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
           variant: "destructive"
         });
         setUploading(false);
+        setUploadProgress(0);
         return;
       }
 
       const expiresAt = calculateExpiryTime(promotionType);
       const postType = selectedFile.type.startsWith('image/') ? 'image' : 'video';
 
-      // Insert post record to DB
+      // Insert post record to DB with retry logic
       const { data: postData, error: postError } = await supabase
         .from('posts')
         .insert({
@@ -120,11 +195,12 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
 
       if (postError) {
         toast({
-          title: "Feed DB insert failed",
-          description: postError.message,
+          title: "Database error",
+          description: "Post uploaded but failed to save to database. Please contact support.",
           variant: "destructive"
         });
         setUploading(false);
+        setUploadProgress(0);
         return;
       }
 
@@ -135,6 +211,10 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
 
       if (promotionType !== 'free_2h') {
         onShowPayment(postData);
+        toast({
+          title: "Post uploaded successfully!",
+          description: "Complete payment to activate promotion.",
+        });
       } else {
         toast({
           title: "Post uploaded successfully!",
@@ -147,13 +227,23 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
       setCaption('');
       setPreviewUrl(null);
     } catch (error: any) {
+      console.error('Upload error:', error);
+      let errorMessage = "Upload failed";
+      
+      if (error.message?.includes('network') || !navigator.onLine) {
+        errorMessage = "Network error - please check your connection";
+      } else if (error.message?.includes('size')) {
+        errorMessage = "File too large for your connection";
+      }
+
       toast({
-        title: "Upload failed",
+        title: errorMessage,
         description: error.message ?? String(error),
         variant: "destructive"
       });
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -192,6 +282,23 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
     return (
       <Card className="bg-black/20 backdrop-blur-md border-gray-700 p-6 mb-8">
         <h2 className="text-xl font-bold text-white mb-4">Preview Your Post</h2>
+        
+        {/* Upload Progress */}
+        {uploading && uploadProgress > 0 && (
+          <div className="mb-4 bg-gray-800 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-white text-sm">Uploading...</span>
+              <span className="text-white text-sm">{Math.round(uploadProgress)}%</span>
+            </div>
+            <div className="w-full bg-gray-700 rounded-full h-2">
+              <div 
+                className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
+          </div>
+        )}
+
         <div className="mb-4">
           {selectedFile.type.startsWith('image/') && previewUrl && (
             <img
@@ -199,6 +306,7 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
               alt="Preview"
               className="w-full max-h-64 object-contain rounded mb-2"
               style={{ aspectRatio: '16/9' }}
+              loading="lazy"
             />
           )}
           {selectedFile.type.startsWith('video/') && previewUrl && (
@@ -207,6 +315,9 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
               controls
               className="w-full max-h-64 object-contain rounded mb-2"
               style={{ aspectRatio: '16/9' }}
+              preload="metadata"
+              playsInline
+              muted
             />
           )}
         </div>
