@@ -20,54 +20,91 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
   const [showPoster, setShowPoster] = useState(true);
   const [posterLoaded, setPosterLoaded] = useState(false);
   const [generatedPoster, setGeneratedPoster] = useState<string | null>(null);
+  const [previewGenerated, setPreviewGenerated] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   console.log("[PostVideoPlayer] src:", src, "posterUrl:", posterUrl);
 
-  // Generate video frame preview
+  // Generate video frame preview with improved CORS handling
   const generateVideoPreview = async () => {
-    if (!videoRef.current || !canvasRef.current) return;
+    if (!videoRef.current || previewGenerated) return;
 
     try {
       const video = videoRef.current;
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
       
-      if (!ctx) return;
-
       // Wait for video metadata to load
       if (video.readyState >= 1) {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        // Create a canvas for preview generation
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
         
-        // Seek to 10% of video duration for a good preview frame
-        const seekTime = video.duration * 0.1;
-        video.currentTime = seekTime;
+        if (!ctx) return;
+
+        // Set canvas dimensions
+        canvas.width = video.videoWidth || 480;
+        canvas.height = video.videoHeight || 320;
         
-        // Wait for seek to complete
-        await new Promise((resolve) => {
-          video.addEventListener('seeked', resolve, { once: true });
-        });
-        
-        // Draw frame to canvas
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        // Convert to data URL
-        const dataURL = canvas.toDataURL('image/jpeg', 0.8);
-        setGeneratedPoster(dataURL);
-        
-        // Reset video time
-        video.currentTime = 0;
+        // Create a promise to handle the seeked event
+        const seekToPreviewFrame = () => {
+          return new Promise<void>((resolve, reject) => {
+            const timeout = setTimeout(() => {
+              reject(new Error('Seek timeout'));
+            }, 5000);
+
+            const onSeeked = () => {
+              clearTimeout(timeout);
+              video.removeEventListener('seeked', onSeeked);
+              resolve();
+            };
+
+            video.addEventListener('seeked', onSeeked);
+            
+            // Seek to 10% of video duration for a good preview frame
+            const seekTime = Math.min(video.duration * 0.1, 5); // Max 5 seconds
+            video.currentTime = seekTime;
+          });
+        };
+
+        try {
+          await seekToPreviewFrame();
+          
+          // Draw frame to canvas with CORS handling
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          
+          // Convert to data URL with error handling
+          const dataURL = canvas.toDataURL('image/jpeg', 0.7);
+          setGeneratedPoster(dataURL);
+          setPreviewGenerated(true);
+          
+          // Reset video time
+          video.currentTime = 0;
+          
+          console.log('[PostVideoPlayer] Video preview generated successfully');
+        } catch (drawError) {
+          console.warn('[PostVideoPlayer] Could not generate preview due to CORS restrictions');
+          setPreviewGenerated(true); // Mark as attempted to avoid retries
+        }
       }
     } catch (error) {
-      console.error('Error generating video preview:', error);
+      console.warn('[PostVideoPlayer] Preview generation failed:', error);
+      setPreviewGenerated(true); // Mark as attempted to avoid retries
     }
   };
 
-  // Get effective poster URL - prioritize provided poster, then generated preview
-  const effectivePosterUrl = posterUrl || generatedPoster || src.replace(/\.(mp4|mov|webm|avi|mkv)$/i, '.jpg');
+  // Get effective poster URL with better fallback strategy
+  const getEffectivePosterUrl = () => {
+    // Priority: provided poster > generated preview > no poster (show video)
+    if (posterUrl && posterUrl !== 'undefined') {
+      return posterUrl;
+    }
+    if (generatedPoster) {
+      return generatedPoster;
+    }
+    return null; // No poster available, will show video directly
+  };
+
+  const effectivePosterUrl = getEffectivePosterUrl();
 
   const handlePlay = async () => {
     if (videoRef.current) {
@@ -126,18 +163,18 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
         isFullscreen ? 'h-screen flex items-center justify-center' : 'h-72'
       }`}
     >
-      {/* Hidden canvas for generating video previews */}
-      <canvas ref={canvasRef} className="hidden" />
-      
-      <VideoPoster
-        posterUrl={effectivePosterUrl}
-        isFullscreen={isFullscreen}
-        showPoster={showPoster}
-        onVideoClick={handleVideoClick}
-        onPosterLoad={() => setPosterLoaded(true)}
-      />
+      {/* Show poster only if we have a valid poster URL and poster should be shown */}
+      {effectivePosterUrl && showPoster && (
+        <VideoPoster
+          posterUrl={effectivePosterUrl}
+          isFullscreen={isFullscreen}
+          showPoster={showPoster}
+          onVideoClick={handleVideoClick}
+          onPosterLoad={() => setPosterLoaded(true)}
+        />
+      )}
 
-      {/* Video element - hidden when poster is shown */}
+      {/* Video element */}
       <video
         ref={videoRef}
         src={src}
@@ -145,15 +182,16 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
           isFullscreen 
             ? 'max-w-full max-h-full object-contain' 
             : 'w-full h-full object-cover'
-        } ${showPoster ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        } ${(effectivePosterUrl && showPoster) ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
         preload="metadata"
         playsInline
         webkit-playsinline="true"
+        crossOrigin="anonymous"
         onError={(e) => {
           setVideoError('Failed to load video. Please check the file format and URL.');
           setIsLoading(false);
           setIsBuffering(false);
-          setShowPoster(true);
+          setShowPoster(false); // Show video element even if there's an error
           console.error('[PostVideoPlayer] Video failed to load:', src, e);
         }}
         onLoadStart={() => {
@@ -164,7 +202,7 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
         onLoadedMetadata={() => {
           console.log('[PostVideoPlayer] Video metadata loaded:', src);
           // Generate preview frame when metadata is loaded
-          if (!posterUrl) {
+          if (!posterUrl || posterUrl === 'undefined') {
             generateVideoPreview();
           }
         }}
@@ -195,7 +233,7 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
         onEnded={() => {
           setIsPlaying(false);
           setShowControls(true);
-          setShowPoster(true);
+          setShowPoster(!!effectivePosterUrl);
         }}
         onWaiting={() => {
           setIsBuffering(true);
@@ -222,7 +260,7 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
       <VideoLoadingIndicator 
         isLoading={isLoading} 
         isBuffering={isBuffering} 
-        showPoster={showPoster} 
+        showPoster={showPoster && !!effectivePosterUrl}
       />
       <VideoControls
         isPlaying={isPlaying}
@@ -230,7 +268,7 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
         isLoading={isLoading}
         isFullscreen={isFullscreen}
         showControls={showControls}
-        showPoster={showPoster}
+        showPoster={showPoster && !!effectivePosterUrl}
         videoError={videoError}
         onPlay={handlePlay}
         onFullscreen={handleFullscreen}

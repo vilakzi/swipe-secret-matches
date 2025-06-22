@@ -17,7 +17,7 @@ const VideoPoster: React.FC<VideoPosterProps> = ({
   onVideoClick,
   onPosterLoad,
 }) => {
-  if (!showPoster) return null;
+  if (!showPoster || !posterUrl) return null;
 
   return (
     <div 
@@ -27,12 +27,15 @@ const VideoPoster: React.FC<VideoPosterProps> = ({
       <img
         src={posterUrl}
         alt="Video preview"
-        className={`w-full h-full object-cover ${
+        className={`w-full h-full ${
           isFullscreen ? 'object-contain' : 'object-cover'
         }`}
-        onLoad={onPosterLoad}
+        onLoad={() => {
+          console.log('Video poster loaded successfully');
+          onPosterLoad();
+        }}
         onError={(e) => {
-          console.log('Video poster failed to load');
+          console.log('Video poster failed to load:', posterUrl);
           // Hide the poster if it fails to load, showing the video element instead
           e.currentTarget.style.display = 'none';
         }}
@@ -43,7 +46,7 @@ const VideoPoster: React.FC<VideoPosterProps> = ({
           <Play className="w-12 h-12 text-white ml-1" />
         </div>
       </div>
-      {/* Video duration or info overlay if available */}
+      {/* Video indicator */}
       <div className="absolute bottom-4 right-4 bg-black/60 text-white text-sm px-2 py-1 rounded">
         Video
       </div>
