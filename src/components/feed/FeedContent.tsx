@@ -1,3 +1,4 @@
+
 import React from 'react';
 import AdminTileCarousel from './AdminTileCarousel';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,14 +21,14 @@ interface FeedContentProps {
 }
 
 const FeedContent = ({
-  feedItems,
+  feedItems = [], // Default to empty array
   likedItems,
   isSubscribed,
   onLike,
   onContact,
   onRefresh
 }: FeedContentProps) => {
-  const { contentFeedItems, handleContentLike, handleContentShare } = useContentFeed();
+  const { contentFeedItems = [], handleContentLike, handleContentShare } = useContentFeed();
   const { user } = useAuth();
   const { role } = useUserRole();
 
@@ -35,15 +36,19 @@ const FeedContent = ({
 
   // Create wrapper functions to match expected signatures
   const handleContentLikeWrapper = async (contentId: string, profileId: string) => {
-    handleContentLike(contentId, profileId);
+    if (handleContentLike) {
+      handleContentLike(contentId, profileId);
+    }
   };
 
   const handleContentShareWrapper = async (contentId: string) => {
-    handleContentShare(contentId);
+    if (handleContentShare) {
+      handleContentShare(contentId);
+    }
   };
 
-  // Enrich feed items with role/joinDate for easier checks
-  const enrichedFeedItems = feedItems.map(item => ({
+  // Safely enrich feed items with role/joinDate for easier checks
+  const enrichedFeedItems = Array.isArray(feedItems) ? feedItems.map(item => ({
     ...item,
     isAdminCard: false,
     profile: {
@@ -51,21 +56,21 @@ const FeedContent = ({
       role: item.profile.role || item.profile.userType,
       joinDate: item.profile.joinDate
     }
-  }));
+  })) : [];
 
   // Convert content feed items to FeedItem type compatible format
-  const contentAsRegularFeed = contentFeedItems.filter(
-    c => !!c && !!c.id && isValidMedia(c.postImage)
-  ).map(item => ({
-    ...item,
-    isContent: true,
-    isAdminCard: true,
-    // Ensure the profile matches FeedItem's Profile type
-    profile: {
-      ...item.profile,
-      userType: item.profile.userType as "user" | "service_provider" | "admin" | "superadmin"
-    }
-  } as FeedItem & { isContent: true; isAdminCard: true }));
+  const contentAsRegularFeed = Array.isArray(contentFeedItems) 
+    ? contentFeedItems.filter(c => !!c && !!c.id && isValidMedia(c.postImage)).map(item => ({
+        ...item,
+        isContent: true,
+        isAdminCard: true,
+        // Ensure the profile matches FeedItem's Profile type
+        profile: {
+          ...item.profile,
+          userType: item.profile.userType || "admin" as "user" | "service_provider" | "admin" | "superadmin"
+        }
+      } as FeedItem & { isContent: true; isAdminCard: true }))
+    : [];
 
   // Admin carousel: posts from admin/superadmin, and published content feed
   const adminFeed = [
