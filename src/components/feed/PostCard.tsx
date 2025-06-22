@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { usePresence } from "@/hooks/usePresence";
 import { useNavigate } from "react-router-dom";
@@ -10,6 +11,7 @@ import PostCardHeader from "./PostCardHeader";
 import PostCardActions from "./PostCardActions";
 import PostCardCaption from "./PostCardCaption";
 import PostComments from "./PostComments";
+import { isVideo } from "@/utils/feed/mediaUtils";
 
 interface Profile {
   id: string;
@@ -77,10 +79,14 @@ const PostCard = ({
     openModal(item.postImage || "", `${item.profile.name}'s post`);
   };
 
-  const isVideo =
-    item.postImage?.includes(".mp4") ||
-    item.postImage?.includes(".mov") ||
-    item.postImage?.includes(".webm");
+  const isVideoPost = item.postImage && isVideo(item.postImage);
+
+  // Generate poster URL for videos
+  const generatePosterUrl = (videoUrl: string) => {
+    // Try common poster patterns
+    const posterUrl = videoUrl.replace(/\.(mp4|mov|webm|avi|mkv)$/i, '.jpg');
+    return posterUrl !== videoUrl ? posterUrl : undefined;
+  };
 
   return (
     <>
@@ -94,10 +100,10 @@ const PostCard = ({
         />
         {/* Post Content */}
         <div className="relative">
-          {isVideo && item.postImage ? (
+          {isVideoPost && item.postImage ? (
             <PostVideoPlayer
               src={item.postImage}
-              posterUrl={item.postImage.replace(/\.(mp4|mov|webm)$/, ".jpg")}
+              posterUrl={generatePosterUrl(item.postImage)}
             />
           ) : (
             item.postImage && (
