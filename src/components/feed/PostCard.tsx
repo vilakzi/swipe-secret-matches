@@ -106,10 +106,13 @@ const PostCard = ({
 
     setIsDeleting(true);
     try {
+      // Remove "post-" prefix if it exists to get the actual UUID
+      const actualPostId = item.id.startsWith('post-') ? item.id.replace('post-', '') : item.id;
+      
       const { error } = await supabase
         .from('posts')
         .delete()
-        .eq('id', item.id)
+        .eq('id', actualPostId)
         .eq('provider_id', user.id); // Double check user owns the post
 
       if (error) {
