@@ -1,7 +1,8 @@
+
 import React, { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { X, Image, Video, CheckCircle } from 'lucide-react';
+import { X, Image, Video, CheckCircle, AlertTriangle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useUserRole } from "@/hooks/useUserRole";
 import { getMaxUploadSize } from "@/utils/getMaxUploadSize";
@@ -16,18 +17,88 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
   const maxSize = getMaxUploadSize(role);
 
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   useEffect(() => {
     if (selectedFile) {
       const url = URL.createObjectURL(selectedFile);
       setPreviewUrl(url);
+      
+      // Validate video files
+      if (selectedFile.type.startsWith('video/')) {
+        validateVideoFile(selectedFile);
+      }
+      
       return () => {
         URL.revokeObjectURL(url);
       };
     } else {
       setPreviewUrl(null);
+      setValidationError(null);
     }
   }, [selectedFile]);
+
+  const validateVideoFile = async (file: File) => {
+    setIsValidating(true);
+    setValidationError(null);
+
+    try {
+      const video = document.createElement('video');
+      const url = URL.createObjectURL(file);
+      
+      await new Promise((resolve, reject) => {
+        video.onloadedmetadata = () => {
+          // Check if video has valid dimensions and duration
+          if (video.videoWidth === 0 || video.videoHeight === 0) {
+            reject(new Error('Invalid video file: No video track found'));
+            return;
+          }
+          
+          if (video.duration === 0 || isNaN(video.duration)) {
+            reject(new Error('Invalid video file: No valid duration'));
+            return;
+          }
+
+          // Check reasonable video duration (max 10 minutes)
+          if (video.duration > 600) {
+            reject(new Error('Video too long: Maximum duration is 10 minutes'));
+            return;
+          }
+
+          resolve(void 0);
+        };
+        
+        video.onerror = () => {
+          reject(new Error('Invalid video file: Cannot decode video'));
+        };
+        
+        video.onabort = () => {
+          reject(new Error('Video validation aborted'));
+        };
+
+        // Set timeout for validation
+        setTimeout(() => {
+          reject(new Error('Video validation timeout'));
+        }, 10000);
+        
+        video.src = url;
+        video.load();
+      });
+
+      URL.revokeObjectURL(url);
+    } catch (error: any) {
+      console.error('Video validation failed:', error);
+      setValidationError(error.message);
+      toast({
+        title: "Invalid video file",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsValidating(false);
+    }
+  };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -55,14 +126,15 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
 
       onFileChange(file);
       toast({
-        title: "File ready for upload",
-        description: `${file.name} is ready to be uploaded.`,
+        title: "File ready for validation",
+        description: `${file.name} is being validated...`,
       });
     }
   };
 
   const removeFile = () => {
     onFileChange(null);
+    setValidationError(null);
     toast({
       title: "File removed",
       description: "Please select another file to upload.",
@@ -76,6 +148,8 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
+
+  const isFileReady = selectedFile && !isValidating && !validationError;
 
   return (
     <div className="space-y-4">
@@ -111,10 +185,27 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
                   <p className="text-gray-400 text-sm">
                     {formatFileSize(selectedFile.size)} • {selectedFile.type.startsWith('image/') ? 'Image' : 'Video'}
                   </p>
-                  <div className="flex items-center mt-2">
-                    <CheckCircle className="w-4 h-4 text-green-400 mr-2" />
-                    <span className="text-green-400 text-sm font-medium">Ready for upload</span>
-                  </div>
+                  
+                  {isValidating && (
+                    <div className="flex items-center mt-2">
+                      <div className="w-4 h-4 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin mr-2"></div>
+                      <span className="text-yellow-400 text-sm font-medium">Validating...</span>
+                    </div>
+                  )}
+                  
+                  {validationError && (
+                    <div className="flex items-center mt-2">
+                      <AlertTriangle className="w-4 h-4 text-red-400 mr-2" />
+                      <span className="text-red-400 text-sm font-medium">Validation failed</span>
+                    </div>
+                  )}
+                  
+                  {isFileReady && (
+                    <div className="flex items-center mt-2">
+                      <CheckCircle className="w-4 h-4 text-green-400 mr-2" />
+                      <span className="text-green-400 text-sm font-medium">Ready for upload</span>
+                    </div>
+                  )}
                 </div>
               </div>
               <Button
@@ -126,8 +217,15 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
                 <X className="w-4 h-4" />
               </Button>
             </div>
+            
+            {validationError && (
+              <div className="mt-3 p-3 bg-red-900/20 border border-red-600/30 rounded text-red-400 text-sm">
+                {validationError}
+              </div>
+            )}
+            
             {/* Image or video preview */}
-            {selectedFile.type.startsWith('image/') && previewUrl && (
+            {selectedFile.type.startsWith('image/') && previewUrl && !validationError && (
               <div className="mt-3 rounded-lg overflow-hidden">
                 <img
                   src={previewUrl}
@@ -137,7 +235,7 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
                 />
               </div>
             )}
-            {selectedFile.type.startsWith('video/') && previewUrl && (
+            {selectedFile.type.startsWith('video/') && previewUrl && !validationError && !isValidating && (
               <div className="mt-3 rounded-lg overflow-hidden">
                 <video
                   src={previewUrl}
@@ -151,12 +249,22 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
           </div>
         )}
       </div>
-      {selectedFile && (
+      {isFileReady && (
         <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-3">
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
             <span className="text-green-400 text-sm font-medium">
               File is ready! Click "Submit & Upload Post" to continue.
+            </span>
+          </div>
+        </div>
+      )}
+      {validationError && (
+        <div className="bg-red-900/20 border border-red-600/30 rounded-lg p-3">
+          <div className="flex items-center space-x-2">
+            <AlertTriangle className="w-4 h-4 text-red-400" />
+            <span className="text-red-400 text-sm font-medium">
+              Please select a different file. This file cannot be uploaded.
             </span>
           </div>
         </div>
