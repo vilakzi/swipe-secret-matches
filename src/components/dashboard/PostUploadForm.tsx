@@ -56,96 +56,81 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
     }
   };
 
-  // Step 2: Preview & details, then upload with mobile optimizations
+  // Enhanced mobile upload with better error handling
   const handleUpload = async () => {
     if (!selectedFile || !user) {
       toast({
-        title: "No file or user",
-        description: "Please select a file and try again.",
+        title: "Missing requirements",
+        description: "Please select a file and ensure you're logged in.",
         variant: "destructive"
       });
       return;
     }
 
-    // Check network connection
+    // Enhanced network check for mobile
     if (!navigator.onLine) {
       toast({
         title: "No internet connection",
-        description: "Please check your connection and try again",
+        description: "Please check your mobile data or WiFi connection",
         variant: "destructive"
       });
       return;
     }
 
     setUploading(true);
-    setUploadProgress(0);
+    setUploadProgress(5);
 
     try {
-      const fileExt = selectedFile.name.split('.').pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      const fileExt = selectedFile.name.split('.').pop()?.toLowerCase();
+      const timestamp = Date.now();
+      const fileName = `${user.id}/${timestamp}.${fileExt}`;
 
-      // Show progress for large files
-      if (selectedFile.size > 5 * 1024 * 1024) { // 5MB
+      console.log(`Starting upload: ${fileName}, size: ${selectedFile.size} bytes`);
+
+      // Mobile-specific file size check
+      if (selectedFile.size > 50 * 1024 * 1024) { // 50MB limit for mobile
         toast({
-          title: "Uploading large file...",
-          description: "This may take a moment on mobile",
+          title: "File too large for mobile",
+          description: "Please select a file smaller than 50MB",
+          variant: "destructive"
         });
+        setUploading(false);
+        return;
       }
 
-      // Simulate upload progress
+      // Progress simulation for user feedback
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => {
-          if (prev >= 90) {
+          if (prev >= 85) {
             clearInterval(progressInterval);
             return prev;
           }
-          return prev + Math.random() * 20;
+          return prev + Math.random() * 15;
         });
-      }, 500);
+      }, 1000);
 
-      // Upload file to Supabase Storage with retry logic
-      let uploadData, uploadError;
-      let retryCount = 0;
-      const maxRetries = 3;
-
-      while (retryCount < maxRetries) {
-        try {
-          const result = await supabase.storage
-            .from('posts')
-            .upload(fileName, selectedFile, {
-              cacheControl: '3600',
-              upsert: false
-            });
-          
-          uploadData = result.data;
-          uploadError = result.error;
-          break;
-        } catch (error) {
-          retryCount++;
-          if (retryCount === maxRetries) {
-            uploadError = error;
-          } else {
-            // Wait before retry (exponential backoff)
-            await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
-            toast({
-              title: "Retrying upload...",
-              description: `Attempt ${retryCount + 1} of ${maxRetries}`,
-            });
-          }
-        }
-      }
+      // Upload with mobile-optimized settings
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('posts')
+        .upload(fileName, selectedFile, {
+          cacheControl: '3600',
+          upsert: false,
+          duplex: 'half' // Better for mobile connections
+        });
 
       clearInterval(progressInterval);
-      setUploadProgress(100);
+      setUploadProgress(90);
 
       if (uploadError) {
+        console.error('Upload error:', uploadError);
+        
         let errorMessage = "Upload failed";
-        if (uploadError.message?.includes('network')) {
-          errorMessage = "Network error - please check your connection";
-        } else if (uploadError.message?.includes('timeout')) {
-          errorMessage = "Upload timeout - file may be too large for your connection";
-        } else if (uploadError.message?.includes('storage')) {
-          errorMessage = "Storage error - please try again";
+        if (uploadError.message?.includes('duplicate')) {
+          errorMessage = "File already exists, please try again";
+        } else if (uploadError.message?.includes('size')) {
+          errorMessage = "File too large for your connection";
+        } else if (uploadError.message?.includes('network') || uploadError.message?.includes('fetch')) {
+          errorMessage = "Network error - check your connection and try again";
         }
 
         toast({
@@ -165,8 +150,8 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
 
       if (!publicUrl) {
         toast({
-          title: "Get public URL failed",
-          description: "Could not get URL for uploaded file.",
+          title: "URL generation failed",
+          description: "Could not generate URL for uploaded file",
           variant: "destructive"
         });
         setUploading(false);
@@ -174,10 +159,19 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
         return;
       }
 
+      setUploadProgress(95);
+
       const expiresAt = calculateExpiryTime(promotionType);
       const postType = selectedFile.type.startsWith('image/') ? 'image' : 'video';
 
-      // Insert post record to DB with retry logic
+      console.log('Creating post record:', {
+        provider_id: user.id,
+        content_url: publicUrl,
+        post_type: postType,
+        promotion_type: promotionType
+      });
+
+      // Insert post with better error handling
       const { data: postData, error: postError } = await supabase
         .from('posts')
         .insert({
@@ -194,9 +188,10 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
         .single();
 
       if (postError) {
+        console.error('Database error:', postError);
         toast({
           title: "Database error",
-          description: "Post uploaded but failed to save to database. Please contact support.",
+          description: "File uploaded but failed to save post. Please contact support.",
           variant: "destructive"
         });
         setUploading(false);
@@ -204,7 +199,10 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
         return;
       }
 
-      // Step 3: Show post in feed immediately (optimistic update)
+      setUploadProgress(100);
+      console.log('Post created successfully:', postData);
+
+      // Success - show the new post
       setNewPost(postData);
       onAddPostToFeed(postData);
       setStep(3);
@@ -212,33 +210,37 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
       if (promotionType !== 'free_2h') {
         onShowPayment(postData);
         toast({
-          title: "Post uploaded successfully!",
+          title: "Upload successful!",
           description: "Complete payment to activate promotion.",
         });
       } else {
         toast({
-          title: "Post uploaded successfully!",
+          title: "Upload successful!",
           description: "Your post is now live for 2 hours.",
         });
         onUploadSuccess();
       }
 
+      // Clear form
       setSelectedFile(null);
       setCaption('');
       setPreviewUrl(null);
+      
     } catch (error: any) {
       console.error('Upload error:', error);
-      let errorMessage = "Upload failed";
       
-      if (error.message?.includes('network') || !navigator.onLine) {
+      let errorMessage = "Upload failed";
+      if (!navigator.onLine) {
+        errorMessage = "Lost internet connection during upload";
+      } else if (error.message?.includes('fetch')) {
         errorMessage = "Network error - please check your connection";
-      } else if (error.message?.includes('size')) {
-        errorMessage = "File too large for your connection";
+      } else if (error.message?.includes('timeout')) {
+        errorMessage = "Upload timed out - file may be too large";
       }
 
       toast({
         title: errorMessage,
-        description: error.message ?? String(error),
+        description: "Please try again with a smaller file or better connection",
         variant: "destructive"
       });
     } finally {
@@ -290,11 +292,16 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
               <span className="text-white text-sm">Uploading...</span>
               <span className="text-white text-sm">{Math.round(uploadProgress)}%</span>
             </div>
-            <div className="w-full bg-gray-700 rounded-full h-2">
+            <div className="w-full bg-gray-700 rounded-full h-3">
               <div 
-                className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                className="bg-gradient-to-r from-purple-600 to-blue-600 h-3 rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${uploadProgress}%` }}
               />
+            </div>
+            <div className="text-gray-400 text-xs mt-1">
+              {uploadProgress < 30 ? 'Preparing upload...' : 
+               uploadProgress < 70 ? 'Uploading file...' : 
+               uploadProgress < 95 ? 'Processing...' : 'Almost done...'}
             </div>
           </div>
         )}
@@ -321,6 +328,7 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
             />
           )}
         </div>
+        
         <CaptionSection
           caption={caption}
           onCaptionChange={setCaption}
@@ -329,6 +337,7 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
           promotionType={promotionType}
           onPromotionTypeChange={setPromotionType}
         />
+        
         <div className="flex space-x-2 mt-4">
           <UploadButton
             selectedFile={selectedFile}
@@ -338,7 +347,7 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
           />
           <button
             type="button"
-            className="text-gray-400 underline ml-4"
+            className="text-gray-400 underline ml-4 disabled:opacity-50"
             onClick={resetForm}
             disabled={uploading}
           >
