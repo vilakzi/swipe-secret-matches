@@ -15,6 +15,7 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
   const [isLoading, setIsLoading] = useState(true);
   const [isBuffering, setIsBuffering] = useState(false);
   const [showPoster, setShowPoster] = useState(true);
+  const [posterLoaded, setPosterLoaded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -23,7 +24,7 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
   // Generate a fallback poster from the video URL or use a placeholder
   const effectivePosterUrl = posterUrl || 
     src.replace(/\.(mp4|mov|webm|avi|mkv)$/i, '.jpg') || 
-    `https://picsum.photos/400/600?random=${Math.floor(Math.random() * 1000)}`;
+    `https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=400&h=600&fit=crop&crop=center`;
 
   const handlePlay = async () => {
     if (videoRef.current) {
@@ -82,10 +83,10 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
         isFullscreen ? 'h-screen flex items-center justify-center' : 'h-72'
       }`}
     >
-      {/* Video poster/cover image */}
-      {showPoster && !isPlaying && (
+      {/* Always show poster/cover image when not playing */}
+      {showPoster && (
         <div 
-          className="absolute inset-0 cursor-pointer"
+          className="absolute inset-0 cursor-pointer z-10"
           onClick={handleVideoClick}
         >
           <img
@@ -94,27 +95,34 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
             className={`w-full h-full object-cover ${
               isFullscreen ? 'object-contain' : 'object-cover'
             }`}
+            onLoad={() => setPosterLoaded(true)}
             onError={(e) => {
-              // If poster fails to load, use a gradient placeholder
-              e.currentTarget.style.display = 'none';
+              console.log('Poster failed to load, using fallback');
+              e.currentTarget.src = `https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=400&h=600&fit=crop&crop=center`;
             }}
           />
+          {/* Play button overlay */}
           <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-            <div className="bg-black/50 rounded-full p-4 hover:bg-black/70 transition-colors">
+            <div className="bg-black/60 rounded-full p-4 hover:bg-black/80 transition-colors">
               <Play className="w-12 h-12 text-white ml-1" />
             </div>
+          </div>
+          {/* Video duration or info overlay if available */}
+          <div className="absolute bottom-4 right-4 bg-black/60 text-white text-sm px-2 py-1 rounded">
+            Video
           </div>
         </div>
       )}
 
+      {/* Video element - hidden when poster is shown */}
       <video
         ref={videoRef}
         src={src}
         className={`cursor-pointer ${
           isFullscreen 
             ? 'max-w-full max-h-full object-contain' 
-            : 'w-full h-full object-contain'
-        } ${showPoster && !isPlaying ? 'opacity-0' : 'opacity-100'}`}
+            : 'w-full h-full object-cover'
+        } ${showPoster ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
         poster={effectivePosterUrl}
         preload="metadata"
         playsInline
@@ -181,6 +189,7 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
         Sorry, your browser can't play this video.
       </video>
       
+      {/* Error display */}
       {videoError && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-20">
           <div className="text-center text-white p-4">
@@ -197,6 +206,7 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
         </div>
       )}
       
+      {/* Play/Pause controls when video is visible */}
       {showControls && !videoError && !isLoading && !showPoster && (
         <div className="absolute inset-0 flex items-center justify-center">
           <button
@@ -213,7 +223,7 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
         </div>
       )}
       
-      {/* Video controls overlay */}
+      {/* Bottom controls overlay when video is playing */}
       {!showPoster && (
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
           <div className="flex items-center justify-between text-white">
