@@ -1,6 +1,9 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, Maximize, Minimize } from 'lucide-react';
+import VideoPoster from './video/VideoPoster';
+import VideoControls from './video/VideoControls';
+import VideoErrorDisplay from './video/VideoErrorDisplay';
+import VideoLoadingIndicator from './video/VideoLoadingIndicator';
 
 interface PostVideoPlayerProps {
   src: string;
@@ -83,36 +86,13 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
         isFullscreen ? 'h-screen flex items-center justify-center' : 'h-72'
       }`}
     >
-      {/* Always show poster/cover image when not playing */}
-      {showPoster && (
-        <div 
-          className="absolute inset-0 cursor-pointer z-10"
-          onClick={handleVideoClick}
-        >
-          <img
-            src={effectivePosterUrl}
-            alt="Video cover"
-            className={`w-full h-full object-cover ${
-              isFullscreen ? 'object-contain' : 'object-cover'
-            }`}
-            onLoad={() => setPosterLoaded(true)}
-            onError={(e) => {
-              console.log('Poster failed to load, using fallback');
-              e.currentTarget.src = `https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=400&h=600&fit=crop&crop=center`;
-            }}
-          />
-          {/* Play button overlay */}
-          <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-            <div className="bg-black/60 rounded-full p-4 hover:bg-black/80 transition-colors">
-              <Play className="w-12 h-12 text-white ml-1" />
-            </div>
-          </div>
-          {/* Video duration or info overlay if available */}
-          <div className="absolute bottom-4 right-4 bg-black/60 text-white text-sm px-2 py-1 rounded">
-            Video
-          </div>
-        </div>
-      )}
+      <VideoPoster
+        posterUrl={effectivePosterUrl}
+        isFullscreen={isFullscreen}
+        showPoster={showPoster}
+        onVideoClick={handleVideoClick}
+        onPosterLoad={() => setPosterLoaded(true)}
+      />
 
       {/* Video element - hidden when poster is shown */}
       <video
@@ -189,73 +169,23 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
         Sorry, your browser can't play this video.
       </video>
       
-      {/* Error display */}
-      {videoError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-20">
-          <div className="text-center text-white p-4">
-            <p className="text-red-400 font-bold mb-2">{videoError}</p>
-            <p className="text-xs text-gray-300 break-all">{src}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Loading indicator */}
-      {(isLoading || isBuffering) && !showPoster && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-10">
-          <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      )}
-      
-      {/* Play/Pause controls when video is visible */}
-      {showControls && !videoError && !isLoading && !showPoster && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <button
-            onClick={handlePlay}
-            className="bg-black/50 rounded-full p-4 hover:bg-black/70 transition-colors"
-            disabled={isBuffering}
-          >
-            {isPlaying ? (
-              <Pause className="w-12 h-12 text-white" />
-            ) : (
-              <Play className="w-12 h-12 text-white ml-1" />
-            )}
-          </button>
-        </div>
-      )}
-      
-      {/* Bottom controls overlay when video is playing */}
-      {!showPoster && (
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
-          <div className="flex items-center justify-between text-white">
-            <button
-              onClick={handlePlay}
-              className="flex items-center space-x-2 hover:text-gray-300"
-              disabled={isBuffering || isLoading}
-            >
-              {isPlaying ? (
-                <Pause className="w-5 h-5" />
-              ) : (
-                <Play className="w-5 h-5" />
-              )}
-              <span className="text-sm">
-                {isBuffering ? 'Buffering...' : isPlaying ? 'Pause' : 'Play'}
-              </span>
-            </button>
-            
-            <button
-              onClick={handleFullscreen}
-              className="flex items-center space-x-2 hover:text-gray-300"
-            >
-              {isFullscreen ? (
-                <Minimize className="w-5 h-5" />
-              ) : (
-                <Maximize className="w-5 h-5" />
-              )}
-              <span className="text-sm">{isFullscreen ? 'Exit' : 'Fullscreen'}</span>
-            </button>
-          </div>
-        </div>
-      )}
+      <VideoErrorDisplay videoError={videoError} src={src} />
+      <VideoLoadingIndicator 
+        isLoading={isLoading} 
+        isBuffering={isBuffering} 
+        showPoster={showPoster} 
+      />
+      <VideoControls
+        isPlaying={isPlaying}
+        isBuffering={isBuffering}
+        isLoading={isLoading}
+        isFullscreen={isFullscreen}
+        showControls={showControls}
+        showPoster={showPoster}
+        videoError={videoError}
+        onPlay={handlePlay}
+        onFullscreen={handleFullscreen}
+      />
     </div>
   );
 };
