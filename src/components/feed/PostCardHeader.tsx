@@ -16,6 +16,13 @@ interface Profile {
   liked?: boolean;
   posts?: string[];
   isRealAccount?: boolean;
+  verifications?: {
+    phoneVerified?: boolean;
+    emailVerified?: boolean;
+    photoVerified?: boolean;
+    locationVerified?: boolean;
+    premiumUser?: boolean;
+  };
 }
 
 interface PostCardHeaderProps {
@@ -60,7 +67,9 @@ const PostCardHeader = ({
               >
                 {profile.name}
               </h3>
-              <VerificationBadges profile={profile} />
+              {profile.verifications && (
+                <VerificationBadges verifications={profile.verifications} />
+              )}
             </div>
             <div className="flex items-center space-x-2 text-sm text-gray-400">
               <span>{profile.age}</span>
