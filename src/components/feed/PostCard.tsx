@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { usePresence } from "@/hooks/usePresence";
 import { useNavigate } from "react-router-dom";
@@ -81,13 +80,6 @@ const PostCard = ({
 
   const isVideoPost = item.postImage && isVideo(item.postImage);
 
-  // Generate poster URL for videos
-  const generatePosterUrl = (videoUrl: string) => {
-    // Try common poster patterns
-    const posterUrl = videoUrl.replace(/\.(mp4|mov|webm|avi|mkv)$/i, '.jpg');
-    return posterUrl !== videoUrl ? posterUrl : undefined;
-  };
-
   return (
     <>
       <Card className="bg-gray-800 border-gray-700 mb-4" tabIndex={0} aria-label={`Post card from ${item.profile.name}`}>
@@ -103,7 +95,6 @@ const PostCard = ({
           {isVideoPost && item.postImage ? (
             <PostVideoPlayer
               src={item.postImage}
-              posterUrl={generatePosterUrl(item.postImage)}
             />
           ) : (
             item.postImage && (

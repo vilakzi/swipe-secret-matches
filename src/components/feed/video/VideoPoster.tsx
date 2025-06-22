@@ -26,14 +26,15 @@ const VideoPoster: React.FC<VideoPosterProps> = ({
     >
       <img
         src={posterUrl}
-        alt="Video cover"
+        alt="Video preview"
         className={`w-full h-full object-cover ${
           isFullscreen ? 'object-contain' : 'object-cover'
         }`}
         onLoad={onPosterLoad}
         onError={(e) => {
-          console.log('Poster failed to load, using fallback');
-          e.currentTarget.src = `https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=400&h=600&fit=crop&crop=center`;
+          console.log('Video poster failed to load');
+          // Hide the poster if it fails to load, showing the video element instead
+          e.currentTarget.style.display = 'none';
         }}
       />
       {/* Play button overlay */}
