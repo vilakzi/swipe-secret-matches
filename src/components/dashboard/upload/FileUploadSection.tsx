@@ -10,18 +10,27 @@ import { getMaxUploadSize } from "@/utils/getMaxUploadSize";
 interface FileUploadSectionProps {
   selectedFile: File | null;
   onFileChange: (file: File | null) => void;
+  validationError?: string | null;
+  isValidating?: boolean;
+  setValidationError?: (error: string | null) => void;
+  setIsValidating?: (validating: boolean) => void;
 }
 
-const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProps) => {
+const FileUploadSection = ({ 
+  selectedFile, 
+  onFileChange, 
+  validationError, 
+  isValidating,
+  setValidationError,
+  setIsValidating 
+}: FileUploadSectionProps) => {
   const { role } = useUserRole();
   const maxSize = getMaxUploadSize(role);
 
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isValidating, setIsValidating] = useState(false);
-  const [validationError, setValidationError] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
-  // Monitor network status for mobile
+  // Monitor network status
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
@@ -34,8 +43,8 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
     const handleOffline = () => {
       setIsOnline(false);
       toast({
-        title: "Connection lost",
-        description: "Please check your internet connection",
+        title: "Connection lost", 
+        description: "Upload unavailable until connection is restored",
         variant: "destructive",
       });
     };
@@ -54,12 +63,12 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
       const url = URL.createObjectURL(selectedFile);
       setPreviewUrl(url);
       
-      // Validate video files with mobile-optimized checks
+      // Enhanced video validation
       if (selectedFile.type.startsWith('video/')) {
         validateVideoFile(selectedFile);
       } else {
-        // Reset validation for image files
-        setValidationError(null);
+        // Reset validation for images
+        setValidationError?.(null);
       }
       
       return () => {
@@ -67,21 +76,21 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
       };
     } else {
       setPreviewUrl(null);
-      setValidationError(null);
+      setValidationError?.(null);
     }
-  }, [selectedFile]);
+  }, [selectedFile, setValidationError]);
 
   const validateVideoFile = async (file: File) => {
     if (!isOnline) {
-      setValidationError("No internet connection for validation");
+      setValidationError?.("No internet connection for validation");
       return;
     }
 
-    setIsValidating(true);
-    setValidationError(null);
+    setIsValidating?.(true);
+    setValidationError?.(null);
 
     try {
-      // Mobile-optimized video validation with shorter timeout
+      // Enhanced video validation for mobile
       const video = document.createElement('video');
       const url = URL.createObjectURL(file);
       
@@ -97,28 +106,28 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
 
         const onLoaded = () => {
           try {
-            // Check if video has valid dimensions and duration
+            // Comprehensive video validation
             if (video.videoWidth === 0 || video.videoHeight === 0) {
-              reject(new Error('Invalid video: No video track found'));
+              reject(new Error('Invalid video: No video track detected'));
               return;
             }
             
-            if (video.duration === 0 || isNaN(video.duration)) {
-              reject(new Error('Invalid video: Cannot determine duration'));
+            if (video.duration === 0 || !isFinite(video.duration)) {
+              reject(new Error('Invalid video: Cannot read video duration'));
               return;
             }
 
-            // Check reasonable video duration (max 5 minutes for mobile)
-            if (video.duration > 300) {
-              reject(new Error('Video too long: Maximum 5 minutes allowed'));
+            // Mobile-friendly duration limit (3 minutes)
+            if (video.duration > 180) {
+              reject(new Error('Video too long: Maximum 3 minutes for mobile'));
               return;
             }
 
-            // Check video resolution for mobile optimization
+            // Check for reasonable resolution
             if (video.videoWidth > 1920 || video.videoHeight > 1920) {
               toast({
                 title: "Large video detected",
-                description: "Video may take longer to upload on mobile",
+                description: "Upload may take longer on mobile",
               });
             }
 
@@ -132,14 +141,14 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
         
         const onError = () => {
           cleanup();
-          reject(new Error('Cannot decode video file'));
+          reject(new Error('Cannot process video file - may be corrupted'));
         };
 
-        // Reduced timeout for mobile (5 seconds)
+        // Shorter timeout for mobile (3 seconds)
         timeoutId = setTimeout(() => {
           cleanup();
-          reject(new Error('Video validation timeout (poor connection?)'));
-        }, 5000);
+          reject(new Error('Video validation timeout - check connection'));
+        }, 3000);
         
         video.addEventListener('loadedmetadata', onLoaded);
         video.addEventListener('error', onError);
@@ -149,9 +158,9 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
 
     } catch (error: any) {
       console.error('Video validation failed:', error);
-      setValidationError(error.message);
+      setValidationError?.(error.message);
     } finally {
-      setIsValidating(false);
+      setIsValidating?.(false);
     }
   };
 
@@ -161,39 +170,42 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
     if (!isOnline) {
       toast({
         title: "No internet connection",
-        description: "Please check your connection and try again",
+        description: "Please check your connection before selecting files",
         variant: "destructive",
       });
       return;
     }
 
     if (file) {
+      // Enhanced file type validation
       const isImage = file.type.startsWith('image/');
       const isVideo = file.type.startsWith('video/');
 
       if (!isImage && !isVideo) {
         toast({
           title: "Invalid file type",
-          description: "Please select an image or video file",
+          description: "Please select an image (JPEG, PNG, GIF, WebP) or video (MP4, WebM, MOV)",
           variant: "destructive",
         });
         return;
       }
 
-      if (file.size > maxSize) {
+      // Enhanced size validation for mobile
+      const mobileMaxSize = Math.min(maxSize, 50 * 1024 * 1024); // 50MB max for mobile
+      if (file.size > mobileMaxSize) {
         toast({
           title: "File too large",
-          description: `Maximum allowed: ${Math.round(maxSize / (1024*1024))}MB`,
+          description: `Maximum: ${Math.round(mobileMaxSize / (1024*1024))}MB for mobile uploads`,
           variant: "destructive",
         });
         return;
       }
 
-      // Mobile-specific file size warnings
-      if (file.size > 10 * 1024 * 1024) { // 10MB
+      // Mobile warnings
+      if (file.size > 10 * 1024 * 1024) {
         toast({
           title: "Large file warning",
-          description: "Large files may take longer to upload on mobile",
+          description: "Large files may upload slowly on mobile data",
         });
       }
 
@@ -203,10 +215,10 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
 
   const removeFile = () => {
     onFileChange(null);
-    setValidationError(null);
+    setValidationError?.(null);
     toast({
       title: "File removed",
-      description: "Please select another file to upload",
+      description: "Select another file to upload",
     });
   };
 
@@ -222,13 +234,13 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
 
   return (
     <div className="space-y-4">
-      {/* Network Status Indicator */}
+      {/* Enhanced network status */}
       {!isOnline && (
         <div className="bg-red-900/20 border border-red-600/30 rounded-lg p-3">
           <div className="flex items-center space-x-2">
             <WifiOff className="w-4 h-4 text-red-400" />
             <span className="text-red-400 text-sm font-medium">
-              No internet connection - uploads unavailable
+              No internet - uploads unavailable
             </span>
           </div>
         </div>
@@ -242,14 +254,14 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
           <>
             <Input
               type="file"
-              accept="image/*,video/*"
+              accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,video/quicktime"
               onChange={handleFileChange}
               disabled={!isOnline}
               className="bg-gray-800 border-gray-600 text-white file:bg-purple-600 file:text-white file:border-0 file:rounded file:px-3 file:py-1 file:mr-3 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <div className="flex items-center justify-between mt-1">
               <p className="text-xs text-gray-400">
-                Max file size: {Math.round(maxSize / (1024*1024))}MB
+                Max: {Math.round(Math.min(maxSize, 50 * 1024 * 1024) / (1024*1024))}MB
               </p>
               <div className="flex items-center space-x-1">
                 {isOnline ? (
@@ -318,7 +330,7 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
               </div>
             )}
             
-            {/* Image or video preview - mobile optimized */}
+            {/* Enhanced preview for mobile */}
             {selectedFile.type.startsWith('image/') && previewUrl && !validationError && (
               <div className="mt-3 rounded-lg overflow-hidden">
                 <img
@@ -347,13 +359,13 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
         )}
       </div>
 
-      {/* Status Messages */}
+      {/* Status messages */}
       {isFileReady && (
         <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-3">
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
             <span className="text-green-400 text-sm font-medium">
-              File is ready! Click "Submit & Upload Post" to continue.
+              File ready! Continue to upload.
             </span>
           </div>
         </div>
@@ -364,7 +376,7 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
           <div className="flex items-center space-x-2">
             <AlertTriangle className="w-4 h-4 text-red-400" />
             <span className="text-red-400 text-sm font-medium">
-              Please select a different file. This file cannot be uploaded.
+              Please select a different file.
             </span>
           </div>
         </div>
