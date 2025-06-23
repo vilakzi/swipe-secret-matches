@@ -21,6 +21,8 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
   const [posterLoaded, setPosterLoaded] = useState(false);
   const [generatedPoster, setGeneratedPoster] = useState<string | null>(null);
   const [previewGenerated, setPreviewGenerated] = useState(false);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -124,6 +126,25 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
     }
   };
 
+  const handleVolumeChange = (newVolume: number) => {
+    if (videoRef.current) {
+      videoRef.current.volume = newVolume;
+      setVolume(newVolume);
+      if (newVolume > 0) {
+        setIsMuted(false);
+        videoRef.current.muted = false;
+      }
+    }
+  };
+
+  const handleMuteToggle = () => {
+    if (videoRef.current) {
+      const newMutedState = !isMuted;
+      videoRef.current.muted = newMutedState;
+      setIsMuted(newMutedState);
+    }
+  };
+
   const handleVideoClick = () => {
     handlePlay();
   };
@@ -154,6 +175,14 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  // Initialize volume when video loads
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.volume = volume;
+      videoRef.current.muted = isMuted;
+    }
   }, []);
 
   return (
@@ -270,8 +299,12 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, posterUrl }) => 
         showControls={showControls}
         showPoster={showPoster && !!effectivePosterUrl}
         videoError={videoError}
+        volume={volume}
+        isMuted={isMuted}
         onPlay={handlePlay}
         onFullscreen={handleFullscreen}
+        onVolumeChange={handleVolumeChange}
+        onMuteToggle={handleMuteToggle}
       />
     </div>
   );
