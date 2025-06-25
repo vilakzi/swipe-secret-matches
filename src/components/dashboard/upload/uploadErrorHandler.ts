@@ -53,8 +53,9 @@ export const checkNetworkConnection = () => {
     return false;
   }
 
-  // Additional connection quality check
-  if (navigator.connection && navigator.connection.effectiveType === 'slow-2g') {
+  // Additional connection quality check with proper typing
+  const connection = (navigator as any).connection;
+  if (connection && connection.effectiveType === 'slow-2g') {
     toast({
       title: "Slow connection detected",
       description: "Upload may take longer than usual",
