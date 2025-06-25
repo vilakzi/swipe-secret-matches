@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -97,11 +96,11 @@ const Index = () => {
       return;
     }
     
-    console.log('🌊 Refreshing continuous feed system from Index component');
+    console.log('🚀 Refreshing dynamic feed engine for guaranteed fresh content');
     setRefreshKey(prev => prev + 1);
     toast({
-      title: "Continuous feed refreshed",
-      description: "Loading fresh content from all accounts...",
+      title: "Dynamic feed refreshed",
+      description: "Loading completely fresh content flow with never-ending variety...",
     });
   };
 
@@ -119,14 +118,14 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Enhanced Header with continuous feed indicators */}
+      {/* Enhanced Header with dynamic feed indicators */}
       <header className="fixed top-0 left-0 right-0 z-40 bg-black/80 backdrop-blur-md border-b border-gray-700">
         <div className="p-4 flex justify-between items-center max-w-md mx-auto">
           <div className="flex items-center space-x-3">
             <Heart className="w-8 h-8 text-pink-500" />
             <div>
               <h1 className="text-2xl font-bold text-white">Connect</h1>
-              <p className="text-xs text-gray-400">Continuous Feed</p>
+              <p className="text-xs text-gray-400">Dynamic Never-Ending Feed</p>
             </div>
             {isAdmin && (
               <span className="bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
@@ -160,12 +159,12 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Main Content with Continuous Feed */}
+      {/* Main Content with Dynamic Never-Ending Feed */}
       <main className="pt-20">
         <div className="max-w-md mx-auto px-4">
           <ProfileCompletionPrompt />
           
-          {/* Continuous Feed System */}
+          {/* Dynamic Feed Engine */}
           <InstagramFeed 
             key={refreshKey}
             onLike={handleLike}

@@ -4,7 +4,7 @@ import FeedHeader from './feed/FeedHeader';
 import FeedContent from './feed/FeedContent';
 import PullToRefresh from './feed/PullToRefresh';
 import InfiniteScroll from './feed/InfiniteScroll';
-import { useContinuousFeedData } from '@/hooks/useContinuousFeedData';
+import { useDynamicFeedEngine } from '@/hooks/useDynamicFeedEngine';
 import { toast } from '@/hooks/use-toast';
 
 interface InstagramFeedProps {
@@ -17,7 +17,7 @@ interface InstagramFeedProps {
 const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFeedProps) => {
   const [showFilters, setShowFilters] = useState(false);
   
-  // Use new continuous feed system
+  // Use dynamic feed engine for continuous, never-ending content
   const {
     displayedItems,
     hasMoreItems,
@@ -25,30 +25,31 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
     handleLoadMore,
     handleRefresh,
     engagementTracker,
-    feedStats
-  } = useContinuousFeedData();
+    feedEngineStats
+  } = useDynamicFeedEngine();
 
   const handlePullRefresh = useCallback(async () => {
+    console.log('🔄 Pull refresh - generating fresh content flow');
     handleRefresh();
     await new Promise(resolve => setTimeout(resolve, 1000));
     onRefresh();
   }, [handleRefresh, onRefresh]);
 
   const handleSmartRefresh = useCallback(() => {
-    console.log('🌊 Smart continuous feed refresh triggered');
+    console.log('🔄 Smart refresh - ensuring dynamic content rotation');
     handleRefresh();
     onRefresh();
     toast({
-      title: "Continuous feed refreshed",
-      description: `Fresh content loaded! ${feedStats.totalAvailable} items available`,
+      title: "Fresh content loaded!",
+      description: `Dynamic feed refreshed with ${feedEngineStats.poolSize} items in rotation`,
     });
-  }, [handleRefresh, onRefresh, feedStats.totalAvailable]);
+  }, [handleRefresh, onRefresh, feedEngineStats.poolSize]);
 
-  console.log('🌊 InstagramFeed rendering with continuous system:', {
+  console.log('🚀 InstagramFeed rendering with dynamic engine:', {
     displayedItems: displayedItems.length,
     hasMore: hasMoreItems,
     isLoading: isLoadingMore,
-    stats: feedStats
+    engineStats: feedEngineStats
   });
 
   return (
@@ -67,7 +68,7 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
             hasMore={hasMoreItems}
             isLoading={isLoadingMore}
             onLoadMore={handleLoadMore}
-            threshold={300} // Load more content earlier
+            threshold={200} // Load more content proactively
           >
             <FeedContent
               feedItems={displayedItems}
@@ -79,14 +80,14 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
               engagementTracker={engagementTracker}
             />
             
-            {/* Continuous flow indicator */}
-            {hasMoreItems && !isLoadingMore && (
-              <div className="text-center py-4">
-                <div className="text-gray-400 text-sm">
-                  {feedStats.totalAvailable - displayedItems.length} more items available
-                </div>
+            {/* Dynamic flow indicators */}
+            <div className="text-center py-6">
+              <div className="text-gray-400 text-sm space-y-1">
+                <div>Dynamic Feed Active • Content Pool: {feedEngineStats.poolSize}</div>
+                <div>Rotation Cycle: {feedEngineStats.rotationCycle} • Fresh Content Available</div>
+                <div className="text-xs text-gray-500">Continuous flow ensures you never run out of content</div>
               </div>
-            )}
+            </div>
           </InfiniteScroll>
         </PullToRefresh>
       </div>
