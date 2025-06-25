@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import FeedHeader from './feed/FeedHeader';
 import FeedContent from './feed/FeedContent';
@@ -21,7 +22,8 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
     hasMoreItems,
     isLoadingMore,
     handleLoadMore,
-    handleRefresh
+    handleRefresh,
+    engagementTracker
   } = useFeedData(6);
 
   const handlePullRefresh = useCallback(async () => {
@@ -31,12 +33,12 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
   }, [handleRefresh, onRefresh]);
 
   const handleFeedRefresh = useCallback(() => {
-    console.log('Feed refresh triggered');
+    console.log('🚀 Dynamic feed refresh triggered');
     handleRefresh();
     onRefresh();
     toast({
-      title: "Feed refreshed",
-      description: "Content updated successfully",
+      title: "Smart feed refreshed",
+      description: "Content re-ranked with fresh algorithm",
     });
   }, [handleRefresh, onRefresh]);
 
@@ -64,6 +66,7 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
               onLike={onLike}
               onContact={onContact}
               onRefresh={onRefresh}
+              engagementTracker={engagementTracker}
             />
           </InfiniteScroll>
         </PullToRefresh>

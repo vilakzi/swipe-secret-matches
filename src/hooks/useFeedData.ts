@@ -8,6 +8,8 @@ import { useFilteredFeedData } from './useFilteredFeedData';
 import { useFeedPagination } from './useFeedPagination';
 import { usePostFetching } from './feed/usePostFetching';
 import { useFeedItemCreation } from './feed/useFeedItemCreation';
+import { useDynamicFeedAlgorithm } from './feed/useDynamicFeedAlgorithm';
+import { useEngagementTracking } from './feed/useEngagementTracking';
 import { FeedItem } from '@/components/feed/types/feedTypes';
 
 export type { FeedItem };
@@ -27,6 +29,7 @@ export const useFeedData = (itemsPerPage: number = 8) => {
       isLoadingMore: false,
       handleLoadMore: () => {},
       handleRefresh: () => {},
+      engagementTracker: null
     };
   }
 
@@ -36,6 +39,9 @@ export const useFeedData = (itemsPerPage: number = 8) => {
   const { realProfiles, loading: profilesLoading } = useRealProfiles();
   const { newJoiners, loading: newJoinersLoading } = useNewJoiners();
   const { posts, refetchPosts } = usePostFetching();
+
+  // Engagement tracking
+  const engagementTracker = useEngagementTracking();
 
   const allProfiles = useMemo(() => {
     console.log(`Total profiles: ${realProfiles.length} (all real accounts)`);
@@ -49,38 +55,59 @@ export const useFeedData = (itemsPerPage: number = 8) => {
   const filteredProfiles = roleFilteredProfiles;
 
   // Create all feed items with fixed duplication algorithm
-  const allFeedItems = useFeedItemCreation({
+  const rawFeedItems = useFeedItemCreation({
     filteredProfiles,
     posts,
     shuffleKey,
     userId: user?.id
   });
 
-  // Handle pagination with increased default
+  // Apply dynamic algorithm for intelligent content ranking
+  const {
+    algorithmicFeed,
+    isProcessing: algorithmProcessing,
+    manualRefresh: refreshAlgorithm,
+    refreshCount
+  } = useDynamicFeedAlgorithm({
+    rawFeedItems,
+    enabled: true,
+    autoRefreshInterval: 180000, // 3 minutes
+    maxItemsPerLoad: itemsPerPage * 3 // Give algorithm more items to work with
+  });
+
+  // Handle pagination with algorithmic feed
   const {
     displayedItems,
     hasMoreItems,
     isLoadingMore: paginationLoading,
     handleLoadMore,
     resetPagination
-  } = useFeedPagination(allFeedItems, itemsPerPage);
+  } = useFeedPagination(algorithmicFeed, itemsPerPage);
 
-  const isLoadingMore = paginationLoading || profilesLoading || newJoinersLoading;
+  const isLoadingMore = paginationLoading || profilesLoading || newJoinersLoading || algorithmProcessing;
 
   // Enhanced refresh with algorithm reset
   const handleRefresh = useCallback(() => {
-    console.log('Refreshing feed with new algorithm shuffle');
+    console.log('🔄 Refreshing feed with dynamic algorithm (refresh #' + (refreshCount + 1) + ')');
     resetPagination();
     refetchPosts();
+    
     // Generate new shuffle key for fresh algorithm results
     setShuffleKey(prev => prev + Math.floor(Math.random() * 1000));
-  }, [resetPagination, refetchPosts]);
+    
+    // Trigger algorithm refresh
+    refreshAlgorithm();
+    
+    // Clear old engagement data
+    engagementTracker.clearOldEngagementData();
+  }, [resetPagination, refetchPosts, refreshAlgorithm, engagementTracker, refreshCount]);
 
   return {
     displayedItems,
     hasMoreItems,
     isLoadingMore,
     handleLoadMore,
-    handleRefresh
+    handleRefresh,
+    engagementTracker
   };
 };

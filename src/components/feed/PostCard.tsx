@@ -1,11 +1,10 @@
-
 import { Card } from "@/components/ui/card";
 import { usePresence } from "@/hooks/usePresence";
 import { useNavigate } from "react-router-dom";
 import { useImageModal } from "@/hooks/useImageModal";
 import OptimizedImage from "@/components/ui/OptimizedImage";
 import ImageModal from "@/components/ui/ImageModal";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import PostVideoPlayer from "./PostVideoPlayer";
 import PostCardHeader from "./PostCardHeader";
 import PostCardActions from "./PostCardActions";
@@ -53,6 +52,7 @@ interface PostCardProps {
   onLike: (itemId: string, profileId: string) => void;
   onContact: (profile: Profile) => void;
   onDelete?: (itemId: string) => void;
+  engagementTracker?: any;
 }
 
 const PostCard = ({
@@ -62,6 +62,7 @@ const PostCard = ({
   onLike,
   onContact,
   onDelete,
+  engagementTracker,
 }: PostCardProps) => {
   const { isUserOnline } = usePresence();
   const { user } = useAuth();
@@ -69,28 +70,70 @@ const PostCard = ({
   const { isOpen, imageSrc, imageAlt, openModal, closeModal } = useImageModal();
   const [showComments, setShowComments] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  const cardRef = useRef<HTMLDivElement>(null);
+  const viewTrackedRef = useRef(false);
+
+  // Track engagement when card comes into view
+  useEffect(() => {
+    if (!engagementTracker || viewTrackedRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+            // Item is significantly visible
+            if (!viewTrackedRef.current) {
+              engagementTracker.trackItemView(item.id);
+              viewTrackedRef.current = true;
+            }
+          } else if (viewTrackedRef.current) {
+            // Item is no longer visible
+            engagementTracker.trackItemViewEnd(item.id);
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    if (cardRef.current) {
+      observer.observe(cardRef.current);
+    }
+
+    return () => {
+      observer.disconnect();
+      if (viewTrackedRef.current) {
+        engagementTracker.trackItemViewEnd(item.id);
+      }
+    };
+  }, [item.id, engagementTracker]);
 
   const handleProfileClick = () => {
+    engagementTracker?.trackEngagement(item.id, 'tap');
     navigate(`/profile/${item.profile.id}`);
   };
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
+    engagementTracker?.trackEngagement(item.id, 'like');
     onLike(item.id, item.profile.id);
   };
 
   const handleContact = (e: React.MouseEvent) => {
     e.stopPropagation();
+    engagementTracker?.trackEngagement(item.id, 'contact');
     onContact(item.profile);
   };
 
   const handleAvatarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    engagementTracker?.trackEngagement(item.id, 'tap');
     openModal(item.profile.image, `${item.profile.name}'s profile photo`);
   };
 
   const handlePostImageClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    engagementTracker?.trackEngagement(item.id, 'tap');
     openModal(item.postImage || "", `${item.profile.name}'s post`);
   };
 
@@ -148,7 +191,12 @@ const PostCard = ({
 
   return (
     <>
-      <Card className="bg-gray-800 border-gray-700 mb-4" tabIndex={0} aria-label={`Post card from ${item.profile.name}`}>
+      <Card 
+        ref={cardRef}
+        className="bg-gray-800 border-gray-700 mb-4" 
+        tabIndex={0} 
+        aria-label={`Post card from ${item.profile.name}`}
+      >
         <PostCardHeader
           profile={item.profile}
           isSubscribed={isSubscribed}
