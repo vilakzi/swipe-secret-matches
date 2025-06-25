@@ -1,12 +1,12 @@
 
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
-import FileUploadSection from './upload/FileUploadSection';
+import EnhancedFileUploadSection from './upload/EnhancedFileUploadSection';
 import CaptionSection from './upload/CaptionSection';
 import PromotionTypeSelector from './upload/PromotionTypeSelector';
 import PostPreview from './upload/PostPreview';
 import PostFormActions from './upload/PostFormActions';
-import UploadProgress from './upload/UploadProgress';
+import MobileUploadProgress from './upload/MobileUploadProgress';
 import UploadSuccess from './upload/UploadSuccess';
 import { usePostUpload } from './upload/usePostUpload';
 
@@ -92,7 +92,12 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
       <Card className="bg-black/20 backdrop-blur-md border-gray-700 p-6 mb-8">
         <h2 className="text-xl font-bold text-white mb-4">Preview Your Post</h2>
         
-        <UploadProgress uploadProgress={uploadProgress} uploading={uploading} />
+        <MobileUploadProgress
+          progress={uploadProgress}
+          isUploading={uploading}
+          error={uploadError}
+          fileName={selectedFile.name}
+        />
 
         <PostPreview file={selectedFile} previewUrl={previewUrl} />
         
@@ -122,7 +127,7 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
   return (
     <Card className="bg-black/20 backdrop-blur-md border-gray-700 p-6 mb-8">
       <h2 className="text-xl font-bold text-white mb-4">Create New Post</h2>
-      <FileUploadSection
+      <EnhancedFileUploadSection
         selectedFile={selectedFile}
         onFileChange={handleFileChange}
         validationError={validationError}
