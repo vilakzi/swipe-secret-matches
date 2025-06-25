@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { usePresence } from "@/hooks/usePresence";
 import { useNavigate } from "react-router-dom";
@@ -74,26 +75,25 @@ const PostCard = ({
   const cardRef = useRef<HTMLDivElement>(null);
   const viewTrackedRef = useRef(false);
 
-  // Track engagement when card comes into view
+  // Mobile-optimized engagement tracking
   useEffect(() => {
     if (!engagementTracker || viewTrackedRef.current) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
-            // Item is significantly visible
+          if (entry.isIntersecting && entry.intersectionRatio > 0.3) {
+            // Lower threshold for mobile
             if (!viewTrackedRef.current) {
               engagementTracker.trackItemView(item.id);
               viewTrackedRef.current = true;
             }
           } else if (viewTrackedRef.current) {
-            // Item is no longer visible
             engagementTracker.trackItemViewEnd(item.id);
           }
         });
       },
-      { threshold: 0.5 }
+      { threshold: [0.3, 0.7] } // Multiple thresholds for better mobile detection
     );
 
     if (cardRef.current) {
@@ -108,6 +108,7 @@ const PostCard = ({
     };
   }, [item.id, engagementTracker]);
 
+  // Mobile-optimized handlers
   const handleProfileClick = () => {
     engagementTracker?.trackEngagement(item.id, 'tap');
     navigate(`/profile/${item.profile.id}`);
@@ -149,14 +150,13 @@ const PostCard = ({
 
     setIsDeleting(true);
     try {
-      // Remove "post-" prefix if it exists to get the actual UUID
       const actualPostId = item.id.startsWith('post-') ? item.id.replace('post-', '') : item.id;
       
       const { error } = await supabase
         .from('posts')
         .delete()
         .eq('id', actualPostId)
-        .eq('provider_id', user.id); // Double check user owns the post
+        .eq('provider_id', user.id);
 
       if (error) {
         console.error('Delete error:', error);
@@ -193,7 +193,7 @@ const PostCard = ({
     <>
       <Card 
         ref={cardRef}
-        className="bg-gray-800 border-gray-700 mb-4" 
+        className="bg-gray-800 border-gray-700 mb-4 touch-target" 
         tabIndex={0} 
         aria-label={`Post card from ${item.profile.name}`}
       >
@@ -210,16 +210,16 @@ const PostCard = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-gray-400 hover:text-white h-8 w-8 p-0"
+                  className="text-gray-400 hover:text-white h-10 w-10 p-0 touch-target"
                 >
-                  <MoreVertical className="h-4 w-4" />
+                  <MoreVertical className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700">
+              <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700 z-50">
                 <DropdownMenuItem
                   onClick={handleDeletePost}
                   disabled={isDeleting}
-                  className="text-red-400 hover:text-red-300 hover:bg-gray-700 cursor-pointer"
+                  className="text-red-400 hover:text-red-300 hover:bg-gray-700 cursor-pointer touch-target"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
                   {isDeleting ? "Deleting..." : "Delete Post"}
@@ -229,11 +229,12 @@ const PostCard = ({
           )}
         </PostCardHeader>
         
-        {/* Post Content */}
+        {/* Mobile-optimized post content */}
         <div className="relative">
           {isVideoPost && item.postImage ? (
             <PostVideoPlayer
               src={item.postImage}
+              className="w-full"
             />
           ) : (
             item.postImage && (
@@ -243,11 +244,12 @@ const PostCard = ({
                 className="w-full h-72 hover:opacity-95 transition-opacity"
                 onClick={handlePostImageClick}
                 expandable
+                loading="lazy"
               />
             )
           )}
           <div
-            className="absolute top-4 left-4 right-4 h-8 bg-transparent cursor-pointer"
+            className="absolute top-4 left-4 right-4 h-12 bg-transparent cursor-pointer touch-target"
             onClick={handleProfileClick}
             tabIndex={0}
             aria-label={`Open profile for ${item.profile.name}`}
