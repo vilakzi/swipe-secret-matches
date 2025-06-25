@@ -1,6 +1,6 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Search, Filter, Image, Video, RotateCcw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -61,17 +61,33 @@ const FeedHeader = ({
     try {
       console.log(`Starting ${type} upload for file:`, file.name);
       
-      // For demo purposes, use a placeholder URL
-      const demoUrl = type === 'image' 
-        ? `https://picsum.photos/400/600?random=${Date.now()}` 
-        : 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4';
+      // Generate unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${type}_${Date.now()}.${fileExt}`;
+      
+      // Upload to Supabase Storage
+      const { data, error: uploadError } = await supabase.storage
+        .from('posts')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('posts')
+        .getPublicUrl(fileName);
 
       // Create post entry in database
       const { data: postData, error: postError } = await supabase
         .from('posts')
         .insert({
           provider_id: user.id,
-          content_url: demoUrl,
+          content_url: publicUrl,
           post_type: type,
           caption: `New ${type} post`,
           promotion_type: 'free_2h',

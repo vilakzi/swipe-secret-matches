@@ -58,7 +58,7 @@ export const usePostUpload = () => {
       
       const fileName = generateFileName(user.id, fileExt);
 
-      // Upload file to storage
+      // Upload file to actual Supabase Storage
       const publicUrl = await uploadFileToStorage(fileName, selectedFile, setUploadProgress);
 
       // Create post record in database

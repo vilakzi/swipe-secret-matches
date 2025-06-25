@@ -9,7 +9,7 @@ export const handleUploadError = (error: any) => {
 
   if (!navigator.onLine) {
     errorMessage = "Connection lost";
-    errorDescription = "Please check your internet connection";
+    errorDescription = "Please check your internet connection and try again";
   } else if (error.message?.includes('timeout') || error.message?.includes('fetch')) {
     errorMessage = "Network timeout";
     errorDescription = "Poor connection detected. Try with a smaller file or better signal";
@@ -18,10 +18,22 @@ export const handleUploadError = (error: any) => {
     errorDescription = "Please compress your file or try a smaller one";
   } else if (error.message?.includes('permission') || error.message?.includes('unauthorized')) {
     errorMessage = "Permission denied";
-    errorDescription = "Please log out and log back in";
+    errorDescription = "Please log out and log back in to refresh your session";
   } else if (error.message?.includes('storage')) {
     errorMessage = "Storage error";
     errorDescription = "Server storage issue. Please try again in a moment";
+  } else if (error.message?.includes('Invalid file') || error.message?.includes('extension')) {
+    errorMessage = "Invalid file type";
+    errorDescription = "Please select a supported image or video file";
+  } else if (error.message?.includes('duplicate')) {
+    errorMessage = "Duplicate content";
+    errorDescription = "This file has already been uploaded";
+  } else if (error.message?.includes('quota') || error.message?.includes('limit')) {
+    errorMessage = "Upload limit reached";
+    errorDescription = "You've reached your upload limit. Please try again later";
+  } else if (error.message?.includes('corrupted') || error.message?.includes('invalid')) {
+    errorMessage = "File corrupted";
+    errorDescription = "The file appears to be corrupted. Please try a different file";
   }
 
   toast({
@@ -40,5 +52,42 @@ export const checkNetworkConnection = () => {
     });
     return false;
   }
+
+  // Additional connection quality check
+  if (navigator.connection && navigator.connection.effectiveType === 'slow-2g') {
+    toast({
+      title: "Slow connection detected",
+      description: "Upload may take longer than usual",
+    });
+  }
+
   return true;
+};
+
+// Enhanced network monitoring
+export const monitorNetworkStatus = (callback: (isOnline: boolean) => void) => {
+  const handleOnline = () => {
+    callback(true);
+    toast({
+      title: "Connection restored",
+      description: "You can now upload files",
+    });
+  };
+
+  const handleOffline = () => {
+    callback(false);
+    toast({
+      title: "Connection lost",
+      description: "Please check your internet connection",
+      variant: "destructive",
+    });
+  };
+
+  window.addEventListener('online', handleOnline);
+  window.addEventListener('offline', handleOffline);
+
+  return () => {
+    window.removeEventListener('online', handleOnline);
+    window.removeEventListener('offline', handleOffline);
+  };
 };
