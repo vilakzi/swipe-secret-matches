@@ -48,12 +48,14 @@ export const useFormValidation = (rules: ValidationRules) => {
     return null;
   }, [rules]);
 
-  const validate = useCallback((formData: Record<string, string>): boolean => {
+  const validate = useCallback((formData: Record<string, any>): boolean => {
     const newErrors: Record<string, string> = {};
     let isValid = true;
 
     Object.keys(rules).forEach(fieldName => {
-      const error = validateField(fieldName, formData[fieldName] || '');
+      const fieldValue = formData[fieldName];
+      const stringValue = typeof fieldValue === 'string' ? fieldValue : String(fieldValue || '');
+      const error = validateField(fieldName, stringValue);
       if (error) {
         newErrors[fieldName] = error;
         isValid = false;
