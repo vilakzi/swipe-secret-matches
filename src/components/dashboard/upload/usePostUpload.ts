@@ -56,7 +56,7 @@ export const usePostUpload = () => {
     caption: string,
     promotionType: PromotionType,
     validationError: string | null,
-    onSuccess: (post: any) => void,
+    onSuccess: () => void,
     onAddToFeed: (post: any) => void,
     onShowPayment: (post: any) => void
   ) => {
