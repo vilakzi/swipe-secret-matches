@@ -1,10 +1,10 @@
 
+import React, { memo, useState, useCallback } from 'react';
 import { Card } from "@/components/ui/card";
 import { usePresence } from "@/hooks/usePresence";
 import { useNavigate } from "react-router-dom";
 import { useImageModal } from "@/hooks/useImageModal";
 import ImageModal from "@/components/ui/ImageModal";
-import { useState } from "react";
 import PostCardHeader from "./PostCardHeader";
 import PostCardActions from "./PostCardActions";
 import PostCardCaption from "./PostCardCaption";
@@ -51,7 +51,7 @@ interface PostCardProps {
   engagementTracker?: any;
 }
 
-const PostCard = ({
+const PostCard = memo<PostCardProps>(({
   item,
   likedItems,
   isSubscribed,
@@ -59,56 +59,51 @@ const PostCard = ({
   onContact,
   onDelete,
   engagementTracker,
-}: PostCardProps) => {
+}) => {
   const { isUserOnline } = usePresence();
   const navigate = useNavigate();
   const { isOpen, imageSrc, imageAlt, openModal, closeModal } = useImageModal();
   const [showComments, setShowComments] = useState(false);
 
   // Safety checks
-  if (!item || !item.id || !item.profile) {
+  if (!item?.id || !item?.profile) {
     console.warn('PostCard: Invalid item data', item);
     return null;
   }
 
-  console.log('🎯 PostCard rendering item:', {
-    id: item.id,
-    type: item.type,
-    profileName: item.profile.name,
-    hasPostImage: !!item.postImage,
-    isVideo: item.isVideo,
-    isAdmin: item.profile.role === 'admin' || item.isAdminPost
-  });
-
-  // Mobile-optimized handlers
-  const handleProfileClick = () => {
+  // Memoized handlers
+  const handleProfileClick = useCallback(() => {
     engagementTracker?.trackEngagement(item.id, 'tap');
     navigate(`/profile/${item.profile.id}`);
-  };
+  }, [engagementTracker, item.id, item.profile.id, navigate]);
 
-  const handleLike = (e: React.MouseEvent) => {
+  const handleLike = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     engagementTracker?.trackEngagement(item.id, 'like');
     onLike(item.id, item.profile.id);
-  };
+  }, [engagementTracker, item.id, item.profile.id, onLike]);
 
-  const handleContact = (e: React.MouseEvent) => {
+  const handleContact = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     engagementTracker?.trackEngagement(item.id, 'contact');
     onContact(item.profile);
-  };
+  }, [engagementTracker, item.id, item.profile, onContact]);
 
-  const handleAvatarClick = (e: React.MouseEvent) => {
+  const handleAvatarClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     engagementTracker?.trackEngagement(item.id, 'tap');
     openModal(item.profile.image, `${item.profile.name}'s profile photo`);
-  };
+  }, [engagementTracker, item.id, item.profile.image, item.profile.name, openModal]);
 
-  const handlePostImageClick = (e: React.MouseEvent) => {
+  const handlePostImageClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     engagementTracker?.trackEngagement(item.id, 'tap');
     openModal(item.postImage || "", `${item.profile.name}'s post`);
-  };
+  }, [engagementTracker, item.id, item.postImage, item.profile.name, openModal]);
+
+  const handleToggleComments = useCallback(() => {
+    setShowComments(prev => !prev);
+  }, []);
 
   return (
     <>
@@ -132,7 +127,7 @@ const PostCard = ({
             />
           </PostCardHeader>
           
-          {/* Only show post content if it's a post type with media */}
+          {/* Post content */}
           {item.type === 'post' && item.postImage && (
             <PostCardContent
               postImage={item.postImage}
@@ -142,7 +137,7 @@ const PostCard = ({
             />
           )}
 
-          {/* Show profile content for profile type items */}
+          {/* Profile content */}
           {item.type === 'profile' && (
             <div className="p-4">
               <div className="text-center">
@@ -169,7 +164,7 @@ const PostCard = ({
             <PostCardActions
               itemId={item.id}
               showComments={showComments}
-              onToggleComments={() => setShowComments((open) => !open)}
+              onToggleComments={handleToggleComments}
               onContact={handleContact}
               isSubscribed={isSubscribed}
             />
@@ -184,7 +179,7 @@ const PostCard = ({
               <PostComments
                 postId={item.id}
                 isOpen={showComments}
-                onToggle={() => setShowComments((open) => !open)}
+                onToggle={handleToggleComments}
               />
             )}
           </div>
@@ -199,6 +194,7 @@ const PostCard = ({
       />
     </>
   );
-};
+});
 
+PostCard.displayName = 'PostCard';
 export default PostCard;

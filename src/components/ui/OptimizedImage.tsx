@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, memo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface OptimizedImageProps {
@@ -12,9 +12,10 @@ interface OptimizedImageProps {
   onError?: () => void;
   onClick?: (e: React.MouseEvent) => void;
   expandable?: boolean;
+  priority?: boolean;
 }
 
-const OptimizedImage = ({ 
+const OptimizedImage = memo(({ 
   src, 
   alt, 
   className = '', 
@@ -23,16 +24,18 @@ const OptimizedImage = ({
   onLoad,
   onError,
   onClick,
-  expandable = false
+  expandable = false,
+  priority = false
 }: OptimizedImageProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-  const [isInView, setIsInView] = useState(false);
+  const [isInView, setIsInView] = useState(priority);
   const [aspectRatio, setAspectRatio] = useState<string>('auto');
   const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
-    console.log("[OptimizedImage] Preparing to load", { src, fallback });
+    if (priority) return; // Skip intersection observer for priority images
+    
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -40,7 +43,7 @@ const OptimizedImage = ({
           observer.disconnect();
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1, rootMargin: '50px' }
     );
 
     if (imgRef.current) {
@@ -48,19 +51,19 @@ const OptimizedImage = ({
     }
 
     return () => observer.disconnect();
-  }, [src, fallback]);
+  }, [priority]);
 
   const handleLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const img = e.currentTarget;
     const ratio = img.naturalWidth / img.naturalHeight;
     
-    // Determine best fit for container
+    // Smart aspect ratio detection
     if (ratio > 1.5) {
-      setAspectRatio('16/9'); // Wide images
+      setAspectRatio('16/9');
     } else if (ratio < 0.8) {
-      setAspectRatio('9/16'); // Tall images
+      setAspectRatio('9/16');
     } else {
-      setAspectRatio('1/1'); // Square-ish images
+      setAspectRatio('1/1');
     }
     
     setIsLoading(false);
@@ -70,21 +73,16 @@ const OptimizedImage = ({
   const handleError = () => {
     setIsLoading(false);
     setHasError(true);
-    console.error(`[OptimizedImage] Failed to load image`, { src, fallback });
     onError?.();
   };
 
-  const handleClick = (e: React.MouseEvent) => {
-    onClick?.(e);
-  };
-
-  const shouldLoad = loading === 'eager' || isInView;
+  const shouldLoad = priority || isInView;
 
   return (
     <div 
       className={`relative overflow-hidden ${className} ${expandable || onClick ? 'cursor-pointer' : ''}`} 
       ref={imgRef}
-      onClick={handleClick}
+      onClick={onClick}
       style={{ aspectRatio }}
     >
       {isLoading && (
@@ -101,10 +99,12 @@ const OptimizedImage = ({
           onLoad={handleLoad}
           onError={handleError}
           loading={loading}
+          decoding="async"
         />
       )}
     </div>
   );
-};
+});
 
+OptimizedImage.displayName = 'OptimizedImage';
 export default OptimizedImage;

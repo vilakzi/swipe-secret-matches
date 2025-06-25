@@ -1,4 +1,5 @@
-import React, { useState, useCallback } from 'react';
+
+import React, { useState, useCallback, memo } from 'react';
 import PostCard from './PostCard';
 import FeedHeader from './FeedHeader';
 import { toast } from '@/hooks/use-toast';
@@ -13,7 +14,7 @@ interface FeedContentProps {
   engagementTracker?: any;
 }
 
-const FeedContent = ({
+const FeedContent = memo<FeedContentProps>(({
   feedItems,
   likedItems,
   isSubscribed,
@@ -21,7 +22,7 @@ const FeedContent = ({
   onContact,
   onRefresh,
   engagementTracker,
-}: FeedContentProps) => {
+}) => {
   const [showFilters, setShowFilters] = useState(false);
   const [localFeedItems, setLocalFeedItems] = useState(feedItems);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -63,64 +64,60 @@ const FeedContent = ({
   // Safety check for feed items
   const safeFeedItems = Array.isArray(localFeedItems) ? localFeedItems : [];
 
-  console.log('🎯 FeedContent rendering:', {
-    feedItemsCount: safeFeedItems.length,
-    isRefreshing,
-    hasEngagementTracker: !!engagementTracker
-  });
+  if (safeFeedItems.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="bg-gray-800/50 rounded-lg p-8 border border-gray-700">
+          <h3 className="text-lg font-semibold text-white mb-2">No posts available</h3>
+          <p className="text-gray-400 mb-4">
+            {isRefreshing 
+              ? "Loading fresh content..." 
+              : "Be the first to share something amazing!"
+            }
+          </p>
+          <button
+            onClick={handleRefreshFeed}
+            disabled={isRefreshing}
+            className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            {isRefreshing ? 'Refreshing...' : 'Refresh Feed'}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div className="space-y-4">
-        {safeFeedItems.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="bg-gray-800/50 rounded-lg p-8 border border-gray-700">
-              <h3 className="text-lg font-semibold text-white mb-2">No posts available</h3>
-              <p className="text-gray-400 mb-4">
-                {isRefreshing 
-                  ? "Loading fresh content..." 
-                  : "Be the first to share something amazing!"
-                }
-              </p>
-              <button
-                onClick={handleRefreshFeed}
-                disabled={isRefreshing}
-                className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg transition-colors"
-              >
-                {isRefreshing ? 'Refreshing...' : 'Refresh Feed'}
-              </button>
-            </div>
-          </div>
-        ) : (
-          safeFeedItems.map((item, index) => {
-            // Ensure item has required properties
-            if (!item || !item.id || !item.profile) {
-              console.warn('🎯 Skipping invalid feed item at index', index, item);
-              return null;
-            }
+        {safeFeedItems.map((item, index) => {
+          // Ensure item has required properties
+          if (!item?.id || !item?.profile) {
+            console.warn('🎯 Skipping invalid feed item at index', index, item);
+            return null;
+          }
 
-            // Add debug info for admin content
-            if (item.profile?.role === 'admin' || item.isAdminPost) {
-              console.debug(`🎯 Rendering admin content at position ${index}:`, item.profile?.name);
-            }
-            
-            // FIXED: Use displayKey for React key to prevent duplicates, but keep original ID for database operations
-            const reactKey = item.displayKey || `${item.id}-${index}`;
-            
-            return (
-              <PostCard
-                key={reactKey}
-                item={item}
-                likedItems={likedItems}
-                isSubscribed={isSubscribed}
-                onLike={onLike}
-                onContact={onContact}
-                onDelete={handleDeletePost}
-                engagementTracker={engagementTracker}
-              />
-            );
-          })
-        )}
+          // Add debug info for admin content
+          if (item.profile?.role === 'admin' || item.isAdminPost) {
+            console.debug(`🎯 Rendering admin content at position ${index}:`, item.profile?.name);
+          }
+          
+          // Use displayKey for React key to prevent duplicates
+          const reactKey = item.displayKey || `${item.id}-${index}`;
+          
+          return (
+            <PostCard
+              key={reactKey}
+              item={item}
+              likedItems={likedItems}
+              isSubscribed={isSubscribed}
+              onLike={onLike}
+              onContact={onContact}
+              onDelete={handleDeletePost}
+              engagementTracker={engagementTracker}
+            />
+          );
+        })}
       </div>
 
       {isRefreshing && (
@@ -135,6 +132,7 @@ const FeedContent = ({
       )}
     </div>
   );
-};
+});
 
+FeedContent.displayName = 'FeedContent';
 export default FeedContent;
