@@ -58,6 +58,12 @@ export interface FeedItem {
   // Algorithm properties - support both simple and detailed scoring
   algorithmScore?: number | ContentScore;
   originalIndex?: number;
+  // Dynamic cycling properties
+  displayIndex?: number;
+  cycleNumber?: number;
+  originalId?: string;
+  cycleGenerated?: number;
+  dynamicScore?: number;
 }
 
 export type RelationshipStatus = 'single' | 'taken' | 'complicated' | 'not_specified';
