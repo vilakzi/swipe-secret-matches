@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useMemo } from 'react';
 import { FeedItem } from '@/components/feed/types/feedTypes';
 
@@ -18,7 +17,7 @@ export const useNeverEndingFeed = ({
   const [displayedCount, setDisplayedCount] = useState(initialBatchSize);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // Current displayed items with intelligent cycling
+  // Current displayed items with intelligent cycling - FIXED ID handling
   const displayedItems = useMemo(() => {
     if (dynamicContentPool.length === 0) return [];
 
@@ -30,14 +29,17 @@ export const useNeverEndingFeed = ({
       const poolIndex = i % dynamicContentPool.length;
       const originalItem = dynamicContentPool[poolIndex];
       
-      // Add cycle information to make items unique
+      // Add cycle information but keep original ID for database operations
       const cycleNumber = Math.floor(i / dynamicContentPool.length);
       items.push({
         ...originalItem,
-        id: `${originalItem.id}-cycle-${cycleNumber}`,
+        // Keep original ID intact for database operations
+        id: originalItem.id,
         displayIndex: i,
         cycleNumber,
-        originalId: originalItem.id
+        originalId: originalItem.id,
+        // Use display key for React rendering to avoid key conflicts
+        displayKey: `${originalItem.id}-cycle-${cycleNumber}`
       });
     }
 
@@ -55,9 +57,9 @@ export const useNeverEndingFeed = ({
 
     setIsLoadingMore(true);
     
-    // Mark current items as viewed
+    // Mark current items as viewed using original IDs
     if (onContentViewed) {
-      const viewedIds = displayedItems.map(item => (item as any).originalId || item.id);
+      const viewedIds = displayedItems.map(item => item.originalId || item.id);
       onContentViewed(viewedIds);
     }
 

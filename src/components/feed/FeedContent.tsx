@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import PostCard from './PostCard';
 import FeedHeader from './FeedHeader';
@@ -105,9 +104,12 @@ const FeedContent = ({
               console.debug(`🎯 Rendering admin content at position ${index}:`, item.profile?.name);
             }
             
+            // FIXED: Use displayKey for React key to prevent duplicates, but keep original ID for database operations
+            const reactKey = item.displayKey || `${item.id}-${index}`;
+            
             return (
               <PostCard
-                key={`${item.id}-${index}`}
+                key={reactKey}
                 item={item}
                 likedItems={likedItems}
                 isSubscribed={isSubscribed}
