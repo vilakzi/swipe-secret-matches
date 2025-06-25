@@ -17,9 +17,9 @@ export const useFeedItemCreation = ({
   userId
 }: UseFeedItemCreationProps) => {
   const allFeedItems = useMemo(() => {
-    console.log('Creating feed with NO duplication algorithm, shuffle key:', shuffleKey);
+    console.log('Creating feed with FIXED algorithm - NO duplicates, shuffle key:', shuffleKey);
     
-    // Convert profiles to feed items - only real profiles, no demo data
+    // Convert profiles to feed items - only real profiles
     const profileItems: FeedItem[] = filteredProfiles.map(profile => ({
       id: `profile-${profile.id}`,
       type: 'profile' as const,
@@ -34,7 +34,7 @@ export const useFeedItemCreation = ({
         gender: profile.gender,
         userType: profile.userType,
         role: profile.role || profile.userType,
-        isRealAccount: profile.isRealAccount || true,
+        isRealAccount: true, // Always real accounts - no demo data
         verifications: profile.verifications || {
           phoneVerified: false,
           emailVerified: true,
@@ -45,10 +45,10 @@ export const useFeedItemCreation = ({
       }
     }));
 
-    // Convert posts to feed items with admin prioritization
+    // Convert posts to feed items
     const postItems: FeedItem[] = posts.map(post => {
       const role = post.profiles?.role?.toLowerCase() || '';
-      const isAdmin = ['admin'].includes(role);
+      const isAdmin = role === 'admin';
       
       return {
         id: `post-${post.id}`,
@@ -76,52 +76,27 @@ export const useFeedItemCreation = ({
         postImage: post.content_url,
         caption: post.caption,
         isAdminPost: isAdmin,
-        priorityWeight: isAdmin ? 10 : 1,
-        boostFactor: isAdmin ? 3.0 : 1.0,
         createdAt: post.created_at
       };
     });
 
-    // Separate user's own posts from other posts to prevent duplication
-    let myPostItems: FeedItem[] = [];
-    let otherPostItems: FeedItem[] = [];
+    // CRITICAL FIX: Separate user's own posts to prevent duplicates
+    const userPosts = userId ? postItems.filter(item => item.profile.id === userId) : [];
+    const otherPosts = userId ? postItems.filter(item => item.profile.id !== userId) : postItems;
+
+    // Create a single combined array with NO DUPLICATES
+    const allOtherItems = [...otherPosts, ...profileItems];
     
-    if (userId) {
-      myPostItems = postItems.filter(item => item.profile.id === userId);
-      otherPostItems = postItems.filter(item => item.profile.id !== userId);
-    } else {
-      otherPostItems = postItems;
-    }
-
-    // FIXED ALGORITHM: Simple shuffle with NO duplication
-    const allOtherItems = [...otherPostItems, ...profileItems];
+    // Simple shuffle to mix content
+    const shuffledItems = shuffleArrayWithSeed(allOtherItems, shuffleKey);
     
-    // Separate admin content from regular content
-    const adminItems = allOtherItems.filter(item => 
-      (item as any).isAdminPost || 
-      item.profile.role?.toLowerCase() === 'admin'
-    );
-    const regularItems = allOtherItems.filter(item => 
-      !(item as any).isAdminPost && 
-      item.profile.role?.toLowerCase() !== 'admin'
-    );
+    // Final result: user's posts first, then shuffled other content
+    const result = userPosts.length > 0 
+      ? [...userPosts, ...shuffledItems]
+      : shuffledItems;
 
-    console.log(`Feed composition: ${adminItems.length} admin items, ${regularItems.length} regular items`);
-
-    // Simple approach: Mix admin and regular content without complex interleaving
-    const shuffledAdmin = shuffleArrayWithSeed(adminItems, shuffleKey);
-    const shuffledRegular = shuffleArrayWithSeed(regularItems, shuffleKey + 1);
+    console.log(`FIXED Feed: ${result.length} total items (${userPosts.length} user posts, ${otherPosts.length} other posts, ${profileItems.length} profiles) - GUARANTEED NO DUPLICATES`);
     
-    // Basic merge: Add admin items first (for priority), then regular items
-    // This ensures NO DUPLICATION while maintaining admin priority
-    const mergedItems = [...shuffledAdmin, ...shuffledRegular];
-
-    // Prepend user's own posts at the top (if any)
-    const result = myPostItems.length > 0
-      ? [...myPostItems, ...mergedItems]
-      : mergedItems;
-
-    console.log(`Final feed: ${result.length} items total (${myPostItems.length} own posts, ${adminItems.length} admin, ${regularItems.length} regular) - NO DUPLICATES`);
     return result;
   }, [filteredProfiles, posts, shuffleKey, userId]);
 
