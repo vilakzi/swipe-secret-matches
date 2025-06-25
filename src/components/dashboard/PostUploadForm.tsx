@@ -29,7 +29,7 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isValidating, setIsValidating] = useState(false);
 
-  const { uploading, uploadProgress, uploadPost } = usePostUpload();
+  const { uploading, uploadProgress, uploadPost, uploadError } = usePostUpload();
 
   const resetForm = () => {
     setSelectedFile(null);
@@ -109,7 +109,7 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
           selectedFile={selectedFile}
           uploading={uploading}
           promotionType={promotionType}
-          validationError={validationError}
+          validationError={validationError || uploadError}
           isValidating={isValidating}
           onUpload={handleUpload}
           onCancel={resetForm}
@@ -129,6 +129,7 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
         isValidating={isValidating}
         setValidationError={setValidationError}
         setIsValidating={setIsValidating}
+        uploadError={uploadError}
       />
     </Card>
   );

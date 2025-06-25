@@ -13,6 +13,7 @@ export const usePostUpload = () => {
   const { user } = useAuth();
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const uploadPost = async (
     selectedFile: File,
@@ -23,23 +24,30 @@ export const usePostUpload = () => {
     onAddToFeed: (post: any) => void,
     onShowPayment: (post: any) => void
   ) => {
+    // Clear previous errors
+    setUploadError(null);
+
     if (!selectedFile || !user) {
+      const errorMsg = !user ? "Please log in to upload files" : "Please select a file to upload";
+      setUploadError(errorMsg);
       toast({
-        title: "Missing requirements",
-        description: "Please select a file and ensure you're logged in.",
+        title: "Upload Failed",
+        description: errorMsg,
         variant: "destructive"
       });
       return;
     }
 
     if (!checkNetworkConnection()) {
+      setUploadError("No internet connection");
       return;
     }
 
     if (validationError) {
+      setUploadError(validationError);
       toast({
         title: "File validation failed",
-        description: "Please select a different file",
+        description: validationError,
         variant: "destructive"
       });
       return;
@@ -58,7 +66,7 @@ export const usePostUpload = () => {
       
       const fileName = generateFileName(user.id, fileExt);
 
-      // Upload file to actual Supabase Storage
+      // Upload file to Supabase Storage
       const publicUrl = await uploadFileToStorage(fileName, selectedFile, setUploadProgress);
 
       // Create post record in database
@@ -71,6 +79,7 @@ export const usePostUpload = () => {
         setUploadProgress
       );
 
+      setUploadProgress(100);
       onAddToFeed(postData);
 
       if (promotionType !== 'free_2h') {
@@ -90,6 +99,9 @@ export const usePostUpload = () => {
       return postData;
       
     } catch (error: any) {
+      console.error('Upload error:', error);
+      const errorMessage = error.message || 'Upload failed. Please try again.';
+      setUploadError(errorMessage);
       handleUploadError(error);
     } finally {
       setUploading(false);
@@ -100,6 +112,7 @@ export const usePostUpload = () => {
   return {
     uploading,
     uploadProgress,
-    uploadPost
+    uploadPost,
+    uploadError
   };
 };

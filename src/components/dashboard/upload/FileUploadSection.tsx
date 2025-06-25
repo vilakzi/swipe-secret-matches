@@ -8,6 +8,7 @@ import FileInput from './FileInput';
 import FileStatusDisplay from './FileStatusDisplay';
 import FilePreview from './FilePreview';
 import FileValidationMessages from './FileValidationMessages';
+import UploadErrorHandler from './UploadErrorHandler';
 import { useVideoValidator } from './VideoValidator';
 
 interface FileUploadSectionProps {
@@ -17,6 +18,7 @@ interface FileUploadSectionProps {
   isValidating?: boolean;
   setValidationError?: (error: string | null) => void;
   setIsValidating?: (validating: boolean) => void;
+  uploadError?: string | null;
 }
 
 const FileUploadSection = ({ 
@@ -25,7 +27,8 @@ const FileUploadSection = ({
   validationError, 
   isValidating,
   setValidationError,
-  setIsValidating 
+  setIsValidating,
+  uploadError
 }: FileUploadSectionProps) => {
   const { role } = useUserRole();
   const maxSize = getMaxUploadSize(role);
@@ -102,7 +105,7 @@ const FileUploadSection = ({
         return;
       }
 
-      if (file.size > 10 * 1024 * 1024) {
+      if (file.size > 50 * 1024 * 1024) {
         toast({
           title: "Large file warning",
           description: "Large files may upload slowly on mobile data",
@@ -122,11 +125,13 @@ const FileUploadSection = ({
     });
   };
 
-  const isFileReady = selectedFile && !isValidating && !validationError && isOnline;
+  const isFileReady = selectedFile && !isValidating && !validationError && !uploadError && isOnline;
 
   return (
     <div className="space-y-4">
       <NetworkStatusIndicator />
+      
+      <UploadErrorHandler error={uploadError || validationError} isOnline={isOnline} />
 
       <div>
         <label className="block text-sm font-medium text-gray-300 mb-2">

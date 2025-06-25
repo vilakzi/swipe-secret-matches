@@ -12,6 +12,7 @@ interface UploadButtonProps {
   onUpload: () => void;
   validationError?: string | null;
   isValidating?: boolean;
+  uploadError?: string | null;
 }
 
 function UploadButton({ 
@@ -20,7 +21,8 @@ function UploadButton({
   promotionType, 
   onUpload,
   validationError,
-  isValidating 
+  isValidating,
+  uploadError
 }: UploadButtonProps) {
   const { role } = useUserRole();
   const maxSize = getMaxUploadSize(role);
@@ -37,8 +39,9 @@ function UploadButton({
     }
   }
 
-  const isReady = selectedFile && !uploading && !validationError && !isValidating && isOnline;
-  const isDisabled = !selectedFile || uploading || !!validationError || isValidating || !isOnline;
+  const hasError = validationError || uploadError;
+  const isReady = selectedFile && !uploading && !hasError && !isValidating && isOnline;
+  const isDisabled = !selectedFile || uploading || !!hasError || isValidating || !isOnline;
 
   return (
     <div className="space-y-3">
@@ -71,13 +74,25 @@ function UploadButton({
         </div>
       )}
 
-      {/* Validation Error */}
-      {validationError && (
+      {/* Upload Error */}
+      {uploadError && (
         <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-3">
           <div className="flex items-center space-x-2">
             <AlertTriangle className="w-4 h-4 text-red-400" />
             <span className="text-red-400 text-sm font-medium">
-              File validation failed - cannot upload
+              Upload failed: {uploadError}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Validation Error */}
+      {validationError && !uploadError && (
+        <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-3">
+          <div className="flex items-center space-x-2">
+            <AlertTriangle className="w-4 h-4 text-red-400" />
+            <span className="text-red-400 text-sm font-medium">
+              File validation failed: {validationError}
             </span>
           </div>
         </div>
@@ -120,10 +135,10 @@ function UploadButton({
             <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
             <span>Validating...</span>
           </div>
-        ) : validationError ? (
+        ) : hasError ? (
           <div className="flex items-center space-x-2">
             <AlertTriangle className="w-5 h-5" />
-            <span>Invalid File</span>
+            <span>Error - Cannot Upload</span>
           </div>
         ) : selectedFile ? (
           <div className="flex items-center space-x-2">
@@ -154,25 +169,6 @@ function UploadButton({
           </span>
         </div>
       </div>
-      
-      {/* Helper Messages */}
-      {!selectedFile && (
-        <p className="text-center text-gray-400 text-xs">
-          Select an image or video file to get started
-        </p>
-      )}
-
-      {validationError && (
-        <p className="text-center text-red-400 text-xs">
-          Please choose a different file and try again
-        </p>
-      )}
-
-      {!isOnline && (
-        <p className="text-center text-red-400 text-xs">
-          Internet connection required for uploads
-        </p>
-      )}
     </div>
   );
 }
