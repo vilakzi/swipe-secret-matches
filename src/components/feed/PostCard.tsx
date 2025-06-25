@@ -229,7 +229,7 @@ const PostCard = ({
           )}
         </PostCardHeader>
         
-        {/* Mobile-optimized post content */}
+        {/* Optimized post content rendering */}
         <div className="relative">
           {isVideoPost && item.postImage ? (
             <PostVideoPlayer
@@ -248,19 +248,23 @@ const PostCard = ({
               />
             )
           )}
-          <div
-            className="absolute top-4 left-4 right-4 h-12 bg-transparent cursor-pointer touch-target"
-            onClick={handleProfileClick}
-            tabIndex={0}
-            aria-label={`Open profile for ${item.profile.name}`}
-            role="button"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                handleProfileClick();
-              }
-            }}
-          />
+          
+          {/* Clickable overlay for profile navigation - only on non-video posts */}
+          {!isVideoPost && (
+            <div
+              className="absolute top-4 left-4 right-4 h-12 bg-transparent cursor-pointer touch-target"
+              onClick={handleProfileClick}
+              tabIndex={0}
+              aria-label={`Open profile for ${item.profile.name}`}
+              role="button"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleProfileClick();
+                }
+              }}
+            />
+          )}
         </div>
 
         <div className="p-4">
