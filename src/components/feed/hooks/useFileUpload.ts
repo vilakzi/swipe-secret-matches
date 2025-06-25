@@ -1,0 +1,147 @@
+
+import { useAuth } from '@/contexts/AuthContext';
+import { useUserRole } from "@/hooks/useUserRole";
+import { getMaxUploadSize } from "@/utils/getMaxUploadSize";
+import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+
+export const useFileUpload = (onRefresh?: () => void) => {
+  const { user } = useAuth();
+  const { role } = useUserRole();
+  const maxSize = getMaxUploadSize(role);
+
+  const handleFileUpload = async (file: File, type: 'image' | 'video') => {
+    if (!user) {
+      toast({
+        title: "Please log in",
+        description: "You need to be logged in to upload content",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size based on user role
+    if (file.size > maxSize) {
+      toast({
+        title: "File too large",
+        description: `Maximum file size is ${Math.round(maxSize / (1024*1024))}MB for ${role} accounts`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file type
+    const isValidType = type === 'image' ? file.type.startsWith('image/') : file.type.startsWith('video/');
+    if (!isValidType) {
+      toast({
+        title: "Invalid file type",
+        description: `Please select a valid ${type} file`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      console.log(`Starting ${type} upload for file:`, file.name);
+      
+      // Generate unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${type}_${Date.now()}.${fileExt}`;
+      
+      // Upload to Supabase Storage
+      const { data, error: uploadError } = await supabase.storage
+        .from('posts')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('posts')
+        .getPublicUrl(fileName);
+
+      // Create post entry in database
+      const { data: postData, error: postError } = await supabase
+        .from('posts')
+        .insert({
+          provider_id: user.id,
+          content_url: publicUrl,
+          post_type: type,
+          caption: `New ${type} post`,
+          promotion_type: 'free_2h',
+          expires_at: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+          is_promoted: false,
+          payment_status: 'paid'
+        })
+        .select()
+        .single();
+
+      if (postError) {
+        console.error('Post creation error:', postError);
+        throw postError;
+      }
+
+      console.log('Post created successfully:', postData);
+
+      toast({
+        title: "Upload successful!",
+        description: `Your ${type} has been uploaded and posted to the feed.`,
+      });
+
+      // Trigger refresh
+      if (onRefresh) {
+        onRefresh();
+      }
+      
+    } catch (error: any) {
+      console.error('Upload failed:', error);
+      toast({
+        title: "Upload failed",
+        description: error.message || "Something went wrong during upload",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const createFileInput = (accept: string, onFileSelect: (file: File) => void) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = accept;
+    input.style.display = 'none';
+    
+    const handleChange = (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      const file = target.files?.[0];
+      if (file) {
+        onFileSelect(file);
+      }
+      // Clean up
+      input.removeEventListener('change', handleChange);
+      document.body.removeChild(input);
+    };
+    
+    input.addEventListener('change', handleChange);
+    document.body.appendChild(input);
+    input.click();
+  };
+
+  const handleImageUpload = () => {
+    createFileInput('image/*', (file) => handleFileUpload(file, 'image'));
+  };
+
+  const handleVideoUpload = () => {
+    createFileInput('video/*', (file) => handleFileUpload(file, 'video'));
+  };
+
+  return {
+    handleImageUpload,
+    handleVideoUpload,
+    maxSize,
+    user
+  };
+};
