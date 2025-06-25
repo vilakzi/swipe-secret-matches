@@ -54,7 +54,14 @@ export const useFormValidation = (rules: ValidationRules) => {
 
     Object.keys(rules).forEach(fieldName => {
       const fieldValue = formData[fieldName];
+      // Convert any value to string for validation, but skip boolean fields that don't need validation
       const stringValue = typeof fieldValue === 'string' ? fieldValue : String(fieldValue || '');
+      
+      // Skip validation for boolean fields that don't have validation rules
+      if (typeof fieldValue === 'boolean' && !rules[fieldName].required) {
+        return;
+      }
+      
       const error = validateField(fieldName, stringValue);
       if (error) {
         newErrors[fieldName] = error;
