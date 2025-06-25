@@ -66,19 +66,18 @@ export const useFeedData = (itemsPerPage: number = 8) => {
         return;
       }
 
-      // Enhanced post processing with super admin prioritization
+      // Enhanced post processing with admin prioritization
       const processedPosts = (postsData || []).map(post => {
         const role = post.profiles?.role?.toLowerCase() || '';
-        const isSuperAdmin = ['admin'].includes(role); // Treating admin as super admin for now
+        const isAdmin = ['admin'].includes(role);
         
         return {
           ...post,
           // Enhanced priority system
-          isAdminPost: isSuperAdmin,
-          isSuperAdminPost: isSuperAdmin,
-          priorityWeight: isSuperAdmin ? 10 : 1, // Super high priority for admins
+          isAdminPost: isAdmin,
+          priorityWeight: isAdmin ? 10 : 1,
           // Add boost factor for algorithm
-          boostFactor: isSuperAdmin ? 5.0 : 1.0
+          boostFactor: isAdmin ? 3.0 : 1.0 // Reduced from 5.0 to 3.0
         };
       });
 
@@ -104,16 +103,16 @@ export const useFeedData = (itemsPerPage: number = 8) => {
   // All profiles are used; no further filtering
   const filteredProfiles = roleFilteredProfiles;
 
-  // Create all feed items with enhanced super admin algorithm
+  // Create all feed items with fixed duplication algorithm
   const allFeedItems = useMemo(() => {
-    console.log('Creating feed with super admin algorithm, shuffle key:', shuffleKey);
+    console.log('Creating feed with fixed algorithm, shuffle key:', shuffleKey);
     
     const profileItems = generateFeedItems(filteredProfiles, shuffleKey);
 
-    // Convert posts to feed items with enhanced admin prioritization
+    // Convert posts to feed items with admin prioritization
     const postItems: FeedItem[] = posts.map(post => {
       const role = post.profiles?.role?.toLowerCase() || '';
-      const isSuperAdmin = ['admin'].includes(role);
+      const isAdmin = ['admin'].includes(role);
       
       return {
         id: `post-${post.id}`,
@@ -140,15 +139,14 @@ export const useFeedData = (itemsPerPage: number = 8) => {
         },
         postImage: post.content_url,
         caption: post.caption,
-        isAdminPost: isSuperAdmin,
-        isSuperAdminPost: isSuperAdmin,
-        priorityWeight: isSuperAdmin ? 10 : 1,
-        boostFactor: isSuperAdmin ? 5.0 : 1.0,
+        isAdminPost: isAdmin,
+        priorityWeight: isAdmin ? 10 : 1,
+        boostFactor: isAdmin ? 3.0 : 1.0,
         createdAt: post.created_at
       };
     });
 
-    // Separate user's own posts
+    // Separate user's own posts from other posts to prevent duplication
     let myPostItems: FeedItem[] = [];
     let otherPostItems: FeedItem[] = [];
     
@@ -159,69 +157,53 @@ export const useFeedData = (itemsPerPage: number = 8) => {
       otherPostItems = postItems;
     }
 
-    // Advanced social media algorithm with super admin bias
+    // Fixed algorithm: No duplication, just smart ordering
     const combinedItems = [...otherPostItems, ...profileItems];
     
-    // Create weighted distribution favoring super admins
-    const weightedItems: FeedItem[] = [];
-    
-    // Separate super admin content from regular content
-    const superAdminItems = combinedItems.filter(item => 
-      (item as any).isSuperAdminPost || 
+    // Separate admin content from regular content
+    const adminItems = combinedItems.filter(item => 
+      (item as any).isAdminPost || 
       item.profile.role?.toLowerCase() === 'admin'
     );
     const regularItems = combinedItems.filter(item => 
-      !(item as any).isSuperAdminPost && 
+      !(item as any).isAdminPost && 
       item.profile.role?.toLowerCase() !== 'admin'
     );
 
-    console.log(`Super admin items: ${superAdminItems.length}, Regular items: ${regularItems.length}`);
+    console.log(`Admin items: ${adminItems.length}, Regular items: ${regularItems.length}`);
 
-    // Social media algorithm: Inject super admin content frequently
-    const totalRegularSlots = Math.max(regularItems.length, 20);
-    const adminInjectionRate = Math.min(superAdminItems.length, Math.ceil(totalRegularSlots / 3)); // Every 3rd item can be admin
-    
-    // Shuffle both arrays independently for variety
-    const shuffledSuperAdmin = shuffleArrayWithSeed(superAdminItems, shuffleKey);
+    // Smart interleaving: Admin content appears frequently but NO DUPLICATION
+    const interleavedItems: FeedItem[] = [];
+    const shuffledAdmin = shuffleArrayWithSeed(adminItems, shuffleKey);
     const shuffledRegular = shuffleArrayWithSeed(regularItems, shuffleKey + 1);
     
-    // Interleave content with super admin bias
     let adminIndex = 0;
     let regularIndex = 0;
+    let position = 0;
     
-    for (let i = 0; i < totalRegularSlots + adminInjectionRate; i++) {
-      // Every 2-3 positions, try to inject super admin content
-      const shouldInjectAdmin = (i % 2 === 0 || i % 3 === 0) && 
-                                adminIndex < shuffledSuperAdmin.length;
-      
-      if (shouldInjectAdmin) {
-        // Add super admin content with multiple copies for higher visibility
-        const adminItem = shuffledSuperAdmin[adminIndex % shuffledSuperAdmin.length];
-        weightedItems.push(adminItem);
-        
-        // Add extra copies of super admin content for algorithm boost
-        if (Math.random() > 0.3) { // 70% chance to add extra copy
-          weightedItems.push(adminItem);
-        }
+    // Interleave with admin priority every 3-4 items
+    while (adminIndex < shuffledAdmin.length || regularIndex < shuffledRegular.length) {
+      // Every 3rd position, try to add admin content
+      if (position % 3 === 0 && adminIndex < shuffledAdmin.length) {
+        interleavedItems.push(shuffledAdmin[adminIndex]);
+        adminIndex++;
+      } else if (regularIndex < shuffledRegular.length) {
+        interleavedItems.push(shuffledRegular[regularIndex]);
+        regularIndex++;
+      } else if (adminIndex < shuffledAdmin.length) {
+        // Fill remaining admin items
+        interleavedItems.push(shuffledAdmin[adminIndex]);
         adminIndex++;
       }
-      
-      // Add regular content
-      if (regularIndex < shuffledRegular.length) {
-        weightedItems.push(shuffledRegular[regularIndex]);
-        regularIndex++;
-      }
+      position++;
     }
 
-    // Final shuffle while maintaining admin content frequency
-    const finalFeed = algorithmicShuffle(weightedItems, shuffleKey);
-    
-    // Prepend user's own posts at the top
+    // Prepend user's own posts at the top (if any)
     const result = myPostItems.length > 0
-      ? [...myPostItems, ...finalFeed]
-      : finalFeed;
+      ? [...myPostItems, ...interleavedItems]
+      : interleavedItems;
 
-    console.log(`Final feed composition: ${result.length} items (${myPostItems.length} own posts)`);
+    console.log(`Final feed composition: ${result.length} items (${myPostItems.length} own posts, no duplicates)`);
     return result;
   }, [filteredProfiles, posts, shuffleKey, user?.id]);
 
@@ -265,23 +247,5 @@ function shuffleArrayWithSeed<T>(array: T[], seed: number): T[] {
     const j = Math.floor((currentSeed / 233280) * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
-  return arr;
-}
-
-// Advanced algorithmic shuffle that maintains content priority
-function algorithmicShuffle<T>(array: T[], seed: number): T[] {
-  const arr = [...array];
-  let currentSeed = seed;
-  
-  // Light shuffle to maintain algorithm benefits while adding variety
-  for (let i = 0; i < arr.length; i += 2) {
-    if (i + 1 < arr.length) {
-      currentSeed = (currentSeed * 1103515245 + 12345) % 2147483647;
-      if ((currentSeed / 2147483647) > 0.7) { // 30% chance to swap adjacent items
-        [arr[i], arr[i + 1]] = [arr[i + 1], arr[i]];
-      }
-    }
-  }
-  
   return arr;
 }
