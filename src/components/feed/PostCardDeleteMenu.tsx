@@ -36,12 +36,11 @@ const PostCardDeleteMenu = ({ postId, profileId, onDelete }: PostCardDeleteMenuP
 
     setIsDeleting(true);
     try {
-      const actualPostId = postId.startsWith('post-') ? postId.replace('post-', '') : postId;
-      
+      // Use the clean postId directly - no need to strip prefix
       const { error } = await supabase
         .from('posts')
         .delete()
-        .eq('id', actualPostId)
+        .eq('id', postId)
         .eq('provider_id', user.id);
 
       if (error) {

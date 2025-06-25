@@ -9,6 +9,43 @@ interface UseDynamicFeedAlgorithmProps {
   maxItemsPerLoad?: number;
 }
 
+// Define the score calculation function outside the hook to avoid hoisting issues
+const calculateItemScore = (item: FeedItem, index: number): number => {
+  let score = 100; // Base score
+
+  // Admin content gets massive boost
+  if (item.isAdminCard || item.profile?.role === 'admin') {
+    score += 1000;
+  }
+
+  // Recent posts get priority
+  const createdAt = (item as any).createdAt;
+  if (createdAt) {
+    const ageInHours = (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60);
+    score += Math.max(0, 50 - ageInHours);
+  }
+
+  // Service providers get moderate boost
+  if (item.profile?.userType === 'service_provider') {
+    score += 20;
+  }
+
+  // Posts with content get boost over profile-only items
+  if (item.type === 'post' && item.postImage) {
+    score += 30;
+  }
+
+  // Mobile-specific: Prefer image content over video on slower connections
+  if (typeof window !== 'undefined' && window.innerWidth < 768 && item.postImage && !item.postImage.includes('.mp4')) {
+    score += 15;
+  }
+
+  // Add controlled randomness for diversity
+  score += Math.random() * 10;
+
+  return score;
+};
+
 export const useDynamicFeedAlgorithm = ({
   rawFeedItems,
   enabled = true,
@@ -28,7 +65,7 @@ export const useDynamicFeedAlgorithm = ({
     // Prevent duplicate processing
     if (isProcessing) {
       console.log('🚀 Algorithm already processing, skipping...');
-      return [];
+      return rawFeedItems.slice(0, Math.min(maxItemsPerLoad, 12));
     }
 
     setIsProcessing(true);
@@ -61,59 +98,24 @@ export const useDynamicFeedAlgorithm = ({
       });
 
       // Mobile-optimized: Return reasonable batch size
-      const mobileOptimizedSize = window.innerWidth < 768 ? Math.min(maxItemsPerLoad, 12) : maxItemsPerLoad;
+      const mobileOptimizedSize = typeof window !== 'undefined' && window.innerWidth < 768 
+        ? Math.min(maxItemsPerLoad, 12) 
+        : maxItemsPerLoad;
       const finalItems = sortedItems.slice(0, mobileOptimizedSize).map(({ algorithmScore, originalIndex, ...item }) => item);
       
-      console.log(`🚀 Algorithm completed: ${finalItems.length} items processed for ${window.innerWidth < 768 ? 'mobile' : 'desktop'}`);
+      console.log(`🚀 Algorithm completed: ${finalItems.length} items processed for ${typeof window !== 'undefined' && window.innerWidth < 768 ? 'mobile' : 'desktop'}`);
       
       return finalItems;
     } catch (error) {
       console.error('🚀 Algorithm error:', error);
       // Fallback: return original items with mobile optimization
-      const fallbackSize = window.innerWidth < 768 ? 8 : maxItemsPerLoad;
+      const fallbackSize = typeof window !== 'undefined' && window.innerWidth < 768 ? 8 : maxItemsPerLoad;
       return rawFeedItems.slice(0, fallbackSize);
     } finally {
       // Use timeout to prevent blocking UI on mobile
       setTimeout(() => setIsProcessing(false), 100);
     }
-  }, [rawFeedItems, enabled, maxItemsPerLoad, refreshCount]);
-
-  // Calculate item relevance score with mobile considerations
-  const calculateItemScore = (item: FeedItem, index: number): number => {
-    let score = 100; // Base score
-
-    // Admin content gets massive boost
-    if (item.isAdminCard || item.profile?.role === 'admin') {
-      score += 1000;
-    }
-
-    // Recent posts get priority
-    const createdAt = (item as any).createdAt;
-    if (createdAt) {
-      const ageInHours = (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60);
-      score += Math.max(0, 50 - ageInHours);
-    }
-
-    // Service providers get moderate boost
-    if (item.profile?.userType === 'service_provider') {
-      score += 20;
-    }
-
-    // Posts with content get boost over profile-only items
-    if (item.type === 'post' && item.postImage) {
-      score += 30;
-    }
-
-    // Mobile-specific: Prefer image content over video on slower connections
-    if (window.innerWidth < 768 && item.postImage && !item.postImage.includes('.mp4')) {
-      score += 15;
-    }
-
-    // Add controlled randomness for diversity
-    score += Math.random() * 10;
-
-    return score;
-  };
+  }, [rawFeedItems, enabled, maxItemsPerLoad, refreshCount, isProcessing]);
 
   // Debounced manual refresh for better mobile UX
   const manualRefresh = useCallback(() => {
@@ -128,7 +130,9 @@ export const useDynamicFeedAlgorithm = ({
     if (!enabled || autoRefreshInterval <= 0) return;
 
     // Longer interval on mobile to save battery
-    const interval = window.innerWidth < 768 ? autoRefreshInterval * 1.5 : autoRefreshInterval;
+    const interval = typeof window !== 'undefined' && window.innerWidth < 768 
+      ? autoRefreshInterval * 1.5 
+      : autoRefreshInterval;
     
     const refreshTimer = setInterval(() => {
       if (!isProcessing) {

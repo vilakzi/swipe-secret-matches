@@ -21,7 +21,7 @@ export const useFeedItemCreation = ({
     
     // Convert profiles to feed items - only real profiles
     const profileItems: FeedItem[] = filteredProfiles.map(profile => ({
-      id: `profile-${profile.id}`,
+      id: profile.id, // Use clean UUID without prefix
       type: 'profile' as const,
       profile: {
         id: profile.id,
@@ -51,7 +51,7 @@ export const useFeedItemCreation = ({
       const isAdmin = role === 'admin';
       
       return {
-        id: `post-${post.id}`,
+        id: post.id, // Use clean UUID without prefix
         type: 'post' as const,
         profile: {
           id: post.profiles?.id || post.provider_id,
