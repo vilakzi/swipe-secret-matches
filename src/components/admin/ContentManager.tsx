@@ -16,12 +16,14 @@ import {
   Lock,
   Users,
   Image,
-  Video
+  Video,
+  Star
 } from 'lucide-react';
 import { useAdminContent, AdminContent } from '@/hooks/useAdminContent';
+import ContentPromotion from './ContentPromotion';
 
 const ContentManager = () => {
-  const { content, loading, updateContent, deleteContent } = useAdminContent();
+  const { content, loading, updateContent, deleteContent, refetch } = useAdminContent();
   const [editingContent, setEditingContent] = useState<AdminContent | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
@@ -64,7 +66,6 @@ const ContentManager = () => {
     try {
       await updateContent(editingContent.id, editingContent);
     } catch (error) {
-      // Optionally show a toast or error message here
       console.error("Failed to update content", error);
     } finally {
       setIsEditDialogOpen(false);
@@ -77,7 +78,6 @@ const ContentManager = () => {
       try {
         await deleteContent(id);
       } catch (error) {
-        // Optionally show a toast or error message here
         console.error("Failed to delete content", error);
       }
     }
@@ -94,20 +94,19 @@ const ContentManager = () => {
     }
   };
 
-  const handleSchedule = async (item: AdminContent, scheduledDate: string) => {
-    try {
-      await updateContent(item.id, {
-        status: 'scheduled',
-        scheduled_at: scheduledDate,
-      });
-    } catch (error) {
-      console.error("Failed to schedule content", error);
-    }
-  };
-
   if (loading) {
     return <div className="text-center py-8">Loading content...</div>;
   }
+
+  // Sort content by promotion priority first, then by created date
+  const sortedContent = [...content].sort((a, b) => {
+    if (a.is_promoted && !b.is_promoted) return -1;
+    if (!a.is_promoted && b.is_promoted) return 1;
+    if (a.is_promoted && b.is_promoted) {
+      return (b.promotion_priority || 0) - (a.promotion_priority || 0);
+    }
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
 
   return (
     <Card>
@@ -116,8 +115,18 @@ const ContentManager = () => {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {content.map((item) => (
-            <div key={item.id} className="border rounded-lg overflow-hidden">
+          {sortedContent.map((item) => (
+            <div key={item.id} className="border rounded-lg overflow-hidden relative">
+              {/* Promotion indicator */}
+              {item.is_promoted && (
+                <div className="absolute top-2 right-2 z-10">
+                  <Badge className="bg-yellow-600 text-white">
+                    <Star className="w-3 h-3 mr-1" />
+                    Priority {item.promotion_priority}
+                  </Badge>
+                </div>
+              )}
+              
               {/* Content Preview */}
               <div className="aspect-video bg-gray-100 relative">
                 {item.content_type === 'image' ? (
@@ -141,17 +150,20 @@ const ContentManager = () => {
                   </Badge>
                 </div>
                 {/* Content Type Badge */}
-                <div className="absolute top-2 right-2">
-                  <Badge variant="secondary">
-                    {item.content_type === 'image' ? (
-                      <Image className="w-3 h-3 mr-1" />
-                    ) : (
-                      <Video className="w-3 h-3 mr-1" />
-                    )}
-                    {item.content_type}
-                  </Badge>
-                </div>
+                {!item.is_promoted && (
+                  <div className="absolute top-2 right-2">
+                    <Badge variant="secondary">
+                      {item.content_type === 'image' ? (
+                        <Image className="w-3 h-3 mr-1" />
+                      ) : (
+                        <Video className="w-3 h-3 mr-1" />
+                      )}
+                      {item.content_type}
+                    </Badge>
+                  </div>
+                )}
               </div>
+              
               {/* Content Info */}
               <div className="p-4">
                 <h3 className="font-medium text-lg mb-2 truncate">{item.title}</h3>
@@ -160,6 +172,7 @@ const ContentManager = () => {
                     {item.description}
                   </p>
                 )}
+                
                 {/* Stats */}
                 <div className="flex justify-between text-sm text-gray-500 mb-3">
                   <span className="flex items-center gap-1">
@@ -171,6 +184,15 @@ const ContentManager = () => {
                     {item.visibility}
                   </span>
                 </div>
+
+                {/* Promotion Controls */}
+                <div className="mb-3">
+                  <ContentPromotion 
+                    content={item} 
+                    onPromotionChange={refetch}
+                  />
+                </div>
+                
                 {/* Actions */}
                 <div className="flex justify-between">
                   <div className="flex gap-2">
@@ -203,7 +225,8 @@ const ContentManager = () => {
             </div>
           ))}
         </div>
-        {/* Edit Dialog */}
+        
+        {/* Edit Dialog - keep existing code the same */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>

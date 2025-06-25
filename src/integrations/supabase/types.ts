@@ -24,10 +24,14 @@ export type Database = {
           file_size: number | null
           file_url: string
           id: string
+          is_promoted: boolean | null
           like_count: number | null
           metadata: Json | null
           optimized_file_sizes: Json | null
           original_file_size: number | null
+          promoted_at: string | null
+          promoted_by: string | null
+          promotion_priority: number | null
           published_at: string | null
           rejection_reason: string | null
           scheduled_at: string | null
@@ -53,10 +57,14 @@ export type Database = {
           file_size?: number | null
           file_url: string
           id?: string
+          is_promoted?: boolean | null
           like_count?: number | null
           metadata?: Json | null
           optimized_file_sizes?: Json | null
           original_file_size?: number | null
+          promoted_at?: string | null
+          promoted_by?: string | null
+          promotion_priority?: number | null
           published_at?: string | null
           rejection_reason?: string | null
           scheduled_at?: string | null
@@ -82,10 +90,14 @@ export type Database = {
           file_size?: number | null
           file_url?: string
           id?: string
+          is_promoted?: boolean | null
           like_count?: number | null
           metadata?: Json | null
           optimized_file_sizes?: Json | null
           original_file_size?: number | null
+          promoted_at?: string | null
+          promoted_by?: string | null
+          promotion_priority?: number | null
           published_at?: string | null
           rejection_reason?: string | null
           scheduled_at?: string | null
@@ -1001,12 +1013,20 @@ export type Database = {
         }
         Returns: undefined
       }
+      promote_admin_content: {
+        Args: { content_id: string; priority_level?: number }
+        Returns: undefined
+      }
       promote_to_admin: {
         Args: { _user_email: string }
         Returns: undefined
       }
       reset_daily_usage: {
         Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      unpromote_admin_content: {
+        Args: { content_id: string }
         Returns: undefined
       }
     }
