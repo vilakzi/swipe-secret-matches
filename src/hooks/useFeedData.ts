@@ -19,10 +19,11 @@ export const useFeedData = (itemsPerPage: number = 8) => {
   const { user } = useAuth() || {};
 
   // Debug: output user value before any use
-  console.debug("user value is", user);
+  console.debug("📱 Mobile Debug - user value is", user);
 
   // --- Return default values if no user (instead of null) --- //
   if (!user) {
+    console.log("📱 Mobile Debug - No user found, returning defaults");
     return {
       displayedItems: [],
       hasMoreItems: false,
@@ -40,11 +41,19 @@ export const useFeedData = (itemsPerPage: number = 8) => {
   const { newJoiners, loading: newJoinersLoading } = useNewJoiners();
   const { posts, refetchPosts } = usePostFetching();
 
+  console.log("📱 Mobile Debug - Data status:", {
+    profilesLoading,
+    newJoinersLoading,
+    profilesCount: realProfiles.length,
+    postsCount: posts.length,
+    shuffleKey
+  });
+
   // Engagement tracking
   const engagementTracker = useEngagementTracking();
 
   const allProfiles = useMemo(() => {
-    console.log(`Total profiles: ${realProfiles.length} (all real accounts)`);
+    console.log(`📱 Mobile Debug - Total profiles: ${realProfiles.length} (all real accounts)`);
     return realProfiles;
   }, [realProfiles]);
 
@@ -62,6 +71,8 @@ export const useFeedData = (itemsPerPage: number = 8) => {
     userId: user?.id
   });
 
+  console.log("📱 Mobile Debug - Raw feed items created:", rawFeedItems.length);
+
   // Apply dynamic algorithm for intelligent content ranking
   const {
     algorithmicFeed,
@@ -75,6 +86,12 @@ export const useFeedData = (itemsPerPage: number = 8) => {
     maxItemsPerLoad: itemsPerPage * 3 // Give algorithm more items to work with
   });
 
+  console.log("📱 Mobile Debug - Algorithmic feed processed:", {
+    itemCount: algorithmicFeed.length,
+    isProcessing: algorithmProcessing,
+    refreshCount
+  });
+
   // Handle pagination with algorithmic feed
   const {
     displayedItems,
@@ -86,9 +103,15 @@ export const useFeedData = (itemsPerPage: number = 8) => {
 
   const isLoadingMore = paginationLoading || profilesLoading || newJoinersLoading || algorithmProcessing;
 
+  console.log("📱 Mobile Debug - Final display status:", {
+    displayedItemsCount: displayedItems.length,
+    hasMoreItems,
+    isLoadingMore
+  });
+
   // Enhanced refresh with algorithm reset
   const handleRefresh = useCallback(() => {
-    console.log('🔄 Refreshing feed with dynamic algorithm (refresh #' + (refreshCount + 1) + ')');
+    console.log('📱 Mobile Debug - Refreshing feed with dynamic algorithm (refresh #' + (refreshCount + 1) + ')');
     resetPagination();
     refetchPosts();
     
