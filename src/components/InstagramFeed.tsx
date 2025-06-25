@@ -4,6 +4,7 @@ import FeedHeader from './feed/FeedHeader';
 import FeedContent from './feed/FeedContent';
 import PullToRefresh from './feed/PullToRefresh';
 import InfiniteScroll from './feed/InfiniteScroll';
+import RefreshManager from './feed/RefreshManager';
 import { useDynamicFeedEngine } from '@/hooks/useDynamicFeedEngine';
 import { toast } from '@/hooks/use-toast';
 
@@ -68,7 +69,7 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
             hasMore={hasMoreItems}
             isLoading={isLoadingMore}
             onLoadMore={handleLoadMore}
-            threshold={200} // Load more content proactively
+            threshold={200}
           >
             <FeedContent
               feedItems={displayedItems}
@@ -91,6 +92,12 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
           </InfiniteScroll>
         </PullToRefresh>
       </div>
+
+      {/* Smart refresh manager */}
+      <RefreshManager
+        onRefresh={handleSmartRefresh}
+        autoRefreshInterval={300000} // 5 minutes
+      />
     </div>
   );
 };

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Play, Pause, Volume2, VolumeX, Maximize, Minimize } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useVideoPlayer } from '@/hooks/useVideoPlayer';
+import { useSmartVideoControls } from '@/hooks/useSmartVideoControls';
 import EnhancedVideoPreview from './EnhancedVideoPreview';
 
 interface ImprovedVideoPlayerProps {
@@ -19,9 +20,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   autoPlay = false
 }) => {
   const [showVideo, setShowVideo] = useState(autoPlay);
-  const [showControls, setShowControls] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [controlsTimeout, setControlsTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const {
     videoRef,
@@ -36,10 +35,22 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     handleVolumeChange
   } = useVideoPlayer(src);
 
+  const {
+    showControls,
+    handleVideoPlay,
+    handleVideoPause,
+    handleMouseMove,
+    handleTouchStart,
+    handleClick
+  } = useSmartVideoControls({
+    hideDelay: 3000,
+    showOnHover: true,
+    showOnTouch: true
+  });
+
   const handlePlayClick = async () => {
     if (!showVideo) {
       setShowVideo(true);
-      // Small delay to ensure video element is ready
       setTimeout(() => togglePlay(), 100);
     } else {
       await togglePlay();
@@ -63,35 +74,14 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     }
   };
 
-  // Auto-hide controls after 3 seconds during playback
-  const resetControlsTimeout = () => {
-    if (controlsTimeout) {
-      clearTimeout(controlsTimeout);
-    }
-    
-    setShowControls(true);
-    
-    if (isPlaying && showVideo) {
-      const timeout = setTimeout(() => {
-        setShowControls(false);
-      }, 3000);
-      setControlsTimeout(timeout);
-    }
-  };
-
+  // Sync video player state with smart controls
   useEffect(() => {
-    resetControlsTimeout();
-    return () => {
-      if (controlsTimeout) {
-        clearTimeout(controlsTimeout);
-      }
-    };
-  }, [isPlaying, showVideo]);
-
-  // Handle mouse movement to show controls
-  const handleMouseMove = () => {
-    resetControlsTimeout();
-  };
+    if (isPlaying) {
+      handleVideoPlay();
+    } else {
+      handleVideoPause();
+    }
+  }, [isPlaying, handleVideoPlay, handleVideoPause]);
 
   if (error) {
     return (
@@ -119,8 +109,8 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     <div 
       className={`relative bg-black overflow-hidden h-72 ${className}`}
       onMouseMove={handleMouseMove}
-      onMouseEnter={() => setShowControls(true)}
-      onTouchStart={() => setShowControls(true)}
+      onTouchStart={handleTouchStart}
+      onClick={handleClick}
     >
       <video
         ref={videoRef}
@@ -140,9 +130,9 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
         </div>
       )}
       
-      {/* Controls overlay */}
+      {/* Controls overlay - only show when needed */}
       {showControls && showVideo && (
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent transition-opacity duration-300">
           {/* Center play/pause button */}
           <div className="absolute inset-0 flex items-center justify-center">
             <Button
@@ -199,13 +189,6 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
           </div>
         </div>
       )}
-
-      {/* Tap overlay for mobile */}
-      <div
-        className="absolute inset-0 cursor-pointer"
-        onClick={handlePlayClick}
-        style={{ zIndex: showControls ? -1 : 1 }}
-      />
     </div>
   );
 };
