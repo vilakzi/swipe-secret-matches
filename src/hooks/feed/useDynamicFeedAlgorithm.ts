@@ -35,11 +35,6 @@ const calculateItemScore = (item: FeedItem, index: number): number => {
     score += 30;
   }
 
-  // Mobile-specific: Prefer image content over video on slower connections
-  if (typeof window !== 'undefined' && window.innerWidth < 768 && item.postImage && !item.postImage.includes('.mp4')) {
-    score += 15;
-  }
-
   // Add controlled randomness for diversity
   score += Math.random() * 10;
 
@@ -55,20 +50,13 @@ export const useDynamicFeedAlgorithm = ({
   const [refreshCount, setRefreshCount] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Optimized algorithm with mobile performance considerations
+  // Optimized algorithm with race condition prevention
   const algorithmicFeed = useMemo(() => {
     if (!enabled || rawFeedItems.length === 0) {
-      console.log('🚀 Algorithm disabled or no items, returning empty array');
-      return [];
-    }
-
-    // Prevent duplicate processing
-    if (isProcessing) {
-      console.log('🚀 Algorithm already processing, skipping...');
+      console.log('🚀 Algorithm disabled or no items, returning raw items');
       return rawFeedItems.slice(0, Math.min(maxItemsPerLoad, 12));
     }
 
-    setIsProcessing(true);
     console.log(`🚀 Algorithm processing ${rawFeedItems.length} items (refresh #${refreshCount + 1})`);
 
     try {
@@ -97,56 +85,41 @@ export const useDynamicFeedAlgorithm = ({
         return a.originalIndex - b.originalIndex;
       });
 
-      // Mobile-optimized: Return reasonable batch size
-      const mobileOptimizedSize = typeof window !== 'undefined' && window.innerWidth < 768 
-        ? Math.min(maxItemsPerLoad, 12) 
-        : maxItemsPerLoad;
-      const finalItems = sortedItems.slice(0, mobileOptimizedSize).map(({ algorithmScore, originalIndex, ...item }) => item);
+      // Return reasonable batch size
+      const finalSize = Math.min(maxItemsPerLoad, sortedItems.length);
+      const finalItems = sortedItems.slice(0, finalSize).map(({ algorithmScore, originalIndex, ...item }) => item);
       
-      console.log(`🚀 Algorithm completed: ${finalItems.length} items processed for ${typeof window !== 'undefined' && window.innerWidth < 768 ? 'mobile' : 'desktop'}`);
+      console.log(`🚀 Algorithm completed: ${finalItems.length} items processed`);
       
       return finalItems;
     } catch (error) {
       console.error('🚀 Algorithm error:', error);
-      // Fallback: return original items with mobile optimization
-      const fallbackSize = typeof window !== 'undefined' && window.innerWidth < 768 ? 8 : maxItemsPerLoad;
-      return rawFeedItems.slice(0, fallbackSize);
-    } finally {
-      // Use timeout to prevent blocking UI on mobile
-      setTimeout(() => setIsProcessing(false), 100);
+      // Fallback: return original items
+      return rawFeedItems.slice(0, Math.min(maxItemsPerLoad, 12));
     }
-  }, [rawFeedItems, enabled, maxItemsPerLoad, refreshCount, isProcessing]);
+  }, [rawFeedItems, enabled, maxItemsPerLoad, refreshCount]);
 
-  // Debounced manual refresh for better mobile UX
+  // Manual refresh
   const manualRefresh = useCallback(() => {
-    if (isProcessing) return;
-    
     console.log('🚀 Manual algorithm refresh triggered');
     setRefreshCount(prev => prev + 1);
-  }, [isProcessing]);
+  }, []);
 
-  // Mobile-optimized auto-refresh
+  // Auto-refresh
   useEffect(() => {
     if (!enabled || autoRefreshInterval <= 0) return;
 
-    // Longer interval on mobile to save battery
-    const interval = typeof window !== 'undefined' && window.innerWidth < 768 
-      ? autoRefreshInterval * 1.5 
-      : autoRefreshInterval;
-    
     const refreshTimer = setInterval(() => {
-      if (!isProcessing) {
-        console.log('🚀 Auto algorithm refresh triggered');
-        setRefreshCount(prev => prev + 1);
-      }
-    }, interval);
+      console.log('🚀 Auto algorithm refresh triggered');
+      setRefreshCount(prev => prev + 1);
+    }, autoRefreshInterval);
 
     return () => clearInterval(refreshTimer);
-  }, [enabled, autoRefreshInterval, isProcessing]);
+  }, [enabled, autoRefreshInterval]);
 
   return {
     algorithmicFeed,
-    isProcessing,
+    isProcessing: false, // Simplified to prevent race conditions
     manualRefresh,
     refreshCount
   };

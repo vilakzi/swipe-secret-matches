@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import PostCard from './PostCard';
 import FeedHeader from './FeedHeader';
@@ -45,8 +46,8 @@ const FeedContent = ({
     try {
       await onRefresh();
       toast({
-        title: "Smart algorithm refreshed",
-        description: "Your feed has been updated with personalized content.",
+        title: "Feed refreshed",
+        description: "Your feed has been updated with fresh content.",
       });
     } catch (error) {
       console.error('Error refreshing feed:', error);
@@ -62,6 +63,12 @@ const FeedContent = ({
 
   // Safety check for feed items
   const safeFeedItems = Array.isArray(localFeedItems) ? localFeedItems : [];
+
+  console.log('🎯 FeedContent rendering:', {
+    feedItemsCount: safeFeedItems.length,
+    isRefreshing,
+    hasEngagementTracker: !!engagementTracker
+  });
 
   return (
     <div className="space-y-6">
@@ -87,9 +94,15 @@ const FeedContent = ({
           </div>
         ) : (
           safeFeedItems.map((item, index) => {
-            // Add debug info for algorithm-prioritized content
-            if (item.profile?.role?.toLowerCase() === 'admin' || item.isAdminPost) {
-              console.debug(`🎯 Algorithm prioritized admin content at position ${index}:`, item.profile?.name);
+            // Ensure item has required properties
+            if (!item || !item.id || !item.profile) {
+              console.warn('🎯 Skipping invalid feed item at index', index, item);
+              return null;
+            }
+
+            // Add debug info for admin content
+            if (item.profile?.role === 'admin' || item.isAdminPost) {
+              console.debug(`🎯 Rendering admin content at position ${index}:`, item.profile?.name);
             }
             
             return (
@@ -113,7 +126,7 @@ const FeedContent = ({
           <div className="bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg border border-gray-700">
             <div className="flex items-center space-x-2">
               <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-              <span>🧠 Smart algorithm working...</span>
+              <span>Loading fresh content...</span>
             </div>
           </div>
         </div>

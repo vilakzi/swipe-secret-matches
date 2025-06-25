@@ -25,6 +25,8 @@ interface Profile {
   liked?: boolean;
   posts?: string[];
   isRealAccount?: boolean;
+  userType?: string;
+  role?: string;
 }
 
 interface FeedItem {
@@ -33,6 +35,10 @@ interface FeedItem {
   profile: Profile;
   postImage?: string;
   caption?: string;
+  isAdminCard?: boolean;
+  isAdminPost?: boolean;
+  isVideo?: boolean;
+  createdAt?: string;
 }
 
 interface PostCardProps {
@@ -58,6 +64,21 @@ const PostCard = ({
   const navigate = useNavigate();
   const { isOpen, imageSrc, imageAlt, openModal, closeModal } = useImageModal();
   const [showComments, setShowComments] = useState(false);
+
+  // Safety checks
+  if (!item || !item.id || !item.profile) {
+    console.warn('PostCard: Invalid item data', item);
+    return null;
+  }
+
+  console.log('🎯 PostCard rendering item:', {
+    id: item.id,
+    type: item.type,
+    profileName: item.profile.name,
+    hasPostImage: !!item.postImage,
+    isVideo: item.isVideo,
+    isAdmin: item.profile.role === 'admin' || item.isAdminPost
+  });
 
   // Mobile-optimized handlers
   const handleProfileClick = () => {
@@ -95,7 +116,7 @@ const PostCard = ({
         <Card 
           className="bg-gray-800 border-gray-700 mb-4 touch-target" 
           tabIndex={0} 
-          aria-label={`Post card from ${item.profile.name}`}
+          aria-label={`${item.type === 'post' ? 'Post' : 'Profile'} from ${item.profile.name}`}
         >
           <PostCardHeader
             profile={item.profile}
@@ -111,12 +132,38 @@ const PostCard = ({
             />
           </PostCardHeader>
           
-          <PostCardContent
-            postImage={item.postImage}
-            profileName={item.profile.name}
-            onPostImageClick={handlePostImageClick}
-            onProfileClick={handleProfileClick}
-          />
+          {/* Only show post content if it's a post type with media */}
+          {item.type === 'post' && item.postImage && (
+            <PostCardContent
+              postImage={item.postImage}
+              profileName={item.profile.name}
+              onPostImageClick={handlePostImageClick}
+              onProfileClick={handleProfileClick}
+            />
+          )}
+
+          {/* Show profile content for profile type items */}
+          {item.type === 'profile' && (
+            <div className="p-4">
+              <div className="text-center">
+                <img
+                  src={item.profile.image}
+                  alt={`${item.profile.name}'s profile`}
+                  className="w-full h-72 object-cover rounded-lg cursor-pointer"
+                  onClick={handleAvatarClick}
+                  loading="lazy"
+                />
+                <div className="mt-4">
+                  <h3 className="text-lg font-semibold text-white">{item.profile.name}</h3>
+                  <p className="text-sm text-gray-400">Age: {item.profile.age}</p>
+                  <p className="text-sm text-gray-400">{item.profile.location}</p>
+                  {item.profile.bio && (
+                    <p className="text-sm text-gray-300 mt-2">{item.profile.bio}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="p-4">
             <PostCardActions
@@ -126,11 +173,13 @@ const PostCard = ({
               onContact={handleContact}
               isSubscribed={isSubscribed}
             />
-            <PostCardCaption
-              name={item.profile.name}
-              caption={item.caption}
-              onProfileClick={handleProfileClick}
-            />
+            {item.caption && (
+              <PostCardCaption
+                name={item.profile.name}
+                caption={item.caption}
+                onProfileClick={handleProfileClick}
+              />
+            )}
             {showComments && (
               <PostComments
                 postId={item.id}

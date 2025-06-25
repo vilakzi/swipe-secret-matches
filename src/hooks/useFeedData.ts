@@ -63,8 +63,8 @@ export const useFeedData = (itemsPerPage: number = 8) => {
   } = useDynamicFeedAlgorithm({
     rawFeedItems,
     enabled: true,
-    autoRefreshInterval: 180000,
-    maxItemsPerLoad: itemsPerPage * 3
+    autoRefreshInterval: 300000, // 5 minutes
+    maxItemsPerLoad: itemsPerPage * 4 // More items for better algorithm performance
   });
 
   console.log("📱 Algorithmic feed processed:", {
@@ -82,7 +82,7 @@ export const useFeedData = (itemsPerPage: number = 8) => {
     resetPagination
   } = useFeedPagination(algorithmicFeed, itemsPerPage);
 
-  const isLoadingMore = paginationLoading || profilesLoading || newJoinersLoading || algorithmProcessing;
+  const isLoadingMore = paginationLoading || profilesLoading || newJoinersLoading;
 
   console.log("📱 Final display status:", {
     displayedItemsCount: displayedItems.length,
