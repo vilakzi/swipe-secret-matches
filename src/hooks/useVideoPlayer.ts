@@ -28,15 +28,18 @@ export const useVideoPlayer = (src: string) => {
     try {
       if (isPlaying) {
         video.pause();
+        setIsPlaying(false);
       } else {
         setIsBuffering(true);
         await video.play();
+        setIsPlaying(true);
         setIsBuffering(false);
       }
     } catch (err) {
       console.error('Video play error:', err);
       setError('Failed to play video');
       setIsBuffering(false);
+      setIsPlaying(false);
     }
   }, [isPlaying, error]);
 
@@ -71,16 +74,19 @@ export const useVideoPlayer = (src: string) => {
     if (!video) return;
 
     const handleLoadStart = () => {
+      console.log('Video load started for:', src);
       setIsLoading(true);
       setError(null);
     };
 
     const handleCanPlay = () => {
+      console.log('Video can play:', src);
       setIsLoading(false);
       setIsBuffering(false);
     };
 
     const handleLoadedMetadata = () => {
+      console.log('Video metadata loaded:', src, 'duration:', video.duration);
       setDuration(video.duration);
       setIsLoading(false);
     };
@@ -90,30 +96,36 @@ export const useVideoPlayer = (src: string) => {
     };
 
     const handlePlay = () => {
+      console.log('Video playing:', src);
       setIsPlaying(true);
       setIsBuffering(false);
     };
 
     const handlePause = () => {
+      console.log('Video paused:', src);
       setIsPlaying(false);
     };
 
     const handleWaiting = () => {
+      console.log('Video waiting/buffering:', src);
       setIsBuffering(true);
     };
 
     const handleCanPlayThrough = () => {
+      console.log('Video can play through:', src);
       setIsBuffering(false);
     };
 
-    const handleError = () => {
+    const handleError = (e: Event) => {
+      console.error('Video error for src:', src, e);
       setError('Video failed to load');
       setIsLoading(false);
       setIsBuffering(false);
-      console.error('Video error for src:', src);
+      setIsPlaying(false);
     };
 
     const handleEnded = () => {
+      console.log('Video ended:', src);
       setIsPlaying(false);
       setCurrentTime(0);
     };

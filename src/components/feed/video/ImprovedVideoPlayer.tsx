@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Play, Pause, Volume2, VolumeX, Maximize, Minimize } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useVideoPlayer } from '@/hooks/useVideoPlayer';
@@ -21,6 +21,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   const [showVideo, setShowVideo] = useState(autoPlay);
   const [showControls, setShowControls] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [controlsTimeout, setControlsTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const {
     videoRef,
@@ -35,13 +36,13 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     handleVolumeChange
   } = useVideoPlayer(src);
 
-  const handlePlayClick = () => {
+  const handlePlayClick = async () => {
     if (!showVideo) {
       setShowVideo(true);
       // Small delay to ensure video element is ready
       setTimeout(() => togglePlay(), 100);
     } else {
-      togglePlay();
+      await togglePlay();
     }
   };
 
@@ -62,16 +63,35 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     }
   };
 
-  // Hide controls after 3 seconds of inactivity during playback
-  React.useEffect(() => {
-    if (!isPlaying || !showVideo) return;
+  // Auto-hide controls after 3 seconds during playback
+  const resetControlsTimeout = () => {
+    if (controlsTimeout) {
+      clearTimeout(controlsTimeout);
+    }
+    
+    setShowControls(true);
+    
+    if (isPlaying && showVideo) {
+      const timeout = setTimeout(() => {
+        setShowControls(false);
+      }, 3000);
+      setControlsTimeout(timeout);
+    }
+  };
 
-    const timer = setTimeout(() => {
-      setShowControls(false);
-    }, 3000);
+  useEffect(() => {
+    resetControlsTimeout();
+    return () => {
+      if (controlsTimeout) {
+        clearTimeout(controlsTimeout);
+      }
+    };
+  }, [isPlaying, showVideo]);
 
-    return () => clearTimeout(timer);
-  }, [isPlaying, showVideo, showControls]);
+  // Handle mouse movement to show controls
+  const handleMouseMove = () => {
+    resetControlsTimeout();
+  };
 
   if (error) {
     return (
@@ -98,15 +118,14 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   return (
     <div 
       className={`relative bg-black overflow-hidden h-72 ${className}`}
+      onMouseMove={handleMouseMove}
       onMouseEnter={() => setShowControls(true)}
-      onMouseMove={() => setShowControls(true)}
       onTouchStart={() => setShowControls(true)}
     >
       <video
         ref={videoRef}
         src={src}
-        className={`w-full h-full ${isFullscreen ? 'object-contain' : 'object-cover'} cursor-pointer`}
-        onClick={handlePlayClick}
+        className={`w-full h-full ${isFullscreen ? 'object-contain' : 'object-cover'}`}
         poster={poster}
         preload="metadata"
         playsInline
@@ -130,7 +149,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
               variant="ghost"
               size="lg"
               onClick={handlePlayClick}
-              className="text-white hover:bg-white/20 bg-black/30 rounded-full p-4"
+              className="text-white hover:bg-white/20 bg-black/30 rounded-full p-4 transition-all duration-200"
               disabled={isBuffering}
             >
               {isBuffering ? (
@@ -154,6 +173,19 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
               >
                 {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
               </Button>
+              
+              {/* Volume control */}
+              <div className="flex items-center space-x-2">
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.1"
+                  value={isMuted ? 0 : volume}
+                  onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                  className="w-16 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+                />
+              </div>
             </div>
             
             <Button
@@ -167,6 +199,13 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
           </div>
         </div>
       )}
+
+      {/* Tap overlay for mobile */}
+      <div
+        className="absolute inset-0 cursor-pointer"
+        onClick={handlePlayClick}
+        style={{ zIndex: showControls ? -1 : 1 }}
+      />
     </div>
   );
 };

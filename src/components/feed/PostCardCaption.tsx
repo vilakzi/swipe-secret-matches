@@ -1,30 +1,64 @@
 
 import React from 'react';
-import { parseHyperlinks } from '@/utils/hyperlinkUtils';
 
 interface PostCardCaptionProps {
   name: string;
-  caption?: string;
+  caption: string;
   onProfileClick: () => void;
 }
 
 const PostCardCaption = ({ name, caption, onProfileClick }: PostCardCaptionProps) => {
-  if (!caption) return null;
-
-  const parsedCaption = parseHyperlinks(caption);
+  const renderCaptionWithMentions = (text: string) => {
+    // Split text by words and render with proper React elements
+    const words = text.split(' ');
+    
+    return words.map((word, index) => {
+      const key = `word-${index}`;
+      
+      if (word.startsWith('@')) {
+        return (
+          <span
+            key={key}
+            className="text-blue-400 cursor-pointer hover:underline"
+            onClick={(e) => {
+              e.stopPropagation();
+              onProfileClick();
+            }}
+          >
+            {word}{index < words.length - 1 ? ' ' : ''}
+          </span>
+        );
+      }
+      
+      if (word.startsWith('#')) {
+        return (
+          <span key={key} className="text-purple-400">
+            {word}{index < words.length - 1 ? ' ' : ''}
+          </span>
+        );
+      }
+      
+      return (
+        <span key={key}>
+          {word}{index < words.length - 1 ? ' ' : ''}
+        </span>
+      );
+    });
+  };
 
   return (
-    <div className="pt-2">
+    <div className="mt-2">
       <p className="text-sm text-gray-300">
-        <button 
+        <span
+          className="font-semibold text-white cursor-pointer hover:text-gray-300"
           onClick={onProfileClick}
-          className="font-semibold text-white hover:text-gray-300 transition-colors mr-2"
         >
           {name}
-        </button>
-        {parsedCaption.map((part, index) => (
-          <React.Fragment key={index}>{part}</React.Fragment>
-        ))}
+        </span>
+        {' '}
+        <span>
+          {renderCaptionWithMentions(caption)}
+        </span>
       </p>
     </div>
   );
