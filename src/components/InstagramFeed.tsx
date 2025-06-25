@@ -4,7 +4,7 @@ import FeedHeader from './feed/FeedHeader';
 import FeedContent from './feed/FeedContent';
 import PullToRefresh from './feed/PullToRefresh';
 import InfiniteScroll from './feed/InfiniteScroll';
-import { useFeedData } from '@/hooks/useFeedData';
+import { useContinuousFeedData } from '@/hooks/useContinuousFeedData';
 import { toast } from '@/hooks/use-toast';
 
 interface InstagramFeedProps {
@@ -17,14 +17,16 @@ interface InstagramFeedProps {
 const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFeedProps) => {
   const [showFilters, setShowFilters] = useState(false);
   
+  // Use new continuous feed system
   const {
     displayedItems,
     hasMoreItems,
     isLoadingMore,
     handleLoadMore,
     handleRefresh,
-    engagementTracker
-  } = useFeedData(6);
+    engagementTracker,
+    feedStats
+  } = useContinuousFeedData();
 
   const handlePullRefresh = useCallback(async () => {
     handleRefresh();
@@ -32,15 +34,22 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
     onRefresh();
   }, [handleRefresh, onRefresh]);
 
-  const handleFeedRefresh = useCallback(() => {
-    console.log('🚀 Dynamic feed refresh triggered');
+  const handleSmartRefresh = useCallback(() => {
+    console.log('🌊 Smart continuous feed refresh triggered');
     handleRefresh();
     onRefresh();
     toast({
-      title: "Smart feed refreshed",
-      description: "Content re-ranked with fresh algorithm",
+      title: "Continuous feed refreshed",
+      description: `Fresh content loaded! ${feedStats.totalAvailable} items available`,
     });
-  }, [handleRefresh, onRefresh]);
+  }, [handleRefresh, onRefresh, feedStats.totalAvailable]);
+
+  console.log('🌊 InstagramFeed rendering with continuous system:', {
+    displayedItems: displayedItems.length,
+    hasMore: hasMoreItems,
+    isLoading: isLoadingMore,
+    stats: feedStats
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 overflow-x-hidden">
@@ -49,7 +58,7 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
         setShowFilters={setShowFilters}
         onImageUpload={() => console.log('Image upload initiated')}
         onVideoUpload={() => console.log('Video upload initiated')}
-        onRefresh={handleFeedRefresh}
+        onRefresh={handleSmartRefresh}
       />
       
       <div className="max-w-md mx-auto">
@@ -58,6 +67,7 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
             hasMore={hasMoreItems}
             isLoading={isLoadingMore}
             onLoadMore={handleLoadMore}
+            threshold={300} // Load more content earlier
           >
             <FeedContent
               feedItems={displayedItems}
@@ -68,6 +78,15 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
               onRefresh={onRefresh}
               engagementTracker={engagementTracker}
             />
+            
+            {/* Continuous flow indicator */}
+            {hasMoreItems && !isLoadingMore && (
+              <div className="text-center py-4">
+                <div className="text-gray-400 text-sm">
+                  {feedStats.totalAvailable - displayedItems.length} more items available
+                </div>
+              </div>
+            )}
           </InfiniteScroll>
         </PullToRefresh>
       </div>

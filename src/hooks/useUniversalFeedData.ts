@@ -2,10 +2,9 @@
 import { useMemo } from 'react';
 import { Profile } from '@/components/feed/types/feedTypes';
 
-// UPDATED: Universal feed access - everyone sees everyone's content
-export const useFilteredFeedData = (allProfiles: Profile[], newJoiners: any[], posts: any[]) => {
-  const universalProfiles = useMemo(() => {
-    console.log('🌍 UNIVERSAL FEED - Everyone sees everyone principle active');
+export const useUniversalFeedData = (allProfiles: Profile[], newJoiners: any[], posts: any[]) => {
+  const universalFeedData = useMemo(() => {
+    console.log('🌍 Universal Feed - Everyone sees everyone principle');
     console.log('All profiles count:', allProfiles.length);
     console.log('New joiners count:', newJoiners.length);
     console.log('Posts count:', posts.length);
@@ -26,14 +25,21 @@ export const useFilteredFeedData = (allProfiles: Profile[], newJoiners: any[], p
       posts: []
     }));
 
-    // UNIVERSAL ACCESS: Return ALL profiles for ALL users
-    const combinedProfiles = [...allProfiles, ...newJoinerProfiles];
+    // UNIVERSAL PRINCIPLE: Everyone sees content from everyone
+    const allAvailableProfiles = [...allProfiles, ...newJoinerProfiles];
     
-    console.log('🌍 Universal feed created with', combinedProfiles.length, 'total profiles');
-    console.log('🌍 Content visibility: EVERYONE SEES EVERYONE');
-    
-    return combinedProfiles;
+    console.log('🌍 Universal Feed created:', {
+      totalProfiles: allAvailableProfiles.length,
+      totalPosts: posts.length,
+      principle: 'Everyone sees everyone'
+    });
+
+    return {
+      profiles: allAvailableProfiles,
+      posts,
+      newJoiners: newJoinerProfiles
+    };
   }, [allProfiles, newJoiners, posts]);
 
-  return universalProfiles;
+  return universalFeedData;
 };
