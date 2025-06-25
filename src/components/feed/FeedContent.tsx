@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import PostCard from './PostCard';
 import FeedHeader from './FeedHeader';
@@ -66,20 +65,17 @@ const FeedContent = ({
 
   return (
     <div className="space-y-6">
-      <FeedHeader
-        showFilters={showFilters}
-        setShowFilters={setShowFilters}
-        onImageUpload={() => {}}
-        onVideoUpload={() => {}}
-        onRefresh={handleRefreshFeed}
-      />
-
       <div className="space-y-4">
         {safeFeedItems.length === 0 ? (
           <div className="text-center py-12">
             <div className="bg-gray-800/50 rounded-lg p-8 border border-gray-700">
               <h3 className="text-lg font-semibold text-white mb-2">No posts available</h3>
-              <p className="text-gray-400 mb-4">Be the first to share something amazing!</p>
+              <p className="text-gray-400 mb-4">
+                {isRefreshing 
+                  ? "Loading fresh content..." 
+                  : "Be the first to share something amazing!"
+                }
+              </p>
               <button
                 onClick={handleRefreshFeed}
                 disabled={isRefreshing}

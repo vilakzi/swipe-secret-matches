@@ -4,9 +4,16 @@ import { supabase } from '@/integrations/supabase/client';
 
 export const usePostFetching = () => {
   const [posts, setPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchPosts = useCallback(async () => {
     try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('Fetching posts from database...');
+      
       const { data: postsData, error } = await supabase
         .from('posts')
         .select(`
@@ -31,6 +38,7 @@ export const usePostFetching = () => {
 
       if (error) {
         console.error('Error fetching posts:', error);
+        setError(error.message);
         return;
       }
 
@@ -41,11 +49,9 @@ export const usePostFetching = () => {
         
         return {
           ...post,
-          // Enhanced priority system
           isAdminPost: isAdmin,
           priorityWeight: isAdmin ? 10 : 1,
-          // Add boost factor for algorithm
-          boostFactor: isAdmin ? 3.0 : 1.0 // Reduced from 5.0 to 3.0
+          boostFactor: isAdmin ? 3.0 : 1.0
         };
       });
 
@@ -53,6 +59,9 @@ export const usePostFetching = () => {
       setPosts(processedPosts);
     } catch (error) {
       console.error('Error in fetchPosts:', error);
+      setError(error instanceof Error ? error.message : 'Unknown error');
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -62,6 +71,8 @@ export const usePostFetching = () => {
 
   return {
     posts,
+    loading,
+    error,
     fetchPosts,
     refetchPosts: fetchPosts
   };

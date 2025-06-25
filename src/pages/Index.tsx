@@ -21,10 +21,22 @@ const Index = () => {
 
   const { addError } = useError();
 
+  // Show loading state while checking authentication
+  if (roleLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900">
+        <div className="text-center p-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold text-white">Loading...</h2>
+        </div>
+      </div>
+    );
+  }
+
   // Check if user is logged in
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900">
         <div className="text-center p-8">
           <h2 className="text-2xl font-bold text-white mb-4">Please log in to access the feed</h2>
           <Button
@@ -43,11 +55,12 @@ const Index = () => {
   };
 
   const handleLike = (itemId: string, profileId: string) => {
-    if (!isAdmin && role !== 'service_provider' && role !== 'user') {
-      // Show error via toast/global error
+    // Allow likes for all authenticated users with valid roles
+    if (!user || (!isAdmin && !['service_provider', 'user'].includes(role || ''))) {
       addError("You must be logged in with a valid role to like profiles.");
       return;
     }
+    
     setLikedItems(prev => {
       const newLiked = new Set(prev);
       if (newLiked.has(itemId)) {
@@ -65,18 +78,24 @@ const Index = () => {
   };
 
   const handleContact = (profile: any) => {
-    if (!isAdmin && role !== 'service_provider' && role !== 'user') {
+    if (!user || (!isAdmin && !['service_provider', 'user'].includes(role || ''))) {
       addError("You must be logged in with a valid role to contact profiles.");
       return;
     }
-    window.open(`https://wa.me/${profile.whatsapp.replace(/[^0-9]/g, '')}`, '_blank');
+    
+    if (profile.whatsapp) {
+      window.open(`https://wa.me/${profile.whatsapp.replace(/[^0-9]/g, '')}`, '_blank');
+    } else {
+      addError("WhatsApp contact not available for this profile.");
+    }
   };
 
   const handleRefresh = () => {
-    if (!isAdmin && role !== 'service_provider' && role !== 'user') {
+    if (!user || (!isAdmin && !['service_provider', 'user'].includes(role || ''))) {
       addError("You must be logged in with a valid role to refresh the feed.");
       return;
     }
+    
     console.log('Refreshing feed from Index component');
     setRefreshKey(prev => prev + 1);
     toast({
