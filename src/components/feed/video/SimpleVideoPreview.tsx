@@ -17,7 +17,7 @@ const SimpleVideoPreview: React.FC<SimpleVideoPreviewProps> = ({
 }) => {
   return (
     <div 
-      className={`relative bg-gray-900 overflow-hidden cursor-pointer ${className}`}
+      className={`relative bg-gray-900 overflow-hidden cursor-pointer h-72 ${className}`}
       onClick={onPlay}
     >
       {poster ? (
@@ -33,7 +33,10 @@ const SimpleVideoPreview: React.FC<SimpleVideoPreviewProps> = ({
         />
       ) : (
         <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-          <div className="text-gray-400 text-sm">Video</div>
+          <div className="text-gray-400 text-center">
+            <Play className="w-12 h-12 mx-auto mb-2" />
+            <div className="text-sm">Video</div>
+          </div>
         </div>
       )}
       

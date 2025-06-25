@@ -2,6 +2,7 @@
 import { useMemo } from 'react';
 import { FeedItem } from '@/components/feed/types/feedTypes';
 import { shuffleArrayWithSeed } from '@/utils/feed/shuffleUtils';
+import { isVideo } from '@/utils/feed/mediaUtils';
 
 interface UseFeedItemCreationProps {
   filteredProfiles: any[];
@@ -49,6 +50,7 @@ export const useFeedItemCreation = ({
     const postItems: FeedItem[] = posts.map(post => {
       const role = post.profiles?.role?.toLowerCase() || '';
       const isAdmin = role === 'admin';
+      const postIsVideo = isVideo(post.content_url);
       
       return {
         id: post.id, // Use clean UUID without prefix
@@ -76,7 +78,11 @@ export const useFeedItemCreation = ({
         postImage: post.content_url,
         caption: post.caption,
         isAdminPost: isAdmin,
-        createdAt: post.created_at
+        createdAt: post.created_at,
+        // Video-specific properties
+        isVideo: postIsVideo,
+        videoDuration: post.video_duration, // Assuming this field exists or will be added
+        videoThumbnail: post.video_thumbnail // Assuming this field exists or will be added
       };
     });
 

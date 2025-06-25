@@ -21,6 +21,14 @@ export interface Profile {
   reviewCount?: number;
   isAvailable?: boolean;
   services?: string[];
+  // Verification properties
+  verifications?: {
+    phoneVerified: boolean;
+    emailVerified: boolean;
+    photoVerified: boolean;
+    locationVerified: boolean;
+    premiumUser: boolean;
+  };
 }
 
 export interface FeedItem {
@@ -30,7 +38,18 @@ export interface FeedItem {
   postImage?: string;
   caption?: string;
   isAdminCard?: boolean;
+  isAdminPost?: boolean;
   isWelcome?: boolean;
+  // Video-specific properties
+  isVideo?: boolean;
+  videoDuration?: number;
+  videoThumbnail?: string;
+  // Post metadata
+  createdAt?: string;
+  updatedAt?: string;
+  // Algorithm properties
+  algorithmScore?: number;
+  originalIndex?: number;
 }
 
 export type RelationshipStatus = 'single' | 'taken' | 'complicated' | 'not_specified';

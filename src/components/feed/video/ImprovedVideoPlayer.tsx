@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Play, Pause, Volume2, VolumeX, Maximize, Minimize } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useVideoPlayer } from '@/hooks/useVideoPlayer';
-import SimpleVideoPreview from './SimpleVideoPreview';
+import EnhancedVideoPreview from './EnhancedVideoPreview';
 
 interface ImprovedVideoPlayerProps {
   src: string;
@@ -86,7 +86,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
 
   if (!showVideo) {
     return (
-      <SimpleVideoPreview
+      <EnhancedVideoPreview
         src={src}
         poster={poster}
         onPlay={handlePlayClick}
@@ -97,7 +97,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
 
   return (
     <div 
-      className={`relative bg-black overflow-hidden ${className}`}
+      className={`relative bg-black overflow-hidden h-72 ${className}`}
       onMouseEnter={() => setShowControls(true)}
       onMouseMove={() => setShowControls(true)}
       onTouchStart={() => setShowControls(true)}
@@ -105,7 +105,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
       <video
         ref={videoRef}
         src={src}
-        className={`w-full h-72 ${isFullscreen ? 'object-contain' : 'object-cover'} cursor-pointer`}
+        className={`w-full h-full ${isFullscreen ? 'object-contain' : 'object-cover'} cursor-pointer`}
         onClick={handlePlayClick}
         poster={poster}
         preload="metadata"
