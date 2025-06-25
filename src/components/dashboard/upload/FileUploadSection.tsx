@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -117,9 +116,10 @@ const FileUploadSection = ({
               return;
             }
 
-            // Mobile-friendly duration limit (3 minutes)
-            if (video.duration > 180) {
-              reject(new Error('Video too long: Maximum 3 minutes for mobile'));
+            // Extended duration limit for providers and admins (10 minutes)
+            const maxDuration = (role === 'admin' || role === 'service_provider') ? 600 : 180;
+            if (video.duration > maxDuration) {
+              reject(new Error(`Video too long: Maximum ${maxDuration/60} minutes for ${role} accounts`));
               return;
             }
 
@@ -190,18 +190,17 @@ const FileUploadSection = ({
         return;
       }
 
-      // Enhanced size validation for mobile
-      const mobileMaxSize = Math.min(maxSize, 50 * 1024 * 1024); // 50MB max for mobile
-      if (file.size > mobileMaxSize) {
+      // Enhanced size validation based on role
+      if (file.size > maxSize) {
         toast({
           title: "File too large",
-          description: `Maximum: ${Math.round(mobileMaxSize / (1024*1024))}MB for mobile uploads`,
+          description: `Maximum: ${Math.round(maxSize / (1024*1024))}MB for ${role} accounts`,
           variant: "destructive",
         });
         return;
       }
 
-      // Mobile warnings
+      // Warnings for large files
       if (file.size > 10 * 1024 * 1024) {
         toast({
           title: "Large file warning",
@@ -261,7 +260,7 @@ const FileUploadSection = ({
             />
             <div className="flex items-center justify-between mt-1">
               <p className="text-xs text-gray-400">
-                Max: {Math.round(Math.min(maxSize, 50 * 1024 * 1024) / (1024*1024))}MB
+                Max: {Math.round(maxSize / (1024*1024))}MB ({role})
               </p>
               <div className="flex items-center space-x-1">
                 {isOnline ? (

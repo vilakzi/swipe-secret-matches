@@ -5,6 +5,8 @@ import { Search, Filter, Image, Video, RotateCcw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { useUserRole } from "@/hooks/useUserRole";
+import { getMaxUploadSize } from "@/utils/getMaxUploadSize";
 
 interface FeedHeaderProps {
   showFilters: boolean;
@@ -22,6 +24,8 @@ const FeedHeader = ({
   onRefresh
 }: FeedHeaderProps) => {
   const { user } = useAuth();
+  const { role } = useUserRole();
+  const maxSize = getMaxUploadSize(role);
 
   const handleFileUpload = async (file: File, type: 'image' | 'video') => {
     if (!user) {
@@ -33,12 +37,11 @@ const FeedHeader = ({
       return;
     }
 
-    // Validate file size (50MB max)
-    const maxSize = 50 * 1024 * 1024;
+    // Validate file size based on user role
     if (file.size > maxSize) {
       toast({
         title: "File too large",
-        description: "Maximum file size is 50MB",
+        description: `Maximum file size is ${Math.round(maxSize / (1024*1024))}MB for ${role} accounts`,
         variant: "destructive",
       });
       return;
@@ -165,7 +168,7 @@ const FeedHeader = ({
               size="sm"
               onClick={handleImageUpload}
               className="text-white hover:bg-white/10"
-              title="Upload Image"
+              title={`Upload Image (max ${Math.round(maxSize / (1024*1024))}MB)`}
             >
               <Image className="w-4 h-4" />
             </Button>
@@ -174,7 +177,7 @@ const FeedHeader = ({
               size="sm"
               onClick={handleVideoUpload}
               className="text-white hover:bg-white/10"
-              title="Upload Video"
+              title={`Upload Video (max ${Math.round(maxSize / (1024*1024))}MB)`}
             >
               <Video className="w-4 h-4" />
             </Button>
