@@ -1,7 +1,5 @@
 
 import React, { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { X, AlertTriangle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useUserRole } from "@/hooks/useUserRole";
 import { getMaxUploadSize } from "@/utils/getMaxUploadSize";
@@ -9,6 +7,7 @@ import NetworkStatusIndicator from './NetworkStatusIndicator';
 import FileInput from './FileInput';
 import FileStatusDisplay from './FileStatusDisplay';
 import FilePreview from './FilePreview';
+import FileValidationMessages from './FileValidationMessages';
 import { useVideoValidator } from './VideoValidator';
 
 interface FileUploadSectionProps {
@@ -136,64 +135,21 @@ const FileUploadSection = ({
         {!selectedFile ? (
           <FileInput isOnline={isOnline} onFileChange={handleFileChange} />
         ) : (
-          <div className="bg-gray-800 border border-gray-600 rounded-lg p-4">
-            <div className="flex items-start justify-between">
-              <FileStatusDisplay
-                file={selectedFile}
-                validationError={validationError}
-                isValidating={isValidating}
-                isOnline={isOnline}
-              />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={removeFile}
-                className="text-gray-400 hover:text-white hover:bg-gray-700"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-            
-            {validationError && (
-              <div className="mt-3 p-3 bg-red-900/20 border border-red-600/30 rounded text-red-400 text-sm">
-                {validationError}
-              </div>
-            )}
-            
-            {previewUrl && (
-              <FilePreview
-                file={selectedFile}
-                previewUrl={previewUrl}
-                validationError={validationError}
-                isValidating={isValidating}
-              />
-            )}
-          </div>
+          <FileStatusDisplay
+            file={selectedFile}
+            validationError={validationError}
+            isValidating={isValidating}
+            isOnline={isOnline}
+            previewUrl={previewUrl}
+            onRemove={removeFile}
+          />
         )}
       </div>
 
-      {/* Status messages */}
-      {isFileReady && (
-        <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-3">
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            <span className="text-green-400 text-sm font-medium">
-              File ready! Continue to upload.
-            </span>
-          </div>
-        </div>
-      )}
-      
-      {validationError && (
-        <div className="bg-red-900/20 border border-red-600/30 rounded-lg p-3">
-          <div className="flex items-center space-x-2">
-            <AlertTriangle className="w-4 h-4 text-red-400" />
-            <span className="text-red-400 text-sm font-medium">
-              Please select a different file.
-            </span>
-          </div>
-        </div>
-      )}
+      <FileValidationMessages
+        isFileReady={isFileReady}
+        validationError={validationError}
+      />
     </div>
   );
 };
