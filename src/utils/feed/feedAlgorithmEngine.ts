@@ -1,3 +1,4 @@
+
 import { FeedItem } from '@/components/feed/types/feedTypes';
 
 export interface ContentScore {
@@ -67,8 +68,9 @@ export class FeedAlgorithmEngine {
     const diversityScore = this.calculateDiversityScore(item);
     const userActivityScore = this.calculateUserActivityScore(item);
 
-    // Apply admin boost
-    const adminMultiplier = item.isAdminPost ? this.config.adminBoostMultiplier : 1;
+    // Apply admin boost - check if profile has admin role
+    const isAdminContent = item.profile.role === 'admin' || item.profile.userType === 'admin';
+    const adminMultiplier = isAdminContent ? this.config.adminBoostMultiplier : 1;
 
     const totalScore = (
       recencyScore * this.config.recencyWeight +
@@ -87,8 +89,9 @@ export class FeedAlgorithmEngine {
   }
 
   private calculateRecencyScore(item: FeedItem, now: number): number {
-    const createdAt = item.createdAt ? new Date(item.createdAt).getTime() : now;
-    const ageHours = (now - createdAt) / (1000 * 60 * 60);
+    // Use profile creation time as fallback for content age
+    const profileCreatedAt = item.profile.joinDate ? new Date(item.profile.joinDate).getTime() : now;
+    const ageHours = (now - profileCreatedAt) / (1000 * 60 * 60);
     
     // Fresh content boost (within configured hours)
     if (ageHours <= this.config.freshContentBoostHours) {
@@ -104,7 +107,8 @@ export class FeedAlgorithmEngine {
     const baseEngagement = Math.random() * 0.5 + 0.25; // 0.25-0.75 base score
     
     // Boost for admin content
-    if (item.isAdminPost) {
+    const isAdminContent = item.profile.role === 'admin' || item.profile.userType === 'admin';
+    if (isAdminContent) {
       return Math.min(1.0, baseEngagement * 1.5);
     }
     

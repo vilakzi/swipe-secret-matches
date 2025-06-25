@@ -79,7 +79,12 @@ export const useEngagementTracking = () => {
           metric_type: type,
           value: 1
         })
-        .catch(error => console.warn('Analytics tracking error:', error));
+        .select()
+        .then((result) => {
+          if (result.error) {
+            console.warn('Analytics tracking error:', result.error);
+          }
+        });
     }
   }, []);
 
