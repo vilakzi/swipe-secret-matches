@@ -1,159 +1,124 @@
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { FeedItem } from '@/components/feed/types/feedTypes';
-import { FeedAlgorithmEngine } from '@/utils/feed/feedAlgorithmEngine';
-import { toast } from '@/hooks/use-toast';
 
 interface UseDynamicFeedAlgorithmProps {
   rawFeedItems: FeedItem[];
   enabled?: boolean;
-  autoRefreshInterval?: number; // milliseconds
+  autoRefreshInterval?: number;
   maxItemsPerLoad?: number;
 }
 
 export const useDynamicFeedAlgorithm = ({
   rawFeedItems,
   enabled = true,
-  autoRefreshInterval = 180000, // 3 minutes
-  maxItemsPerLoad = 8
+  autoRefreshInterval = 180000,
+  maxItemsPerLoad = 24
 }: UseDynamicFeedAlgorithmProps) => {
-  const [algorithmicFeed, setAlgorithmicFeed] = useState<FeedItem[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [lastRefresh, setLastRefresh] = useState<number>(Date.now());
   const [refreshCount, setRefreshCount] = useState(0);
-  
-  const algorithmEngineRef = useRef<FeedAlgorithmEngine | null>(null);
-  const autoRefreshTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const isUserActiveRef = useRef<boolean>(true);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  // Initialize algorithm engine
-  useEffect(() => {
-    if (!algorithmEngineRef.current) {
-      algorithmEngineRef.current = new FeedAlgorithmEngine();
-    }
-  }, []);
-
-  // Track user activity for intelligent auto-refresh
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      isUserActiveRef.current = !document.hidden;
-      if (isUserActiveRef.current) {
-        // User came back - trigger refresh if it's been a while
-        const timeSinceRefresh = Date.now() - lastRefresh;
-        if (timeSinceRefresh > autoRefreshInterval / 2) {
-          processAlgorithmicFeed(true);
-        }
-      }
-    };
-
-    const handleUserActivity = () => {
-      isUserActiveRef.current = true;
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    document.addEventListener('mousemove', handleUserActivity);
-    document.addEventListener('keydown', handleUserActivity);
-    document.addEventListener('scroll', handleUserActivity);
-    document.addEventListener('touchstart', handleUserActivity);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      document.removeEventListener('mousemove', handleUserActivity);
-      document.removeEventListener('keydown', handleUserActivity);
-      document.removeEventListener('scroll', handleUserActivity);
-      document.removeEventListener('touchstart', handleUserActivity);
-    };
-  }, [lastRefresh, autoRefreshInterval]);
-
-  // Process feed through algorithm
-  const processAlgorithmicFeed = useCallback(async (isAutoRefresh = false) => {
-    if (!enabled || !algorithmEngineRef.current || rawFeedItems.length === 0) {
-      return;
+  // Simple algorithm that preserves all items but adds intelligent sorting
+  const algorithmicFeed = useMemo(() => {
+    if (!enabled || rawFeedItems.length === 0) {
+      console.log('🚀 Algorithm disabled or no items, returning empty array');
+      return [];
     }
 
     setIsProcessing(true);
+    console.log(`🚀 Algorithm processing ${rawFeedItems.length} items (refresh #${refreshCount + 1})`);
 
     try {
-      // Score all content
-      const scoredItems = algorithmEngineRef.current.scoreContent(rawFeedItems);
-      
-      // Rank and apply algorithm
-      const rankedItems = algorithmEngineRef.current.rankContent(scoredItems);
-      
-      // Limit items for performance
-      const finalItems = rankedItems.slice(0, maxItemsPerLoad * 2);
-      
-      setAlgorithmicFeed(finalItems);
-      setLastRefresh(Date.now());
-      setRefreshCount(prev => prev + 1);
+      // Enhanced sorting with admin priority and content mixing
+      const processedItems = [...rawFeedItems].map((item, index) => ({
+        ...item,
+        algorithmScore: calculateItemScore(item, index),
+        originalIndex: index
+      }));
 
-      // Show subtle notification for manual refreshes
-      if (!isAutoRefresh) {
-        toast({
-          title: "Feed refreshed",
-          description: "New content prioritized based on engagement",
-          duration: 2000,
-        });
-      }
+      // Sort by algorithm score (higher is better)
+      const sortedItems = processedItems.sort((a, b) => {
+        // Admin posts get highest priority
+        if (a.isAdminPost && !b.isAdminPost) return -1;
+        if (!a.isAdminPost && b.isAdminPost) return 1;
+        
+        // Then by algorithm score
+        if (b.algorithmScore !== a.algorithmScore) {
+          return b.algorithmScore - a.algorithmScore;
+        }
+        
+        // Finally by original order
+        return a.originalIndex - b.originalIndex;
+      });
 
+      // Limit items but ensure we return content
+      const finalItems = sortedItems.slice(0, maxItemsPerLoad).map(({ algorithmScore, originalIndex, ...item }) => item);
+      
       console.log(`🚀 Algorithm processed ${finalItems.length} items (refresh #${refreshCount + 1})`);
       
+      return finalItems;
     } catch (error) {
-      console.error('Error processing algorithmic feed:', error);
+      console.error('🚀 Algorithm error:', error);
+      // Fallback: return original items to ensure content is visible
+      return rawFeedItems.slice(0, maxItemsPerLoad);
     } finally {
       setIsProcessing(false);
     }
-  }, [enabled, rawFeedItems, maxItemsPerLoad, refreshCount]);
+  }, [rawFeedItems, enabled, maxItemsPerLoad, refreshCount]);
 
-  // Auto-refresh timer
-  useEffect(() => {
-    if (!enabled || autoRefreshInterval <= 0) {
-      return;
+  // Calculate item relevance score
+  const calculateItemScore = (item: FeedItem, index: number): number => {
+    let score = 100; // Base score
+
+    // Admin content gets massive boost
+    if (item.isAdminPost || item.profile?.role === 'admin') {
+      score += 1000;
     }
 
-    // Clear existing timer
-    if (autoRefreshTimerRef.current) {
-      clearInterval(autoRefreshTimerRef.current);
+    // Recent posts get priority
+    if (item.createdAt) {
+      const ageInHours = (Date.now() - new Date(item.createdAt).getTime()) / (1000 * 60 * 60);
+      score += Math.max(0, 50 - ageInHours); // Newer posts get higher score
     }
 
-    // Set up new timer
-    autoRefreshTimerRef.current = setInterval(() => {
-      if (isUserActiveRef.current) {
-        processAlgorithmicFeed(true);
-      }
-    }, autoRefreshInterval);
+    // Service providers get moderate boost
+    if (item.profile?.userType === 'service_provider') {
+      score += 20;
+    }
 
-    return () => {
-      if (autoRefreshTimerRef.current) {
-        clearInterval(autoRefreshTimerRef.current);
-      }
-    };
-  }, [enabled, autoRefreshInterval, processAlgorithmicFeed]);
+    // Posts with content get boost over profile-only items
+    if (item.type === 'post' && item.postImage) {
+      score += 30;
+    }
 
-  // Process feed when raw items change
-  useEffect(() => {
-    processAlgorithmicFeed();
-  }, [rawFeedItems, processAlgorithmicFeed]);
+    // Add some randomness to prevent staleness
+    score += Math.random() * 10;
+
+    return score;
+  };
 
   // Manual refresh function
   const manualRefresh = useCallback(() => {
-    if (algorithmEngineRef.current) {
-      algorithmEngineRef.current.resetSession();
-    }
-    processAlgorithmicFeed(false);
-  }, [processAlgorithmicFeed]);
-
-  // Get algorithm stats
-  const getAlgorithmStats = useCallback(() => {
-    return algorithmEngineRef.current?.getSessionStats() || null;
+    console.log('🚀 Manual algorithm refresh triggered');
+    setRefreshCount(prev => prev + 1);
   }, []);
+
+  // Auto-refresh interval
+  useEffect(() => {
+    if (!enabled || autoRefreshInterval <= 0) return;
+
+    const interval = setInterval(() => {
+      console.log('🚀 Auto algorithm refresh triggered');
+      setRefreshCount(prev => prev + 1);
+    }, autoRefreshInterval);
+
+    return () => clearInterval(interval);
+  }, [enabled, autoRefreshInterval]);
 
   return {
     algorithmicFeed,
     isProcessing,
-    lastRefresh,
-    refreshCount,
     manualRefresh,
-    getAlgorithmStats
+    refreshCount
   };
 };
