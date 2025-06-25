@@ -1,13 +1,4 @@
-
-import { FeedItem } from '@/components/feed/types/feedTypes';
-
-export interface ContentScore {
-  recencyScore: number;
-  engagementScore: number;
-  diversityScore: number;
-  userActivityScore: number;
-  totalScore: number;
-}
+import { FeedItem, ContentScore } from '@/components/feed/types/feedTypes';
 
 export interface AlgorithmConfig {
   recencyWeight: number;
@@ -37,7 +28,7 @@ export class FeedAlgorithmEngine {
     this.config = config;
   }
 
-  public scoreContent(items: FeedItem[]): (FeedItem & { algorithmScore: ContentScore })[] {
+  public scoreContent(items: FeedItem[]): FeedItem[] {
     const now = Date.now();
     
     return items.map(item => {
@@ -46,12 +37,16 @@ export class FeedAlgorithmEngine {
     });
   }
 
-  public rankContent(items: (FeedItem & { algorithmScore: ContentScore })[]): FeedItem[] {
+  public rankContent(items: FeedItem[]): FeedItem[] {
     // Anti-staleness: Remove content seen in current session
     const unseenItems = items.filter(item => !this.seenContent.has(item.id));
     
-    // Sort by total score (descending)
-    const ranked = unseenItems.sort((a, b) => b.algorithmScore.totalScore - a.algorithmScore.totalScore);
+    // Sort by total score (descending) - handle both number and ContentScore types
+    const ranked = unseenItems.sort((a, b) => {
+      const aScore = typeof a.algorithmScore === 'object' ? a.algorithmScore.totalScore : (a.algorithmScore || 0);
+      const bScore = typeof b.algorithmScore === 'object' ? b.algorithmScore.totalScore : (b.algorithmScore || 0);
+      return bScore - aScore;
+    });
     
     // Apply diversity mixing
     const diverseMix = this.applyDiversityMixing(ranked);
@@ -148,7 +143,7 @@ export class FeedAlgorithmEngine {
     return Math.min(1.0, score);
   }
 
-  private applyDiversityMixing(items: (FeedItem & { algorithmScore: ContentScore })[]): FeedItem[] {
+  private applyDiversityMixing(items: FeedItem[]): FeedItem[] {
     const mixed: FeedItem[] = [];
     const posts = items.filter(item => item.type === 'post');
     const profiles = items.filter(item => item.type === 'profile');

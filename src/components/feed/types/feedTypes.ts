@@ -31,6 +31,14 @@ export interface Profile {
   };
 }
 
+export interface ContentScore {
+  recencyScore: number;
+  engagementScore: number;
+  diversityScore: number;
+  userActivityScore: number;
+  totalScore: number;
+}
+
 export interface FeedItem {
   id: string;
   type: "profile" | "post";
@@ -47,8 +55,8 @@ export interface FeedItem {
   // Post metadata
   createdAt?: string;
   updatedAt?: string;
-  // Algorithm properties
-  algorithmScore?: number;
+  // Algorithm properties - support both simple and detailed scoring
+  algorithmScore?: number | ContentScore;
   originalIndex?: number;
 }
 
