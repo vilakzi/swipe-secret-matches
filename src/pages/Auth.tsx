@@ -1,9 +1,9 @@
 
 import React from 'react';
-import AuthContainer from '@/components/auth/AuthContainer';
+import CleanAuthContainer from '@/components/auth/CleanAuthContainer';
 
 const Auth = () => {
-  return <AuthContainer />;
+  return <CleanAuthContainer />;
 };
 
 export default Auth;
