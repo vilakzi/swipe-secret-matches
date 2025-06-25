@@ -38,9 +38,9 @@ export const useDynamicFeedAlgorithm = ({
 
       // Sort by algorithm score (higher is better)
       const sortedItems = processedItems.sort((a, b) => {
-        // Admin posts get highest priority
-        if (a.isAdminPost && !b.isAdminPost) return -1;
-        if (!a.isAdminPost && b.isAdminPost) return 1;
+        // Admin posts get highest priority - using isAdminCard property
+        if (a.isAdminCard && !b.isAdminCard) return -1;
+        if (!a.isAdminCard && b.isAdminCard) return 1;
         
         // Then by algorithm score
         if (b.algorithmScore !== a.algorithmScore) {
@@ -70,14 +70,15 @@ export const useDynamicFeedAlgorithm = ({
   const calculateItemScore = (item: FeedItem, index: number): number => {
     let score = 100; // Base score
 
-    // Admin content gets massive boost
-    if (item.isAdminPost || item.profile?.role === 'admin') {
+    // Admin content gets massive boost - using isAdminCard property
+    if (item.isAdminCard || item.profile?.role === 'admin') {
       score += 1000;
     }
 
-    // Recent posts get priority
-    if (item.createdAt) {
-      const ageInHours = (Date.now() - new Date(item.createdAt).getTime()) / (1000 * 60 * 60);
+    // Recent posts get priority - for posts, we can check if createdAt exists on the raw item
+    const createdAt = (item as any).createdAt;
+    if (createdAt) {
+      const ageInHours = (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60);
       score += Math.max(0, 50 - ageInHours); // Newer posts get higher score
     }
 
