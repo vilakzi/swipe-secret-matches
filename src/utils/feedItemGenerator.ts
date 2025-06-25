@@ -1,55 +1,27 @@
 
-import { Profile, FeedItem } from '@/components/feed/types/feedTypes';
+import { shuffleArrayWithSeed } from './feed/shuffleUtils';
+import { Profile } from '@/components/feed/types/feedTypes';
 
-// Fisher-Yates shuffle algorithm for randomizing array order
-export const shuffleArray = <T>(array: T[]): T[] => {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-};
-
-export const generateFeedItems = (profiles: Profile[], shuffleKey: number): FeedItem[] => {
-  const items: FeedItem[] = [];
+// Generate feed items from REAL profiles only - no demo data
+export const generateFeedItems = (profiles: Profile[], shuffleKey: number = 0) => {
+  console.log(`Generating feed items from ${profiles.length} real profiles (no demo data)`);
   
-  console.log('Creating feed items from real profiles:', profiles.length);
+  // Only use real profiles - no demo profiles
+  const realProfiles = profiles.filter(profile => profile.isRealAccount);
   
-  // Shuffle profiles first to randomize order
-  const shuffledProfiles = shuffleArray(profiles);
+  // Shuffle real profiles with seed for consistency
+  const shuffledProfiles = shuffleArrayWithSeed(realProfiles, shuffleKey);
   
-  // Generate feed items for each profile
-  shuffledProfiles.forEach((profile, index) => {
-    console.log(`Processing profile ${index + 1}:`, profile.name);
-    
-    // Add profile card
-    items.push({
-      id: `profile-${profile.id}`,
-      type: 'profile',
-      profile: profile
-    });
-    
-    // Add posts if they exist
-    if (profile.posts && profile.posts.length > 0) {
-      console.log(`Adding ${profile.posts.length} posts for ${profile.name}`);
-      profile.posts.forEach((postImage, postIndex) => {
-        items.push({
-          id: `post-${profile.id}-${postIndex}`,
-          type: 'post',
-          profile: profile,
-          postImage: postImage,
-          caption: profile.userType === 'service_provider' 
-            ? `Professional services showcase 💼` 
-            : `Feeling good tonight 💫`
-        });
-      });
+  // Convert to feed items
+  const feedItems = shuffledProfiles.map(profile => ({
+    id: `profile-${profile.id}`,
+    type: 'profile' as const,
+    profile: {
+      ...profile,
+      isRealAccount: true // Ensure all items are marked as real
     }
-  });
-  
-  console.log('Total feed items created from real accounts:', items.length);
-  return items;
-};
+  }));
 
-// Re-export types for convenience
-export type { FeedItem, Profile } from '@/components/feed/types/feedTypes';
+  console.log(`Generated ${feedItems.length} feed items from real profiles only`);
+  return feedItems;
+};

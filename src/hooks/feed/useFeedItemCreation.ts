@@ -1,7 +1,6 @@
 
 import { useMemo } from 'react';
 import { FeedItem } from '@/components/feed/types/feedTypes';
-import { generateFeedItems } from '@/utils/feedItemGenerator';
 import { shuffleArrayWithSeed } from '@/utils/feed/shuffleUtils';
 
 interface UseFeedItemCreationProps {
@@ -18,9 +17,33 @@ export const useFeedItemCreation = ({
   userId
 }: UseFeedItemCreationProps) => {
   const allFeedItems = useMemo(() => {
-    console.log('Creating feed with fixed algorithm, shuffle key:', shuffleKey);
+    console.log('Creating feed with NO duplication algorithm, shuffle key:', shuffleKey);
     
-    const profileItems = generateFeedItems(filteredProfiles, shuffleKey);
+    // Convert profiles to feed items - only real profiles, no demo data
+    const profileItems: FeedItem[] = filteredProfiles.map(profile => ({
+      id: `profile-${profile.id}`,
+      type: 'profile' as const,
+      profile: {
+        id: profile.id,
+        name: profile.name,
+        age: profile.age,
+        image: profile.image,
+        bio: profile.bio,
+        whatsapp: profile.whatsapp,
+        location: profile.location,
+        gender: profile.gender,
+        userType: profile.userType,
+        role: profile.role || profile.userType,
+        isRealAccount: profile.isRealAccount || true,
+        verifications: profile.verifications || {
+          phoneVerified: false,
+          emailVerified: true,
+          photoVerified: false,
+          locationVerified: false,
+          premiumUser: false
+        }
+      }
+    }));
 
     // Convert posts to feed items with admin prioritization
     const postItems: FeedItem[] = posts.map(post => {
@@ -70,53 +93,35 @@ export const useFeedItemCreation = ({
       otherPostItems = postItems;
     }
 
-    // Fixed algorithm: No duplication, just smart ordering
-    const combinedItems = [...otherPostItems, ...profileItems];
+    // FIXED ALGORITHM: Simple shuffle with NO duplication
+    const allOtherItems = [...otherPostItems, ...profileItems];
     
     // Separate admin content from regular content
-    const adminItems = combinedItems.filter(item => 
+    const adminItems = allOtherItems.filter(item => 
       (item as any).isAdminPost || 
       item.profile.role?.toLowerCase() === 'admin'
     );
-    const regularItems = combinedItems.filter(item => 
+    const regularItems = allOtherItems.filter(item => 
       !(item as any).isAdminPost && 
       item.profile.role?.toLowerCase() !== 'admin'
     );
 
-    console.log(`Admin items: ${adminItems.length}, Regular items: ${regularItems.length}`);
+    console.log(`Feed composition: ${adminItems.length} admin items, ${regularItems.length} regular items`);
 
-    // Smart interleaving: Admin content appears frequently but NO DUPLICATION
-    const interleavedItems: FeedItem[] = [];
+    // Simple approach: Mix admin and regular content without complex interleaving
     const shuffledAdmin = shuffleArrayWithSeed(adminItems, shuffleKey);
     const shuffledRegular = shuffleArrayWithSeed(regularItems, shuffleKey + 1);
     
-    let adminIndex = 0;
-    let regularIndex = 0;
-    let position = 0;
-    
-    // Interleave with admin priority every 3-4 items
-    while (adminIndex < shuffledAdmin.length || regularIndex < shuffledRegular.length) {
-      // Every 3rd position, try to add admin content
-      if (position % 3 === 0 && adminIndex < shuffledAdmin.length) {
-        interleavedItems.push(shuffledAdmin[adminIndex]);
-        adminIndex++;
-      } else if (regularIndex < shuffledRegular.length) {
-        interleavedItems.push(shuffledRegular[regularIndex]);
-        regularIndex++;
-      } else if (adminIndex < shuffledAdmin.length) {
-        // Fill remaining admin items
-        interleavedItems.push(shuffledAdmin[adminIndex]);
-        adminIndex++;
-      }
-      position++;
-    }
+    // Basic merge: Add admin items first (for priority), then regular items
+    // This ensures NO DUPLICATION while maintaining admin priority
+    const mergedItems = [...shuffledAdmin, ...shuffledRegular];
 
     // Prepend user's own posts at the top (if any)
     const result = myPostItems.length > 0
-      ? [...myPostItems, ...interleavedItems]
-      : interleavedItems;
+      ? [...myPostItems, ...mergedItems]
+      : mergedItems;
 
-    console.log(`Final feed composition: ${result.length} items (${myPostItems.length} own posts, no duplicates)`);
+    console.log(`Final feed: ${result.length} items total (${myPostItems.length} own posts, ${adminItems.length} admin, ${regularItems.length} regular) - NO DUPLICATES`);
     return result;
   }, [filteredProfiles, posts, shuffleKey, userId]);
 
