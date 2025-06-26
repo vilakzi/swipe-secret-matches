@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 
 interface VideoPlayerContainerProps {
   src: string;
@@ -8,16 +8,16 @@ interface VideoPlayerContainerProps {
   videoRef: React.RefObject<HTMLVideoElement>;
   isFullscreen: boolean;
   isMuted: boolean;
-  onMouseMove: () => void;
-  onTouchStart: () => void;
-  onClick: () => void;
+  onMouseMove: (e: React.MouseEvent) => void;
+  onTouchStart: (e: React.TouchEvent) => void;
+  onClick: (e?: React.MouseEvent | React.TouchEvent) => void;
   children: React.ReactNode;
 }
 
 const VideoPlayerContainer: React.FC<VideoPlayerContainerProps> = ({
   src,
   poster,
-  className = '',
+  className,
   videoRef,
   isFullscreen,
   isMuted,
@@ -26,22 +26,30 @@ const VideoPlayerContainer: React.FC<VideoPlayerContainerProps> = ({
   onClick,
   children
 }) => {
+  const handleClick = (e: React.MouseEvent) => {
+    onClick(e);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    onClick(e);
+  };
+
   return (
     <div 
-      className={`relative bg-black overflow-hidden h-72 ${className}`}
+      className={`relative w-full ${isFullscreen ? 'h-screen' : 'aspect-video'} bg-black rounded-lg overflow-hidden ${className}`}
       onMouseMove={onMouseMove}
       onTouchStart={onTouchStart}
-      onClick={onClick}
+      onClick={handleClick}
+      onTouchEnd={handleTouchEnd}
     >
       <video
         ref={videoRef}
         src={src}
-        className={`w-full h-full ${isFullscreen ? 'object-contain' : 'object-cover'}`}
         poster={poster}
-        preload="metadata"
+        className="w-full h-full object-cover"
         playsInline
         muted={isMuted}
-        loop
+        preload="metadata"
       />
       {children}
     </div>

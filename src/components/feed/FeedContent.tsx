@@ -1,7 +1,6 @@
 
 import React, { useState, useCallback, memo } from 'react';
 import PostCard from './PostCard';
-import FeedHeader from './FeedHeader';
 import { toast } from '@/hooks/use-toast';
 
 interface FeedContentProps {
@@ -23,7 +22,6 @@ const FeedContent = memo<FeedContentProps>(({
   onRefresh,
   engagementTracker,
 }) => {
-  const [showFilters, setShowFilters] = useState(false);
   const [localFeedItems, setLocalFeedItems] = useState(feedItems);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -63,6 +61,12 @@ const FeedContent = memo<FeedContentProps>(({
 
   // Safety check for feed items
   const safeFeedItems = Array.isArray(localFeedItems) ? localFeedItems : [];
+
+  console.log('🎯 FeedContent rendering:', {
+    totalItems: safeFeedItems.length,
+    isRefreshing,
+    hasEngagementTracker: !!engagementTracker
+  });
 
   if (safeFeedItems.length === 0) {
     return (
