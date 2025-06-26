@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Filter, RotateCcw } from 'lucide-react';
 import SwipeCard from './SwipeCard';

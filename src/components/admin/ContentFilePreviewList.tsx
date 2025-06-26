@@ -1,3 +1,4 @@
+import React from "react";
 import ContentFilePreview from "./ContentFilePreview";
 import type { UploadFile } from "./useContentUpload";
 
