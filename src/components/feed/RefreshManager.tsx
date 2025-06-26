@@ -16,10 +16,8 @@ const RefreshManager: React.FC<RefreshManagerProps> = ({
 }) => {
   const [showRefreshPrompt, setShowRefreshPrompt] = useState(false);
   const [timeUntilRefresh, setTimeUntilRefresh] = useState(autoRefreshInterval);
-  const [isUserViewing, setIsUserViewing] = useState(true);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
     let countdownInterval: NodeJS.Timeout;
 
     const startCountdown = () => {
@@ -41,10 +39,10 @@ const RefreshManager: React.FC<RefreshManagerProps> = ({
     startCountdown();
 
     // Check for user activity
+    // Check for user activity
     const handleUserActivity = () => {
-      setIsUserViewing(true);
+      // User activity detected (no-op)
     };
-
     // Detect if user is actively viewing (scroll, click, touch)
     const events = ['scroll', 'click', 'touchstart', 'mousemove'];
     events.forEach(event => {
@@ -52,7 +50,6 @@ const RefreshManager: React.FC<RefreshManagerProps> = ({
     });
 
     return () => {
-      if (interval) clearInterval(interval);
       if (countdownInterval) clearInterval(countdownInterval);
       events.forEach(event => {
         window.removeEventListener(event, handleUserActivity);

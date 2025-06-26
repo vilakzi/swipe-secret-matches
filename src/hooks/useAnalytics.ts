@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 export type AnalyticsSummary = {
+  [x: string]: number;
   total_content: number;
   total_views: number;
   total_likes: number;
