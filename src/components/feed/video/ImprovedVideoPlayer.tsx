@@ -23,6 +23,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
 }) => {
   const [showVideo, setShowVideo] = useState(autoPlay);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [controlsVisible, setControlsVisible] = useState(true);
 
   const {
     videoRef,
@@ -53,6 +54,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   const handlePlayClick = async () => {
     if (!showVideo) {
       setShowVideo(true);
+      // Wait for video to be ready before playing
       setTimeout(() => togglePlay(), 100);
     } else {
       await togglePlay();
@@ -76,6 +78,17 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     }
   };
 
+  // Show controls when video is loaded and not playing, or when user interacts
+  useEffect(() => {
+    if (!isLoading && !isPlaying) {
+      setControlsVisible(true);
+    } else if (showControls) {
+      setControlsVisible(true);
+    } else {
+      setControlsVisible(false);
+    }
+  }, [isLoading, isPlaying, showControls]);
+
   // Sync video player state with smart controls
   useEffect(() => {
     if (isPlaying) {
@@ -84,6 +97,16 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
       handleVideoPause();
     }
   }, [isPlaying, handleVideoPlay, handleVideoPause]);
+
+  // Handle fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
 
   if (error) {
     return <VideoErrorDisplay videoError={error} src={src} />;
@@ -119,7 +142,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
       />
       
       <VideoControlsOverlay
-        showControls={showControls}
+        showControls={controlsVisible}
         showVideo={showVideo}
         isPlaying={isPlaying}
         isBuffering={isBuffering}
