@@ -61,6 +61,15 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     }
   };
 
+  const handleScreenTap = () => {
+    // Toggle play/pause when user taps the screen
+    if (showVideo && !isLoading) {
+      togglePlay();
+    }
+    // Also trigger the smart controls
+    handleClick();
+  };
+
   const toggleFullscreen = () => {
     const container = videoRef.current?.parentElement;
     if (!container) return;
@@ -78,11 +87,9 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     }
   };
 
-  // Show controls when video is loaded and not playing, or when user interacts
+  // Show controls based on playing state and user interaction
   useEffect(() => {
-    if (!isLoading && !isPlaying) {
-      setControlsVisible(true);
-    } else if (showControls) {
+    if (!isLoading && (!isPlaying || showControls)) {
       setControlsVisible(true);
     } else {
       setControlsVisible(false);
@@ -133,7 +140,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
       isMuted={isMuted}
       onMouseMove={handleMouseMove}
       onTouchStart={handleTouchStart}
-      onClick={handleClick}
+      onClick={handleScreenTap}
     >
       <VideoLoadingIndicator
         isLoading={isLoading}

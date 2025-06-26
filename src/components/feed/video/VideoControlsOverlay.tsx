@@ -38,31 +38,36 @@ const VideoControlsOverlay: React.FC<VideoControlsOverlayProps> = ({
     action();
   };
 
+  // Show center play button only when paused or when controls are visible
+  const showCenterPlayButton = !isPlaying || showControls;
+
   return (
     <div className={`absolute inset-0 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 hover:opacity-100'}`}>
       {/* Background overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
       
-      {/* Center play/pause button */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="pointer-events-auto">
-          <Button
-            variant="ghost"
-            size="lg"
-            onClick={(e) => handleControlClick(e, onPlayClick)}
-            className="text-white hover:bg-white/20 bg-black/50 backdrop-blur-sm rounded-full p-6 transition-all duration-200 border border-white/20"
-            disabled={isBuffering}
-          >
-            {isBuffering ? (
-              <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : isPlaying ? (
-              <Pause className="w-8 h-8" />
-            ) : (
-              <Play className="w-8 h-8 ml-1" />
-            )}
-          </Button>
+      {/* Center play/pause button - only show when paused or controls are visible */}
+      {showCenterPlayButton && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="pointer-events-auto">
+            <Button
+              variant="ghost"
+              size="lg"
+              onClick={(e) => handleControlClick(e, onPlayClick)}
+              className="text-white hover:bg-white/20 bg-black/50 backdrop-blur-sm rounded-full p-6 transition-all duration-200 border border-white/20"
+              disabled={isBuffering}
+            >
+              {isBuffering ? (
+                <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : isPlaying ? (
+                <Pause className="w-8 h-8" />
+              ) : (
+                <Play className="w-8 h-8 ml-1" />
+              )}
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
       
       {/* Bottom controls bar */}
       <div className="absolute bottom-0 left-0 right-0 p-4 pointer-events-none">
