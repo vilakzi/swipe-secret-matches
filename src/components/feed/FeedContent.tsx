@@ -120,8 +120,6 @@ const FeedContent = ({
         isSubscribed={isSubscribed}
         onLike={onLike}
         onContact={onContact}
-        onContentLike={handleContentLikeWrapper}
-        onContentShare={handleContentShareWrapper}
       />
     </div>
   );

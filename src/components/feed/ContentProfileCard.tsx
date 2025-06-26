@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, MessageCircle, Share, Play, Image as ImageIcon, BadgeCheck, Clock, Shield, Crown } from 'lucide-react';
+import { Heart, MessageCircle, Share, Play, Image as ImageIcon, BadgeCheck, Clock, Shield } from 'lucide-react';
 import OptimizedImage from '@/components/ui/OptimizedImage';
 import ImageModal from '@/components/ui/ImageModal';
 import { useImageModal } from '@/hooks/useImageModal';
