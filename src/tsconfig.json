@@ -1,12 +1,11 @@
-
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./*"]
     },
-    "lib": ["es2020", "dom", "dom.iterable", "esnext"],
+    "lib": ["es2020", "dom", "dom.iterable"],
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "jsx": "react-jsx",
@@ -14,12 +13,10 @@
     "noEmit": true,
     "skipLibCheck": true,
     "isolatedModules": true,
-    "resolveJsonModule": true,
-    "types": [],
-    "typeRoots": []
+    "resolveJsonModule": true
   },
   "include": [
-    "src/**/*"
+    "./**/*"
   ],
   "exclude": [
     "node_modules",

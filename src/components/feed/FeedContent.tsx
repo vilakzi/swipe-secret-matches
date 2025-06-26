@@ -134,6 +134,17 @@ const FeedContent = memo<FeedContentProps>(({
           </div>
         </div>
       )}
+<<<<<<< HEAD
+      
+      <NormalFeedList
+        userFeed={allFeedItems}
+        likedItems={likedItems}
+        isSubscribed={isSubscribed}
+        onLike={onLike}
+        onContact={onContact}
+      />
+=======
+>>>>>>> 61f2cb34a398ba0ea04c0ddde371958ddc46924b
     </div>
   );
 });
