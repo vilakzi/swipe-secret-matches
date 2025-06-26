@@ -1,5 +1,4 @@
 
-import React from "react";
 import ProfileCard from "./ProfileCard";
 import { FeedItem, Profile } from "./types/feedTypes";
 

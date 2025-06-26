@@ -1,21 +1,16 @@
 
-import React from 'react';
 import FeedHeaderActions from './FeedHeaderActions';
 import FeedHeaderFilters from './FeedHeaderFilters';
 
 interface FeedHeaderProps {
   showFilters: boolean;
   setShowFilters: (show: boolean) => void;
-  onImageUpload: () => void;
-  onVideoUpload: () => void;
   onRefresh?: () => void;
 }
 
 const FeedHeader = ({
   showFilters,
   setShowFilters,
-  onImageUpload,
-  onVideoUpload,
   onRefresh
 }: FeedHeaderProps) => {
   return (
@@ -29,5 +24,4 @@ const FeedHeader = ({
     </div>
   );
 };
-
 export default FeedHeader;
