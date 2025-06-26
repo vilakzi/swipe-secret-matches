@@ -1,6 +1,5 @@
 {
     "recommendations": [
-        "marscode.marscode-extension",
-        "ikasann-self.vscode-chat-gpt"
+        "marscode.marscode-extension"
     ]
 }
