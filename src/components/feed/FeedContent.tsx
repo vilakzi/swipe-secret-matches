@@ -79,7 +79,7 @@ const FeedContent = ({
     }))
   ];
 
-  // All feed items combined for normal display
+  // All feed items combined for normal display (no filtering by role, show all)
   const allFeedItems = [
     ...contentAsRegularFeed,
     ...enrichedFeedItems.filter(item => {
@@ -87,7 +87,6 @@ const FeedContent = ({
                       (item.type === 'post' && isValidMedia(item.postImage));
       const imgChanged = isProfileImageChanged(item.profile.image);
       const newJoiner = isNewJoiner(item.profile.joinDate);
-      
       return hasMedia || imgChanged || newJoiner;
     }).map(item => ({
       ...item,
