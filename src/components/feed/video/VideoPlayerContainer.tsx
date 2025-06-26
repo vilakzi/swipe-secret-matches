@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface VideoPlayerContainerProps {
@@ -50,6 +49,8 @@ const VideoPlayerContainer: React.FC<VideoPlayerContainerProps> = ({
         playsInline
         muted={isMuted}
         preload="metadata"
+        autoPlay
+        controls
       />
       {children}
     </div>

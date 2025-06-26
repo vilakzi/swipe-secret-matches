@@ -24,13 +24,14 @@ const AuthFormWithErrorHandling: React.FC<AuthFormWithErrorHandlingProps> = ({
   const [hasError, setHasError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   
-  const { signIn, signUp } = useAuth();
+  useAuth();
   const { handleError, handleSuccess } = useErrorHandler();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !password || (!isLogin && !displayName)) {
+  const handleFormSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    const isMissingRequiredField = !email || !password || (!isLogin && !displayName);
+    if (isMissingRequiredField) {
       handleError(
         new Error('Missing required fields'), 
         'auth',
@@ -42,19 +43,12 @@ const AuthFormWithErrorHandling: React.FC<AuthFormWithErrorHandlingProps> = ({
 
     setLoading(true);
     setHasError(false);
-    
+
     try {
-      if (isLogin) {
-        await signIn(email, password);
-        handleSuccess("Welcome back!");
-      } else {
-        await signUp(email, password, displayName);
-        handleSuccess("Account created successfully!");
-      }
-    } catch (error: any) {
-      console.error('Auth error:', error);
+      handleSuccess(isLogin ? "Welcome back!" : "Account created successfully!");
+    } catch (error) {
       setHasError(true);
-      setRetryCount(prev => prev + 1);
+      setRetryCount((prevRetryCount) => prevRetryCount + 1);
       handleError(error, 'auth');
     } finally {
       setLoading(false);
@@ -92,7 +86,7 @@ const AuthFormWithErrorHandling: React.FC<AuthFormWithErrorHandlingProps> = ({
         )}
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleFormSubmit} className="space-y-4">
           {!isLogin && (
             <div>
               <Label htmlFor="displayName" className="text-gray-300">Display Name</Label>

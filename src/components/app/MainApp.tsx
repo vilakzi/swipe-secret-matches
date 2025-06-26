@@ -1,4 +1,3 @@
-import React from 'react';
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 // If you use Sonner, keep it; otherwise, remove the next line
