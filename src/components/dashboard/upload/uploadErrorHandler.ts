@@ -14,7 +14,7 @@ export const handleUploadError = (error: any) => {
   });
 };
 
-export const checkNetworkConnection = () => {
+export const checkNetworkConnection = async () => {
   if (!navigator.onLine) {
     toast({
       title: "No internet connection",
@@ -24,25 +24,75 @@ export const checkNetworkConnection = () => {
     return false;
   }
 
-  // Enhanced connection quality check
+  // Enhanced connection quality check for mobile
   const connection = (navigator as any).connection;
   if (connection) {
     if (connection.effectiveType === 'slow-2g') {
       toast({
+        title: "Very slow connection detected",
+        description: "Upload may fail. Consider using WiFi or a smaller file.",
+        variant: "destructive"
+      });
+      return false;
+    } else if (connection.effectiveType === '2g') {
+      toast({
         title: "Slow connection detected",
-        description: "Upload may take longer than usual. Consider using a smaller file.",
+        description: "Upload may take longer than usual. Consider using WiFi.",
         variant: "default"
       });
-    } else if (connection.downlink < 1) {
+    } else if (connection.downlink < 0.5) {
       toast({
         title: "Poor connection quality",
-        description: "Your connection seems unstable. Upload may fail or take longer.",
-        variant: "default"
+        description: "Your connection seems very unstable. Try moving to better signal area.",
+        variant: "destructive"
       });
+      return false;
     }
   }
 
-  return true;
+  // Test actual connection by making a small request
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    const response = await fetch('https://galrcqwogqqdsqdzfrrd.supabase.co/rest/v1/', {
+      method: 'HEAD',
+      signal: controller.signal,
+      headers: {
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhbHJjcXdvZ3FxZHNxZHpmcnJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0NzQ1MDUsImV4cCI6MjA2NDA1MDUwNX0.95iX-m8r0TqDOS0_kR-3-1xgiZMofPARvMZHzyFrPf0'
+      }
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      toast({
+        title: "Server connection failed",
+        description: "Cannot reach upload server. Please try again later.",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    return true;
+  } catch (error: any) {
+    console.error('Connection test failed:', error);
+    
+    if (error.name === 'AbortError') {
+      toast({
+        title: "Connection timeout",
+        description: "Server response too slow. Please try again with better connection.",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Cannot reach server",
+        description: "Please check your internet connection and try again.",
+        variant: "destructive"
+      });
+    }
+    return false;
+  }
 };
 
 // Enhanced network monitoring with better error messages
@@ -73,12 +123,18 @@ export const monitorNetworkStatus = (callback: (isOnline: boolean) => void) => {
   };
 };
 
-// Retry mechanism for failed uploads
+// Retry mechanism for failed uploads with mobile-specific handling
 export const retryUploadWithFallback = async (uploadFn: () => Promise<any>, maxRetries = 3): Promise<any> => {
   let lastError: Error;
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
+      // Check connection before each retry
+      const connectionOk = await checkNetworkConnection();
+      if (!connectionOk && attempt > 1) {
+        throw new Error('Connection check failed');
+      }
+      
       const result = await uploadFn();
       return result;
     } catch (error: any) {
@@ -89,12 +145,14 @@ export const retryUploadWithFallback = async (uploadFn: () => Promise<any>, maxR
       if (error.message?.includes('unauthorized') || 
           error.message?.includes('forbidden') ||
           error.message?.includes('invalid file type') ||
-          error.message?.includes('file too large')) {
+          error.message?.includes('file too large') ||
+          error.message?.includes('Very slow connection') ||
+          error.message?.includes('Poor connection')) {
         throw error;
       }
       
       if (attempt < maxRetries) {
-        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 8000);
         console.log(`Retrying upload in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
         
         toast({

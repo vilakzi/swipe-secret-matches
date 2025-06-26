@@ -61,8 +61,13 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     }
   };
 
-  const handleScreenTap = () => {
-    // Toggle play/pause when user taps the screen
+  const handleScreenTap = (e: React.MouseEvent) => {
+    // Don't interfere with control button clicks
+    if ((e.target as HTMLElement).closest('button')) {
+      return;
+    }
+    
+    // Toggle play/pause when user taps the screen area
     if (showVideo && !isLoading) {
       togglePlay();
     }
@@ -87,9 +92,9 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     }
   };
 
-  // Show controls based on playing state and user interaction
+  // Always show controls when paused or when user interacts
   useEffect(() => {
-    if (!isLoading && (!isPlaying || showControls)) {
+    if (!isPlaying || showControls || isLoading) {
       setControlsVisible(true);
     } else {
       setControlsVisible(false);

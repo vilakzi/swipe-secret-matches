@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { generateFileName, getFileExtension, validateFileSize } from './uploadUtils';
 import { uploadFileToStorage } from './fileUploadService';
 import { createPostRecord } from './postCreationService';
-import { handleUploadError, checkNetworkConnection } from './uploadErrorHandler';
+import { handleUploadError, checkNetworkConnection, retryUploadWithFallback } from './uploadErrorHandler';
 
 type PromotionType = 'free_2h' | 'paid_8h' | 'paid_12h';
 
@@ -38,8 +38,10 @@ export const usePostUpload = () => {
       return;
     }
 
-    if (!checkNetworkConnection()) {
-      setUploadError("No internet connection");
+    // Enhanced network check for mobile
+    const connectionOk = await checkNetworkConnection();
+    if (!connectionOk) {
+      setUploadError("Connection check failed");
       return;
     }
 
@@ -66,8 +68,11 @@ export const usePostUpload = () => {
       
       const fileName = generateFileName(user.id, fileExt);
 
-      // Upload file to Supabase Storage
-      const publicUrl = await uploadFileToStorage(fileName, selectedFile, setUploadProgress);
+      // Upload file to Supabase Storage with retry mechanism
+      const publicUrl = await retryUploadWithFallback(
+        () => uploadFileToStorage(fileName, selectedFile, setUploadProgress),
+        3
+      );
 
       // Create post record in database
       const postData = await createPostRecord(

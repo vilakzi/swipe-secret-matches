@@ -26,18 +26,36 @@ export const uploadFileToStorage = async (
 
   onProgress?.(10);
 
-  // Check network connection
+  // Check network connection more thoroughly
   if (!navigator.onLine) {
     throw new Error('No internet connection. Please check your connection and try again.');
+  }
+
+  // Test connection to Supabase before upload
+  try {
+    const { data: testData, error: testError } = await supabase
+      .from('profiles')
+      .select('id')
+      .limit(1);
+    
+    if (testError && testError.message.includes('fetch')) {
+      throw new Error('Unable to connect to server. Please check your internet connection.');
+    }
+  } catch (error: any) {
+    console.error('Connection test failed:', error);
+    throw new Error('Network connection failed. Please try again.');
   }
 
   const uploadData = await retryOperation(async () => {
     // Create a more specific file path for better organization
     const timestamp = Date.now();
-    const finalFileName = `${timestamp}-${fileName}`;
+    const randomString = Math.random().toString(36).substring(2, 8);
+    const finalFileName = `${timestamp}-${randomString}-${fileName}`;
     
     onProgress?.(20);
 
+    console.log('Attempting upload to Supabase storage...');
+    
     const { data, error } = await supabase.storage
       .from('posts')
       .upload(finalFileName, file, {
@@ -68,12 +86,17 @@ export const uploadFileToStorage = async (
         throw new Error('You need to be logged in to upload files.');
       }
 
-      if (error.message?.includes('Network') || error.message?.includes('timeout')) {
+      if (error.message?.includes('Network') || error.message?.includes('timeout') || error.message?.includes('fetch')) {
         throw new Error('Network error. Please check your connection and try again.');
       }
       
       if (error.message?.includes('Storage quota')) {
         throw new Error('Storage limit reached. Please contact support.');
+      }
+      
+      // Check for mobile-specific network issues
+      if (error.message?.includes('Failed to fetch')) {
+        throw new Error('Upload failed - poor connection detected. Try using WiFi or moving to better signal area.');
       }
       
       // Generic error with original message for debugging
@@ -85,19 +108,24 @@ export const uploadFileToStorage = async (
 
   onProgress?.(70);
 
-  // Get public URL
-  const { data: { publicUrl } } = supabase.storage
-    .from('posts')
-    .getPublicUrl(uploadData.path);
+  // Get public URL with error handling
+  try {
+    const { data: { publicUrl } } = supabase.storage
+      .from('posts')
+      .getPublicUrl(uploadData.path);
 
-  if (!publicUrl) {
-    throw new Error('Failed to generate public URL for uploaded file');
+    if (!publicUrl) {
+      throw new Error('Failed to generate public URL for uploaded file');
+    }
+
+    onProgress?.(90);
+    
+    console.log('Upload successful:', publicUrl);
+    onProgress?.(100);
+    
+    return publicUrl;
+  } catch (error) {
+    console.error('Failed to get public URL:', error);
+    throw new Error('Upload completed but failed to get file URL. Please try again.');
   }
-
-  onProgress?.(90);
-  
-  console.log('Upload successful:', publicUrl);
-  onProgress?.(100);
-  
-  return publicUrl;
 };
