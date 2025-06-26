@@ -23,7 +23,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   controls = true // <-- Default to false for backward compatibility
 }) => {
   const [showVideo, setShowVideo] = useState(autoPlay);
-  const [isFullscreen, setIsFullscreen] = useState(toggleFullscreen);
+  const [isFullscreen, setIsFullscreen] = useState(useSmartVideoControls);
 
   const {
     videoRef,
