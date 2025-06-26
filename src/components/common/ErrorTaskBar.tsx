@@ -1,5 +1,5 @@
 
-import { createContext, useContext, useRef, ReactNode } from 'react';
+import React, { createContext, useContext, useRef, ReactNode } from 'react';
 import { useToast } from "@/hooks/use-toast";
 
 interface ErrorContextType {

@@ -3,7 +3,7 @@ import React from 'react';
 import PostCard from './PostCard';
 import ProfileCard from './ProfileCard';
 import ContentProfileCard from './ContentProfileCard';
-import { Profile } from './types/feedTypes';
+import { FeedItem, Profile } from './types/feedTypes';
 
 interface AdminTileCarouselProps {
   adminFeed: any[];
@@ -51,15 +51,7 @@ const AdminTileCarousel: React.FC<AdminTileCarouselProps> = ({
                 likedItems={likedItems}
                 isSubscribed={isSubscribed}
                 onLike={onLike}
-                onContact={(profile) =>
-                  onContact({
-                    ...profile,
-                    userType:
-                      profile.userType && ['user', 'service_provider', 'admin', 'superadmin'].includes(profile.userType)
-                        ? profile.userType as "user" | "service_provider" | "admin" | "superadmin"
-                        : 'user'
-                  })
-                }
+                onContact={onContact}
               />
             ) : item.type === 'profile' ? (
               <ProfileCard

@@ -1,4 +1,5 @@
 
+type PromotionType = 'free_2h' | 'paid_8h' | 'paid_12h';
 
 export const calculateExpiryTime = (type: string) => {
   const now = new Date();

@@ -1,5 +1,9 @@
-import React, { useMemo, useState, useRef, useCallback, useEffect } from "react";
+
+import React from "react";
 import { isValidMedia } from "@/utils/feed/mediaUtils";
+import { isProfileImageChanged } from "@/utils/feed/profileUtils";
+import { isNewJoiner } from "@/utils/feed/joinerUtils";
+import { PLACEHOLDER_IMAGE } from "@/utils/feed/profileUtils";
 import WelcomeCard from "./WelcomeCard";
 import FeedProfileCard from "./FeedProfileCard";
 import FeedPostCard from "./FeedPostCard";
@@ -11,56 +15,25 @@ interface NormalFeedListProps {
   isSubscribed: boolean;
   onLike: (itemId: string, profileId: string) => void;
   onContact: (profile: Profile) => void;
-}
-
-const PAGE_SIZE = 15;
-
-// Fisher-Yates shuffle
-function shuffleArray<T>(array: T[]): T[] {
-  const arr = [...array];
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
+  onContentLike?: (contentId: string, profileId: string) => void;
+  onContentShare?: (contentId: string) => void;
 }
 
 const NormalFeedList: React.FC<NormalFeedListProps> = ({
-  userFeed,
+  userFeed = [], // Default to empty array to prevent undefined errors
   likedItems,
   isSubscribed,
   onLike,
   onContact,
+  onContentLike,
+  onContentShare,
 }) => {
-  // Memoize shuffled feed for performance
-  const shuffledFeed = useMemo(() => shuffleArray(userFeed), [userFeed]);
+  // Safely filter the feed, ensuring userFeed is always an array
+  const nonAdminFeed = Array.isArray(userFeed) 
+    ? userFeed.filter(item => !item.isAdminCard)
+    : [];
 
-  // Pagination state
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const loaderRef = useRef<HTMLDivElement | null>(null);
-
-  // Infinite scroll: load more when loader is visible
-  const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
-    const target = entries[0];
-    if (target.isIntersecting) {
-      setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, shuffledFeed.length));
-    }
-  }, [shuffledFeed.length]);
-
-  useEffect(() => {
-    setVisibleCount(PAGE_SIZE); // Reset on feed change
-  }, [shuffledFeed]);
-
-  useEffect(() => {
-    const option = { root: null, rootMargin: "20px", threshold: 1.0 };
-    const observer = new window.IntersectionObserver(handleObserver, option);
-    if (loaderRef.current) observer.observe(loaderRef.current);
-    return () => {
-      if (loaderRef.current) observer.unobserve(loaderRef.current);
-    };
-  }, [handleObserver]);
-
-  if (shuffledFeed.length === 0) {
+  if (nonAdminFeed.length === 0) {
     return (
       <div className="text-center py-8" aria-live="polite">
         <p className="text-gray-400">No profiles found.</p>
@@ -70,7 +43,7 @@ const NormalFeedList: React.FC<NormalFeedListProps> = ({
 
   return (
     <>
-      {shuffledFeed.slice(0, visibleCount).map((item: any) => {
+      {nonAdminFeed.map((item: any) => {
         if (item.isWelcome) {
           return (
             <WelcomeCard
@@ -105,12 +78,6 @@ const NormalFeedList: React.FC<NormalFeedListProps> = ({
         }
         return null;
       })}
-      {/* Loader for infinite scroll */}
-      {visibleCount < shuffledFeed.length && (
-        <div ref={loaderRef} className="py-8 text-center text-gray-400">
-          Loading more...
-        </div>
-      )}
     </>
   );
 };

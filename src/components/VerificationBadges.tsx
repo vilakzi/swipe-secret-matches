@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Shield, CheckCircle, Star, Camera, MapPin } from 'lucide-react';
 

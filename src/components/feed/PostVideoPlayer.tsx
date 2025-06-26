@@ -1,13 +1,17 @@
+
+import React from 'react';
 import ImprovedVideoPlayer from './video/ImprovedVideoPlayer';
+import EnhancedVideoPreview from './video/EnhancedVideoPreview';
 import { isVideo } from '@/utils/feed/mediaUtils';
 
 interface PostVideoPlayerProps {
   src: string;
   poster?: string;
   className?: string;
+  duration?: number;
 }
 
-const PostVideoPlayer = ({ src, poster, className = '' }: PostVideoPlayerProps) => {
+const PostVideoPlayer = ({ src, poster, className = '', duration }: PostVideoPlayerProps) => {
   // Validate video source
   if (!src || src.trim() === '' || !isVideo(src)) {
     return (
@@ -24,10 +28,8 @@ const PostVideoPlayer = ({ src, poster, className = '' }: PostVideoPlayerProps) 
       src={src}
       poster={poster}
       className={className}
-      controls // Ensure native video controls are enabled
     />
   );
 };
 
 export default PostVideoPlayer;
-

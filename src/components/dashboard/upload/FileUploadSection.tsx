@@ -6,6 +6,7 @@ import { getMaxUploadSize } from "@/utils/getMaxUploadSize";
 import NetworkStatusIndicator from './NetworkStatusIndicator';
 import FileInput from './FileInput';
 import FileStatusDisplay from './FileStatusDisplay';
+import FilePreview from './FilePreview';
 import FileValidationMessages from './FileValidationMessages';
 import UploadErrorHandler from './UploadErrorHandler';
 import { useVideoValidator } from './VideoValidator';
@@ -130,7 +131,7 @@ const FileUploadSection = ({
     <div className="space-y-4">
       <NetworkStatusIndicator />
       
-      <UploadErrorHandler error={uploadError ?? validationError ?? null} isOnline={isOnline} />
+      <UploadErrorHandler error={uploadError || validationError} isOnline={isOnline} />
 
       <div>
         <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -141,8 +142,8 @@ const FileUploadSection = ({
         ) : (
           <FileStatusDisplay
             file={selectedFile}
-            validationError={validationError ?? null}
-            isValidating={isValidating ?? false}
+            validationError={validationError}
+            isValidating={isValidating}
             isOnline={isOnline}
             previewUrl={previewUrl}
             onRemove={removeFile}
@@ -151,8 +152,8 @@ const FileUploadSection = ({
       </div>
 
       <FileValidationMessages
-        isFileReady={!!isFileReady}
-        validationError={validationError ?? null}
+        isFileReady={isFileReady}
+        validationError={validationError}
       />
     </div>
   );

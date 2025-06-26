@@ -1,3 +1,4 @@
+
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap");
 @tailwind base;
 @tailwind components;
@@ -7,7 +8,7 @@
   * {
     @apply border-border;
   }
-
+  
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
@@ -17,7 +18,7 @@
     /* Improve scrolling performance */
     scroll-behavior: smooth;
   }
-
+  
   /* Improve touch targets for mobile */
   button, a, [role="button"] {
     touch-action: manipulation;
@@ -33,40 +34,40 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
-
+  
   /* Performance optimizations */
   .gpu-accelerated {
     transform: translateZ(0);
     will-change: transform;
   }
-
+  
   /* Touch-friendly elements */
   .touch-target {
     min-height: 44px;
     min-width: 44px;
   }
-
+  
   /* Safe area for mobile devices */
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom);
   }
-
+  
   .safe-area-top {
     padding-top: env(safe-area-inset-top);
   }
 }
 
+/* Animations for better UX */
 @layer utilities {
   .animate-fade-in {
     animation: fade-in 0.3s ease-out;
   }
-
+  
   .animate-slide-up {
     animation: slide-up 0.3s ease-out;
   }
 }
 
-/* Animations for better UX */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -85,14 +86,4 @@
   to {
     transform: translateY(0);
   }
-}
-
-/* Global video styles for usability */
-video {
-  pointer-events: auto !important;
-  z-index: 1;
-  background: #000;
-  display: block;
-  max-width: 100%;
-  height: auto;
 }
