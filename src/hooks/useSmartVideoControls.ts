@@ -14,7 +14,7 @@ export const useSmartVideoControls = ({
 }: SmartVideoControlsConfig = {}) => {
   const [showControls, setShowControls] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [userInteracting, setUserInteracting] = useState(false);
+  const [userInteracting, setUserInteracting] = useState(true);
   const [hideTimeout, setHideTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const showControlsTemporarily = useCallback(() => {
