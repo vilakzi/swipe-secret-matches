@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef, useCallback, useEffect } from "react";
+import React, { useMemo } from "react";
 import { isValidMedia } from "@/utils/feed/mediaUtils";
 import WelcomeCard from "./WelcomeCard";
 import FeedProfileCard from "./FeedProfileCard";
@@ -12,8 +12,6 @@ interface NormalFeedListProps {
   onLike: (itemId: string, profileId: string) => void;
   onContact: (profile: Profile) => void;
 }
-
-const PAGE_SIZE = 15;
 
 // Fisher-Yates shuffle
 function shuffleArray<T>(array: T[]): T[] {
@@ -32,33 +30,8 @@ const NormalFeedList: React.FC<NormalFeedListProps> = ({
   onLike,
   onContact,
 }) => {
-  // Memoize shuffled feed for performance
+  // Shuffle feed only when userFeed changes for performance
   const shuffledFeed = useMemo(() => shuffleArray(userFeed), [userFeed]);
-
-  // Pagination state
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const loaderRef = useRef<HTMLDivElement | null>(null);
-
-  // Infinite scroll: load more when loader is visible
-  const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
-    const target = entries[0];
-    if (target.isIntersecting) {
-      setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, shuffledFeed.length));
-    }
-  }, [shuffledFeed.length]);
-
-  useEffect(() => {
-    setVisibleCount(PAGE_SIZE); // Reset on feed change
-  }, [shuffledFeed]);
-
-  useEffect(() => {
-    const option = { root: null, rootMargin: "20px", threshold: 1.0 };
-    const observer = new window.IntersectionObserver(handleObserver, option);
-    if (loaderRef.current) observer.observe(loaderRef.current);
-    return () => {
-      if (loaderRef.current) observer.unobserve(loaderRef.current);
-    };
-  }, [handleObserver]);
 
   if (shuffledFeed.length === 0) {
     return (
@@ -70,7 +43,7 @@ const NormalFeedList: React.FC<NormalFeedListProps> = ({
 
   return (
     <>
-      {shuffledFeed.slice(0, visibleCount).map((item: any) => {
+      {shuffledFeed.map((item: any) => {
         if (item.isWelcome) {
           return (
             <WelcomeCard
@@ -105,12 +78,6 @@ const NormalFeedList: React.FC<NormalFeedListProps> = ({
         }
         return null;
       })}
-      {/* Loader for infinite scroll */}
-      {visibleCount < shuffledFeed.length && (
-        <div ref={loaderRef} className="py-8 text-center text-gray-400">
-          Loading more...
-        </div>
-      )}
     </>
   );
 };
