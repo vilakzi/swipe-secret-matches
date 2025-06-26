@@ -30,4 +30,3 @@ const PostVideoPlayer = ({ src, poster, className = '' }: PostVideoPlayerProps) 
 };
 
 export default PostVideoPlayer;
-
