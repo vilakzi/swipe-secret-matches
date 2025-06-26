@@ -12,9 +12,9 @@ export const useSmartVideoControls = ({
   showOnHover = true,
   showOnTouch = true
 }: SmartVideoControlsConfig = {}) => {
-  const [showControls, setShowControls] = useState(true);
+  const [showControls, setShowControls] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [userInteracting, setUserInteracting] = useState(true);
+  const [userInteracting, setUserInteracting] = useState(useSmartVideoControls);
   const [hideTimeout, setHideTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const showControlsTemporarily = useCallback(() => {
