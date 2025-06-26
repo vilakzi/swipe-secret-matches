@@ -1,4 +1,3 @@
-import React from "react";
 import { Button } from "@/components/ui/button";
 import { Image, Video, X } from "lucide-react";
 import type { UploadFile } from "./useContentUpload";
