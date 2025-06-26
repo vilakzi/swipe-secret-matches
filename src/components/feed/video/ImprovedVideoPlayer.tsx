@@ -23,7 +23,6 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
 }) => {
   const [showVideo, setShowVideo] = useState(autoPlay);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [controlsVisible, setControlsVisible] = useState(true);
 
   const {
     videoRef,
@@ -92,15 +91,6 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     }
   };
 
-  // Always show controls when paused or when user interacts
-  useEffect(() => {
-    if (!isPlaying || showControls || isLoading) {
-      setControlsVisible(true);
-    } else {
-      setControlsVisible(false);
-    }
-  }, [isLoading, isPlaying, showControls]);
-
   // Sync video player state with smart controls
   useEffect(() => {
     if (isPlaying) {
@@ -134,6 +124,9 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
       />
     );
   }
+
+  // Always show controls when not playing or when user is interacting
+  const controlsVisible = !isPlaying || showControls || isLoading || isBuffering;
 
   return (
     <VideoPlayerContainer
