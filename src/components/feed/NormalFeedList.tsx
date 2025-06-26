@@ -1,4 +1,3 @@
-
 import React from "react";
 import { isValidMedia } from "@/utils/feed/mediaUtils";
 import WelcomeCard from "./WelcomeCard";
@@ -14,6 +13,16 @@ interface NormalFeedListProps {
   onContact: (profile: Profile) => void;
 }
 
+// Fisher-Yates shuffle
+function shuffleArray<T>(array: T[]): T[] {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 const NormalFeedList: React.FC<NormalFeedListProps> = ({
   userFeed,
   likedItems,
@@ -21,9 +30,10 @@ const NormalFeedList: React.FC<NormalFeedListProps> = ({
   onLike,
   onContact,
 }) => {
-  const nonAdminFeed = userFeed.filter(item => !item.isAdminCard);
+  // Remove filtering: show ALL posts, including admin/provider/super admin
+  const shuffledFeed = shuffleArray(userFeed);
 
-  if (nonAdminFeed.length === 0) {
+  if (shuffledFeed.length === 0) {
     return (
       <div className="text-center py-8" aria-live="polite">
         <p className="text-gray-400">No profiles found.</p>
@@ -33,7 +43,7 @@ const NormalFeedList: React.FC<NormalFeedListProps> = ({
 
   return (
     <>
-      {nonAdminFeed.map((item: any) => {
+      {shuffledFeed.map((item: any) => {
         if (item.isWelcome) {
           return (
             <WelcomeCard
