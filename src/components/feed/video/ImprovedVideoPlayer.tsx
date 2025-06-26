@@ -61,12 +61,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     }
   };
 
-  const handleScreenTap = (e: React.MouseEvent) => {
-    // Don't interfere with control button clicks
-    if ((e.target as HTMLElement).closest('button')) {
-      return;
-    }
-    
+  const handleScreenTap = () => {
     // Toggle play/pause when user taps the screen area
     if (showVideo && !isLoading) {
       togglePlay();
