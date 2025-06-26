@@ -21,12 +21,24 @@ const Index = () => {
 
   const { addError } = useError();
 
+  // Show loading state while checking authentication
+  if (roleLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900">
+        <div className="text-center p-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold text-white">Loading continuous feed...</h2>
+        </div>
+      </div>
+    );
+  }
+
   // Check if user is logged in
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900">
         <div className="text-center p-8">
-          <h2 className="text-2xl font-bold text-white mb-4">Please log in to access the feed</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">Please log in to access the continuous feed</h2>
           <Button
             onClick={() => navigate('/auth')}
             className="bg-purple-600 hover:bg-purple-700"
@@ -43,11 +55,12 @@ const Index = () => {
   };
 
   const handleLike = (itemId: string, profileId: string) => {
-    if (!isAdmin && role !== 'service_provider' && role !== 'user') {
-      // Show error via toast/global error
-      addError("You must be logged in with a valid role to like profiles.");
+    // Universal like system - all authenticated users can like
+    if (!user) {
+      addError("You must be logged in to like profiles.");
       return;
     }
+    
     setLikedItems(prev => {
       const newLiked = new Set(prev);
       if (newLiked.has(itemId)) {
@@ -65,23 +78,29 @@ const Index = () => {
   };
 
   const handleContact = (profile: any) => {
-    if (!isAdmin && role !== 'service_provider' && role !== 'user') {
-      addError("You must be logged in with a valid role to contact profiles.");
+    if (!user) {
+      addError("You must be logged in to contact profiles.");
       return;
     }
-    window.open(`https://wa.me/${profile.whatsapp.replace(/[^0-9]/g, '')}`, '_blank');
+    
+    if (profile.whatsapp) {
+      window.open(`https://wa.me/${profile.whatsapp.replace(/[^0-9]/g, '')}`, '_blank');
+    } else {
+      addError("WhatsApp contact not available for this profile.");
+    }
   };
 
   const handleRefresh = () => {
-    if (!isAdmin && role !== 'service_provider' && role !== 'user') {
-      addError("You must be logged in with a valid role to refresh the feed.");
+    if (!user) {
+      addError("You must be logged in to refresh the feed.");
       return;
     }
-    console.log('Refreshing feed from Index component');
+    
+    console.log('🚀 Refreshing dynamic feed engine for guaranteed fresh content');
     setRefreshKey(prev => prev + 1);
     toast({
-      title: "Feed refreshed",
-      description: "Loading new profiles...",
+      title: "Dynamic feed refreshed",
+      description: "Loading completely fresh content flow with never-ending variety...",
     });
   };
 
@@ -99,12 +118,15 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Simplified Header */}
+      {/* Enhanced Header with dynamic feed indicators */}
       <header className="fixed top-0 left-0 right-0 z-40 bg-black/80 backdrop-blur-md border-b border-gray-700">
         <div className="p-4 flex justify-between items-center max-w-md mx-auto">
           <div className="flex items-center space-x-3">
             <Heart className="w-8 h-8 text-pink-500" />
-            <h1 className="text-2xl font-bold text-white">Connect</h1>
+            <div>
+              <h1 className="text-2xl font-bold text-white">Connect</h1>
+              <p className="text-xs text-gray-400">Dynamic Never-Ending Feed</p>
+            </div>
             {isAdmin && (
               <span className="bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
                 ADMIN
@@ -137,11 +159,12 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main Content with Dynamic Never-Ending Feed */}
       <main className="pt-20">
-        {/* Show Instagram-style Feed for all users including service providers */}
         <div className="max-w-md mx-auto px-4">
           <ProfileCompletionPrompt />
+          
+          {/* Dynamic Feed Engine */}
           <InstagramFeed 
             key={refreshKey}
             onLike={handleLike}

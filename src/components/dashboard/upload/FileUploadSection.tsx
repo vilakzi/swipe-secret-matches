@@ -1,36 +1,88 @@
+
 import React, { useEffect, useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { X, Image, Video, CheckCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useUserRole } from "@/hooks/useUserRole";
 import { getMaxUploadSize } from "@/utils/getMaxUploadSize";
+import NetworkStatusIndicator from './NetworkStatusIndicator';
+import FileInput from './FileInput';
+import FileStatusDisplay from './FileStatusDisplay';
+import FilePreview from './FilePreview';
+import FileValidationMessages from './FileValidationMessages';
+import UploadErrorHandler from './UploadErrorHandler';
+import { useVideoValidator } from './VideoValidator';
 
 interface FileUploadSectionProps {
   selectedFile: File | null;
   onFileChange: (file: File | null) => void;
+  validationError?: string | null;
+  isValidating?: boolean;
+  setValidationError?: (error: string | null) => void;
+  setIsValidating?: (validating: boolean) => void;
+  uploadError?: string | null;
 }
 
-const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProps) => {
+const FileUploadSection = ({ 
+  selectedFile, 
+  onFileChange, 
+  validationError, 
+  isValidating,
+  setValidationError,
+  setIsValidating,
+  uploadError
+}: FileUploadSectionProps) => {
   const { role } = useUserRole();
   const maxSize = getMaxUploadSize(role);
+  const { validateVideoFile } = useVideoValidator();
 
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  // Monitor network status
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     if (selectedFile) {
       const url = URL.createObjectURL(selectedFile);
       setPreviewUrl(url);
+      
+      if (selectedFile.type.startsWith('video/')) {
+        validateVideoFile(selectedFile, isOnline, setIsValidating, setValidationError);
+      } else {
+        setValidationError?.(null);
+      }
+      
       return () => {
         URL.revokeObjectURL(url);
       };
     } else {
       setPreviewUrl(null);
+      setValidationError?.(null);
     }
-  }, [selectedFile]);
+  }, [selectedFile, isOnline, setValidationError, setIsValidating, validateVideoFile]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    
+    if (!isOnline) {
+      toast({
+        title: "No internet connection",
+        description: "Please check your connection before selecting files",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (file) {
       const isImage = file.type.startsWith('image/');
       const isVideo = file.type.startsWith('video/');
@@ -38,7 +90,7 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
       if (!isImage && !isVideo) {
         toast({
           title: "Invalid file type",
-          description: "Please select an image or video file.",
+          description: "Please select an image (JPEG, PNG, GIF, WebP) or video (MP4, WebM, MOV)",
           variant: "destructive",
         });
         return;
@@ -47,120 +99,62 @@ const FileUploadSection = ({ selectedFile, onFileChange }: FileUploadSectionProp
       if (file.size > maxSize) {
         toast({
           title: "File too large",
-          description: `Maximum allowed: ${Math.round(maxSize / (1024*1024))}MB`,
+          description: `Maximum: ${Math.round(maxSize / (1024*1024))}MB for ${role} accounts`,
           variant: "destructive",
         });
         return;
       }
 
+      if (file.size > 50 * 1024 * 1024) {
+        toast({
+          title: "Large file warning",
+          description: "Large files may upload slowly on mobile data",
+        });
+      }
+
       onFileChange(file);
-      toast({
-        title: "File ready for upload",
-        description: `${file.name} is ready to be uploaded.`,
-      });
     }
   };
 
   const removeFile = () => {
     onFileChange(null);
+    setValidationError?.(null);
     toast({
       title: "File removed",
-      description: "Please select another file to upload.",
+      description: "Select another file to upload",
     });
   };
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
+  const isFileReady = selectedFile && !isValidating && !validationError && !uploadError && isOnline;
 
   return (
     <div className="space-y-4">
+      <NetworkStatusIndicator />
+      
+      <UploadErrorHandler error={uploadError || validationError} isOnline={isOnline} />
+
       <div>
         <label className="block text-sm font-medium text-gray-300 mb-2">
           Upload Image or Video
         </label>
         {!selectedFile ? (
-          <>
-            <Input
-              type="file"
-              accept="image/*,video/*"
-              onChange={handleFileChange}
-              className="bg-gray-800 border-gray-600 text-white file:bg-purple-600 file:text-white file:border-0 file:rounded file:px-3 file:py-1 file:mr-3 cursor-pointer"
-            />
-            <p className="text-xs text-gray-400 mt-1">
-              Max file size: {Math.round(maxSize / (1024*1024))}MB
-            </p>
-          </>
+          <FileInput isOnline={isOnline} onFileChange={handleFileChange} />
         ) : (
-          <div className="bg-gray-800 border border-gray-600 rounded-lg p-4">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center space-x-3 flex-1">
-                <div className="flex-shrink-0">
-                  {selectedFile.type.startsWith('image/') ? (
-                    <Image className="w-8 h-8 text-green-400" />
-                  ) : (
-                    <Video className="w-8 h-8 text-green-400" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white font-medium truncate">{selectedFile.name}</p>
-                  <p className="text-gray-400 text-sm">
-                    {formatFileSize(selectedFile.size)} • {selectedFile.type.startsWith('image/') ? 'Image' : 'Video'}
-                  </p>
-                  <div className="flex items-center mt-2">
-                    <CheckCircle className="w-4 h-4 text-green-400 mr-2" />
-                    <span className="text-green-400 text-sm font-medium">Ready for upload</span>
-                  </div>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={removeFile}
-                className="text-gray-400 hover:text-white hover:bg-gray-700"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-            {/* Image or video preview */}
-            {selectedFile.type.startsWith('image/') && previewUrl && (
-              <div className="mt-3 rounded-lg overflow-hidden">
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="w-full h-32 object-cover object-center rounded"
-                  style={{ aspectRatio: '16/9' }}
-                />
-              </div>
-            )}
-            {selectedFile.type.startsWith('video/') && previewUrl && (
-              <div className="mt-3 rounded-lg overflow-hidden">
-                <video
-                  src={previewUrl}
-                  className="w-full h-32 object-cover object-center rounded"
-                  style={{ aspectRatio: '16/9' }}
-                  controls
-                  preload="metadata"
-                />
-              </div>
-            )}
-          </div>
+          <FileStatusDisplay
+            file={selectedFile}
+            validationError={validationError}
+            isValidating={isValidating}
+            isOnline={isOnline}
+            previewUrl={previewUrl}
+            onRemove={removeFile}
+          />
         )}
       </div>
-      {selectedFile && (
-        <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-3">
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            <span className="text-green-400 text-sm font-medium">
-              File is ready! Click "Submit & Upload Post" to continue.
-            </span>
-          </div>
-        </div>
-      )}
+
+      <FileValidationMessages
+        isFileReady={isFileReady}
+        validationError={validationError}
+      />
     </div>
   );
 };

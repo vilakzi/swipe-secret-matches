@@ -21,6 +21,22 @@ export interface Profile {
   reviewCount?: number;
   isAvailable?: boolean;
   services?: string[];
+  // Verification properties
+  verifications?: {
+    phoneVerified: boolean;
+    emailVerified: boolean;
+    photoVerified: boolean;
+    locationVerified: boolean;
+    premiumUser: boolean;
+  };
+}
+
+export interface ContentScore {
+  recencyScore: number;
+  engagementScore: number;
+  diversityScore: number;
+  userActivityScore: number;
+  totalScore: number;
 }
 
 export interface FeedItem {
@@ -30,7 +46,25 @@ export interface FeedItem {
   postImage?: string;
   caption?: string;
   isAdminCard?: boolean;
+  isAdminPost?: boolean;
   isWelcome?: boolean;
+  // Video-specific properties
+  isVideo?: boolean;
+  videoDuration?: number;
+  videoThumbnail?: string;
+  // Post metadata
+  createdAt?: string;
+  updatedAt?: string;
+  // Algorithm properties - support both simple and detailed scoring
+  algorithmScore?: number | ContentScore;
+  originalIndex?: number;
+  // Dynamic cycling properties - FIXED
+  displayIndex?: number;
+  cycleNumber?: number;
+  originalId?: string;
+  cycleGenerated?: number;
+  dynamicScore?: number;
+  displayKey?: string; // For React rendering keys without affecting database operations
 }
 
 export type RelationshipStatus = 'single' | 'taken' | 'complicated' | 'not_specified';

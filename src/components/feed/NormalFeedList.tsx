@@ -15,16 +15,23 @@ interface NormalFeedListProps {
   isSubscribed: boolean;
   onLike: (itemId: string, profileId: string) => void;
   onContact: (profile: Profile) => void;
+  onContentLike?: (contentId: string, profileId: string) => void;
+  onContentShare?: (contentId: string) => void;
 }
 
 const NormalFeedList: React.FC<NormalFeedListProps> = ({
-  userFeed,
+  userFeed = [], // Default to empty array to prevent undefined errors
   likedItems,
   isSubscribed,
   onLike,
   onContact,
+  onContentLike,
+  onContentShare,
 }) => {
-  const nonAdminFeed = userFeed.filter(item => !item.isAdminCard);
+  // Safely filter the feed, ensuring userFeed is always an array
+  const nonAdminFeed = Array.isArray(userFeed) 
+    ? userFeed.filter(item => !item.isAdminCard)
+    : [];
 
   if (nonAdminFeed.length === 0) {
     return (

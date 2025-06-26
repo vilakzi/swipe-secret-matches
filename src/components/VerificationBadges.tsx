@@ -16,6 +16,11 @@ interface VerificationBadgesProps {
 }
 
 const VerificationBadges = ({ verifications, className = '', size = 'sm' }: VerificationBadgesProps) => {
+  // Safety check to prevent errors if verifications is undefined
+  if (!verifications) {
+    return null;
+  }
+
   const badges = [
     {
       key: 'emailVerified',

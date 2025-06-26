@@ -2,7 +2,7 @@
 import React from 'react';
 import AuthHeader from './AuthHeader';
 import AuthToggle from './AuthToggle';
-import AuthForm from './AuthForm';
+import RefactoredAuthForm from './RefactoredAuthForm';
 import AuthFooter from './AuthFooter';
 import ForgotPasswordModal from '@/components/ForgotPasswordModal';
 import { useAuthForm } from '@/hooks/useAuthForm';
@@ -12,26 +12,30 @@ const AuthContainer = () => {
   const {
     isLogin,
     setIsLogin,
-    email,
-    setEmail,
-    password,
-    setPassword,
-    displayName,
-    setDisplayName,
-    userType,
-    isAdmin,
-    showPassword,
     showForgotPassword,
     setShowForgotPassword,
-    handleUserTypeChange,
-    handleAdminToggle,
-    togglePasswordVisibility,
   } = useAuthForm();
 
   const { loading, handleSubmit, handleForgotPassword } = useAuthHandlers();
 
-  const onSubmit = (e: React.FormEvent) => {
-    handleSubmit(e, isLogin, email, password, displayName, userType, isAdmin);
+  const onSubmit = (e: React.FormEvent, formData: {
+    email: string;
+    password: string;
+    displayName: string;
+    userType: 'user' | 'service_provider';
+    isAdmin: boolean;
+    phone?: string;
+  }) => {
+    handleSubmit(
+      e,
+      isLogin,
+      formData.email,
+      formData.password,
+      formData.displayName,
+      formData.userType,
+      formData.isAdmin,
+      formData.phone
+    );
   };
 
   return (
@@ -42,21 +46,9 @@ const AuthContainer = () => {
         <div className="bg-black/20 backdrop-blur-md rounded-lg p-6 border border-gray-700">
           <AuthToggle isLogin={isLogin} onToggle={setIsLogin} />
 
-          <AuthForm
+          <RefactoredAuthForm
             isLogin={isLogin}
-            email={email}
-            password={password}
-            displayName={displayName}
-            userType={userType}
-            isAdmin={isAdmin}
-            showPassword={showPassword}
             loading={loading}
-            onEmailChange={setEmail}
-            onPasswordChange={setPassword}
-            onDisplayNameChange={setDisplayName}
-            onUserTypeChange={handleUserTypeChange}
-            onAdminToggle={handleAdminToggle}
-            onPasswordToggle={togglePasswordVisibility}
             onSubmit={onSubmit}
             onForgotPassword={() => setShowForgotPassword(true)}
           />

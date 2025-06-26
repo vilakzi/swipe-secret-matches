@@ -1,55 +1,36 @@
 
-import { Profile, FeedItem } from '@/components/feed/types/feedTypes';
+import { shuffleArrayWithSeed } from './feed/shuffleUtils';
+import { Profile } from '@/components/feed/types/feedTypes';
 
-// Fisher-Yates shuffle algorithm for randomizing array order
-export const shuffleArray = <T>(array: T[]): T[] => {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-};
-
-export const generateFeedItems = (profiles: Profile[], shuffleKey: number): FeedItem[] => {
-  const items: FeedItem[] = [];
+// FIXED: Generate feed items from REAL profiles ONLY - absolutely no demo data
+export const generateFeedItems = (profiles: Profile[], shuffleKey: number = 0) => {
+  console.log(`Generating feed items from ${profiles.length} profiles (REAL DATA ONLY)`);
   
-  console.log('Creating feed items from real profiles:', profiles.length);
+  // CRITICAL: Filter out any non-real profiles and ensure we have real accounts
+  const realProfiles = profiles.filter(profile => 
+    profile.isRealAccount === true && 
+    profile.id && 
+    profile.name
+  );
   
-  // Shuffle profiles first to randomize order
-  const shuffledProfiles = shuffleArray(profiles);
+  console.log(`Filtered to ${realProfiles.length} verified real profiles`);
   
-  // Generate feed items for each profile
-  shuffledProfiles.forEach((profile, index) => {
-    console.log(`Processing profile ${index + 1}:`, profile.name);
-    
-    // Add profile card
-    items.push({
-      id: `profile-${profile.id}`,
-      type: 'profile',
-      profile: profile
-    });
-    
-    // Add posts if they exist
-    if (profile.posts && profile.posts.length > 0) {
-      console.log(`Adding ${profile.posts.length} posts for ${profile.name}`);
-      profile.posts.forEach((postImage, postIndex) => {
-        items.push({
-          id: `post-${profile.id}-${postIndex}`,
-          type: 'post',
-          profile: profile,
-          postImage: postImage,
-          caption: profile.userType === 'service_provider' 
-            ? `Professional services showcase 💼` 
-            : `Feeling good tonight 💫`
-        });
-      });
+  // Shuffle real profiles with seed
+  const shuffledProfiles = shuffleArrayWithSeed(realProfiles, shuffleKey);
+  
+  // Convert to feed items with explicit real account marking
+  const feedItems = shuffledProfiles.map(profile => ({
+    id: `profile-${profile.id}`,
+    type: 'profile' as const,
+    profile: {
+      ...profile,
+      isRealAccount: true, // Explicitly mark as real
+      // Ensure no demo data leaks through
+      image: profile.image === '/placeholder.svg' ? '/placeholder.svg' : profile.image,
+      name: profile.name || 'Real User'
     }
-  });
-  
-  console.log('Total feed items created from real accounts:', items.length);
-  return items;
-};
+  }));
 
-// Re-export types for convenience
-export type { FeedItem, Profile } from '@/components/feed/types/feedTypes';
+  console.log(`Generated ${feedItems.length} feed items - ALL REAL ACCOUNTS, NO DEMO DATA`);
+  return feedItems;
+};

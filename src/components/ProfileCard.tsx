@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, memo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MapPin, MessageCircle, Heart, Lock } from 'lucide-react';
@@ -18,7 +18,13 @@ interface ProfileCardProps {
   isSubscribed?: boolean;
 }
 
-const ProfileCard = React.memo(({ profile, onSwipe, onNavigate, disabled = false, isSubscribed = false }: ProfileCardProps) => {
+const ProfileCard = memo<ProfileCardProps>(({ 
+  profile, 
+  onSwipe, 
+  onNavigate, 
+  disabled = false, 
+  isSubscribed = false 
+}) => {
   const { isUserOnline } = usePresence();
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -64,7 +70,6 @@ const ProfileCard = React.memo(({ profile, onSwipe, onNavigate, disabled = false
     if (Math.abs(dragOffset.x) > threshold) {
       onSwipe(dragOffset.x > 0 ? 'right' : 'left');
     } else if (onNavigate) {
-      // If it's just a small movement, treat as navigation
       await onNavigate();
     }
     setDragOffset({ x: 0, y: 0 });
@@ -73,7 +78,7 @@ const ProfileCard = React.memo(({ profile, onSwipe, onNavigate, disabled = false
 
   const handleWhatsAppClick = useCallback(() => {
     if (!isSubscribed) {
-      onSwipe('right'); // This will trigger the paywall
+      onSwipe('right');
       return;
     }
     const message = encodeURIComponent(`Hi ${profile.name}! I saw your profile and would love to chat.`);
@@ -81,7 +86,7 @@ const ProfileCard = React.memo(({ profile, onSwipe, onNavigate, disabled = false
   }, [isSubscribed, onSwipe, profile.name, profile.whatsapp]);
 
   const handleLikeClick = useCallback(() => {
-    onSwipe('right'); // This will trigger paywall check or like action
+    onSwipe('right');
   }, [onSwipe]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -120,7 +125,6 @@ const ProfileCard = React.memo(({ profile, onSwipe, onNavigate, disabled = false
         onTouchMove={handleTouchMove}
         onTouchEnd={handleEnd}
       >
-        {/* Profile Image */}
         <ProfileImage
           image={profile.image}
           name={profile.name}
@@ -129,19 +133,16 @@ const ProfileCard = React.memo(({ profile, onSwipe, onNavigate, disabled = false
           locked={!isSubscribed}
           alt={`${profile.name}'s profile photo`}
         >
-          {/* Subscription Status */}
           {!isSubscribed && (
             <div className="absolute top-2 right-2 bg-yellow-500 rounded-full p-2" aria-label="Locked, subscription required">
               <Lock className="w-4 h-4 text-white" />
             </div>
           )}
-          {/* Liked Indicator */}
           {profile.liked && (
             <div className="absolute bottom-2 right-2 bg-pink-500 rounded-full p-2" aria-label="You liked this profile">
               <Heart className="w-4 h-4 text-white fill-white" />
             </div>
           )}
-          {/* Swipe Overlays */}
           {isDragging && (
             <div
               className={`absolute inset-0 flex items-center justify-center ${
@@ -156,17 +157,16 @@ const ProfileCard = React.memo(({ profile, onSwipe, onNavigate, disabled = false
             </div>
           )}
         </ProfileImage>
-        {/* Profile Info */}
+        
         <ProfileInfo
           name={profile.name}
           age={profile.age}
           location={profile.location}
           bio={profile.bio}
           isOnline={isUserOnline(profile.id.toString())}
-          // ProfileCard doesn't show interests
           lineClampBio={0}
         />
-        {/* Action Buttons */}
+        
         <div className="absolute bottom-4 right-4 flex space-x-2">
           <Button
             size="sm"
@@ -195,5 +195,6 @@ const ProfileCard = React.memo(({ profile, onSwipe, onNavigate, disabled = false
     </div>
   );
 });
+
 ProfileCard.displayName = 'ProfileCard';
 export default ProfileCard;

@@ -1,15 +1,17 @@
+
+import React, { memo, useState, useCallback } from 'react';
 import { Card } from "@/components/ui/card";
 import { usePresence } from "@/hooks/usePresence";
 import { useNavigate } from "react-router-dom";
 import { useImageModal } from "@/hooks/useImageModal";
-import OptimizedImage from "@/components/ui/OptimizedImage";
 import ImageModal from "@/components/ui/ImageModal";
-import { useState } from "react";
-import PostVideoPlayer from "./PostVideoPlayer";
 import PostCardHeader from "./PostCardHeader";
 import PostCardActions from "./PostCardActions";
 import PostCardCaption from "./PostCardCaption";
 import PostComments from "./PostComments";
+import PostCardDeleteMenu from "./PostCardDeleteMenu";
+import PostCardContent from "./PostCardContent";
+import PostCardEngagement from "./PostCardEngagement";
 
 interface Profile {
   id: string;
@@ -23,6 +25,8 @@ interface Profile {
   liked?: boolean;
   posts?: string[];
   isRealAccount?: boolean;
+  userType?: string;
+  role?: string;
 }
 
 interface FeedItem {
@@ -31,6 +35,10 @@ interface FeedItem {
   profile: Profile;
   postImage?: string;
   caption?: string;
+  isAdminCard?: boolean;
+  isAdminPost?: boolean;
+  isVideo?: boolean;
+  createdAt?: string;
 }
 
 interface PostCardProps {
@@ -39,114 +47,145 @@ interface PostCardProps {
   isSubscribed: boolean;
   onLike: (itemId: string, profileId: string) => void;
   onContact: (profile: Profile) => void;
+  onDelete?: (itemId: string) => void;
+  engagementTracker?: any;
 }
 
-const PostCard = ({
+const PostCard = memo<PostCardProps>(({
   item,
   likedItems,
   isSubscribed,
   onLike,
   onContact,
-}: PostCardProps) => {
+  onDelete,
+  engagementTracker,
+}) => {
   const { isUserOnline } = usePresence();
   const navigate = useNavigate();
   const { isOpen, imageSrc, imageAlt, openModal, closeModal } = useImageModal();
   const [showComments, setShowComments] = useState(false);
 
-  const handleProfileClick = () => {
+  // Safety checks
+  if (!item?.id || !item?.profile) {
+    console.warn('PostCard: Invalid item data', item);
+    return null;
+  }
+
+  // Memoized handlers
+  const handleProfileClick = useCallback(() => {
+    engagementTracker?.trackEngagement(item.id, 'tap');
     navigate(`/profile/${item.profile.id}`);
-  };
+  }, [engagementTracker, item.id, item.profile.id, navigate]);
 
-  const handleLike = (e: React.MouseEvent) => {
+  const handleLike = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
+    engagementTracker?.trackEngagement(item.id, 'like');
     onLike(item.id, item.profile.id);
-  };
+  }, [engagementTracker, item.id, item.profile.id, onLike]);
 
-  const handleContact = (e: React.MouseEvent) => {
+  const handleContact = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
+    engagementTracker?.trackEngagement(item.id, 'contact');
     onContact(item.profile);
-  };
+  }, [engagementTracker, item.id, item.profile, onContact]);
 
-  const handleAvatarClick = (e: React.MouseEvent) => {
+  const handleAvatarClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
+    engagementTracker?.trackEngagement(item.id, 'tap');
     openModal(item.profile.image, `${item.profile.name}'s profile photo`);
-  };
+  }, [engagementTracker, item.id, item.profile.image, item.profile.name, openModal]);
 
-  const handlePostImageClick = (e: React.MouseEvent) => {
+  const handlePostImageClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
+    engagementTracker?.trackEngagement(item.id, 'tap');
     openModal(item.postImage || "", `${item.profile.name}'s post`);
-  };
+  }, [engagementTracker, item.id, item.postImage, item.profile.name, openModal]);
 
-  const isVideo =
-    item.postImage?.includes(".mp4") ||
-    item.postImage?.includes(".mov") ||
-    item.postImage?.includes(".webm");
+  const handleToggleComments = useCallback(() => {
+    setShowComments(prev => !prev);
+  }, []);
 
   return (
     <>
-      <Card className="bg-gray-800 border-gray-700 mb-4" tabIndex={0} aria-label={`Post card from ${item.profile.name}`}>
-        <PostCardHeader
-          profile={item.profile}
-          isSubscribed={isSubscribed}
-          isUserOnline={isUserOnline}
-          onProfileClick={handleProfileClick}
-          onAvatarClick={handleAvatarClick}
-        />
-        {/* Post Content */}
-        <div className="relative">
-          {isVideo && item.postImage ? (
-            <PostVideoPlayer
-              src={item.postImage}
-              posterUrl={item.postImage.replace(/\.(mp4|mov|webm)$/, ".jpg")}
-            />
-          ) : (
-            item.postImage && (
-              <OptimizedImage
-                src={item.postImage}
-                alt={`Post image from ${item.profile.name}`}
-                className="w-full h-72 hover:opacity-95 transition-opacity"
-                onClick={handlePostImageClick}
-                expandable
-              />
-            )
-          )}
-          <div
-            className="absolute top-4 left-4 right-4 h-8 bg-transparent cursor-pointer"
-            onClick={handleProfileClick}
-            tabIndex={0}
-            aria-label={`Open profile for ${item.profile.name}`}
-            role="button"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                handleProfileClick();
-              }
-            }}
-          />
-        </div>
-
-        <div className="p-4">
-          <PostCardActions
-            itemId={item.id}
-            showComments={showComments}
-            onToggleComments={() => setShowComments((open) => !open)}
-            onContact={handleContact}
+      <PostCardEngagement itemId={item.id} engagementTracker={engagementTracker}>
+        <Card 
+          className="bg-gray-800 border-gray-700 mb-4 touch-target" 
+          tabIndex={0} 
+          aria-label={`${item.type === 'post' ? 'Post' : 'Profile'} from ${item.profile.name}`}
+        >
+          <PostCardHeader
+            profile={item.profile}
             isSubscribed={isSubscribed}
-          />
-          <PostCardCaption
-            name={item.profile.name}
-            caption={item.caption}
+            isUserOnline={isUserOnline}
             onProfileClick={handleProfileClick}
-          />
-          {showComments && (
-            <PostComments
+            onAvatarClick={handleAvatarClick}
+          >
+            <PostCardDeleteMenu
               postId={item.id}
-              isOpen={showComments}
-              onToggle={() => setShowComments((open) => !open)}
+              profileId={item.profile.id}
+              onDelete={onDelete}
+            />
+          </PostCardHeader>
+          
+          {/* Post content */}
+          {item.type === 'post' && item.postImage && (
+            <PostCardContent
+              postImage={item.postImage}
+              profileName={item.profile.name}
+              onPostImageClick={handlePostImageClick}
+              onProfileClick={handleProfileClick}
             />
           )}
-        </div>
-      </Card>
+
+          {/* Profile content */}
+          {item.type === 'profile' && (
+            <div className="p-4">
+              <div className="text-center">
+                <img
+                  src={item.profile.image}
+                  alt={`${item.profile.name}'s profile`}
+                  className="w-full h-72 object-cover rounded-lg cursor-pointer"
+                  onClick={handleAvatarClick}
+                  loading="lazy"
+                />
+                <div className="mt-4">
+                  <h3 className="text-lg font-semibold text-white">{item.profile.name}</h3>
+                  <p className="text-sm text-gray-400">Age: {item.profile.age}</p>
+                  <p className="text-sm text-gray-400">{item.profile.location}</p>
+                  {item.profile.bio && (
+                    <p className="text-sm text-gray-300 mt-2">{item.profile.bio}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="p-4">
+            <PostCardActions
+              itemId={item.id}
+              showComments={showComments}
+              onToggleComments={handleToggleComments}
+              onContact={handleContact}
+              isSubscribed={isSubscribed}
+            />
+            {item.caption && (
+              <PostCardCaption
+                name={item.profile.name}
+                caption={item.caption}
+                onProfileClick={handleProfileClick}
+              />
+            )}
+            {showComments && (
+              <PostComments
+                postId={item.id}
+                isOpen={showComments}
+                onToggle={handleToggleComments}
+              />
+            )}
+          </div>
+        </Card>
+      </PostCardEngagement>
+      
       <ImageModal
         isOpen={isOpen}
         onClose={closeModal}
@@ -155,6 +194,7 @@ const PostCard = ({
       />
     </>
   );
-};
+});
 
+PostCard.displayName = 'PostCard';
 export default PostCard;

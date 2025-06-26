@@ -1,14 +1,25 @@
+
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { validateEmail } from '@/utils/emailValidation';
+import { useErrorHandler } from './useErrorHandler';
+import { useRetryableOperation } from './useRetryableOperation';
 
 export const useAuthHandlers = () => {
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
+  const { handleError, handleSuccess } = useErrorHandler();
+
+  const { execute: executeWithRetry } = useRetryableOperation({
+    maxRetries: 2,
+    errorType: 'auth',
+    onSuccess: () => {
+      handleSuccess("Operation completed successfully!");
+    }
+  });
 
   const handleSubmit = useCallback(async (
     e: React.FormEvent,
@@ -23,142 +34,136 @@ export const useAuthHandlers = () => {
     e.preventDefault();
     if (loading) return;
     
-    // Validate email before proceeding
+    // Enhanced validation with specific error messages
     const emailValidation = validateEmail(email);
     if (!emailValidation.isValid) {
-      toast({
-        title: "Invalid email",
-        description: emailValidation.error,
-        variant: "destructive",
-      });
+      handleError(
+        new Error(emailValidation.error || 'Invalid email'),
+        'auth',
+        undefined,
+        emailValidation.error || 'Please enter a valid email address'
+      );
+      return;
+    }
+
+    if (!password || password.length < 6) {
+      handleError(
+        new Error('Invalid password'),
+        'auth',
+        undefined,
+        'Password must be at least 6 characters long'
+      );
+      return;
+    }
+
+    if (!isLogin && !displayName.trim()) {
+      handleError(
+        new Error('Display name required'),
+        'auth',
+        undefined,
+        'Please enter a display name'
+      );
+      return;
+    }
+
+    // Enhanced phone validation for service providers
+    if (!isLogin && userType === 'service_provider' && (!phone || phone.trim().length < 8)) {
+      handleError(
+        new Error('Phone number required'),
+        'auth',
+        undefined,
+        'Service providers must provide a valid phone number (at least 8 characters)'
+      );
       return;
     }
     
     setLoading(true);
 
     try {
-      if (isLogin) {
-        await signIn(email, password);
-        toast({
-          title: "Welcome back!",
-          description: "You've been signed in successfully.",
-        });
-        navigate('/');
-      } else {
-        if (!displayName.trim()) {
-          toast({
-            title: "Display name required",
-            description: "Please enter a display name.",
-            variant: "destructive",
-          });
-          setLoading(false);
-          return;
-        }
+      await executeWithRetry(async () => {
+        if (isLogin) {
+          await signIn(email, password);
+          handleSuccess("Welcome back!", "Signed In");
+          navigate('/');
+        } else {
+          // Sign up with enhanced error handling
+          await signUp(email, password, displayName, userType, isAdmin);
 
-        // Enforce phone for service providers
-        if (userType === 'service_provider' && (!phone || phone.trim().length < 8)) {
-          toast({
-            title: "Phone number required",
-            description: "Service providers must provide a valid phone number.",
-            variant: "destructive",
-          });
-          setLoading(false);
-          return;
-        }
+          // Update profile with additional info
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              const { error } = await supabase
+                .from('profiles')
+                .update({ 
+                  user_type: userType,
+                  role: isAdmin ? 'admin' : userType,
+                  phone: userType === 'service_provider' ? (phone || '') : ''
+                })
+                .eq('id', user.id);
 
-        // Sign up with basic info
-        await signUp(email, password, displayName, userType, isAdmin);
-
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            // Update profile with phone number and user type
-            const { error } = await supabase
-              .from('profiles')
-              .update({ 
-                user_type: userType,
-                role: isAdmin ? 'admin' : userType,
-                phone: userType === 'service_provider' ? (phone || '') : ''
-              })
-              .eq('id', user.id);
-
-            if (error) {
-              console.error('Error updating user type:', error);
+              if (error) {
+                console.error('Error updating user profile:', error);
+                // Don't fail the whole operation for profile update issues
+                handleError(
+                  error,
+                  'generic',
+                  'profile update',
+                  'Account created but profile update failed. You can complete your profile later.'
+                );
+              }
             }
+          } catch (profileError) {
+            console.error('Profile update error:', profileError);
+            // Non-critical error, don't block the flow
           }
-        } catch (profileError) {
-          console.error('Profile update error:', profileError);
+
+          handleSuccess(
+            `Welcome ${isAdmin ? 'Administrator' : userType === 'service_provider' ? 'Service Provider' : 'User'}! Let's set up your profile.`,
+            "Account Created"
+          );
+          navigate('/onboarding');
         }
-
-        toast({
-          title: "Account created!",
-          description: `Welcome ${isAdmin ? 'Administrator' : userType === 'service_provider' ? 'Service Provider' : 'User'}! Let's set up your profile.`,
-        });
-
-        // Redirect to onboarding for new users
-        navigate('/onboarding');
-        return;
-      }
-      navigate('/');
-    } catch (error: any) {
-      // Handle specific email-related errors
-      let errorMessage = error.message || "An error occurred. Please try again.";
-      
-      if (error.message?.includes('Invalid login credentials')) {
-        errorMessage = "Invalid email or password. Please check your credentials and try again.";
-      } else if (error.message?.includes('User already registered')) {
-        errorMessage = "An account with this email already exists. Please sign in instead.";
-      } else if (error.message?.includes('email')) {
-        errorMessage = "Please check your email address and try again.";
-      }
-      
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
       });
+    } catch (error: any) {
+      // Error already handled by executeWithRetry and handleError
+      console.error('Authentication failed:', error);
     } finally {
       setLoading(false);
     }
-  }, [loading, signIn, signUp, navigate]);
+  }, [loading, signIn, signUp, navigate, handleError, handleSuccess, executeWithRetry]);
 
   const handleForgotPassword = useCallback(async (resetEmail: string) => {
-    // Validate email before sending reset
+    // Enhanced email validation
     const emailValidation = validateEmail(resetEmail);
     if (!emailValidation.isValid) {
-      toast({
-        title: "Invalid email",
-        description: emailValidation.error,
-        variant: "destructive",
-      });
+      handleError(
+        new Error(emailValidation.error || 'Invalid email'),
+        'auth',
+        undefined,
+        emailValidation.error || 'Please enter a valid email address'
+      );
       return;
     }
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/auth`,
-      });
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Reset link sent!",
-        description: "Check your email for a password reset link.",
+      await executeWithRetry(async () => {
+        const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+          redirectTo: `${window.location.origin}/auth`,
+        });
+        
+        if (error) throw error;
+        
+        handleSuccess(
+          "Check your email for a password reset link. Make sure to check your spam folder too.",
+          "Reset Link Sent"
+        );
       });
     } catch (error: any) {
-      let errorMessage = error.message || "Failed to send reset link. Please try again.";
-      
-      if (error.message?.includes('email')) {
-        errorMessage = "Please check your email address and try again.";
-      }
-      
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      // Error already handled by executeWithRetry
+      console.error('Password reset failed:', error);
     }
-  }, []);
+  }, [handleError, handleSuccess, executeWithRetry]);
 
   return {
     loading,

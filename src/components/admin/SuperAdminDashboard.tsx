@@ -9,11 +9,13 @@ import {
   FileImage,
   CheckCircle,
   Clock,
-  XCircle
+  XCircle,
+  Crown
 } from 'lucide-react';
 import EnhancedContentUpload from './EnhancedContentUpload';
 import ContentModerationPanel from './ContentModerationPanel';
 import ContentManager from './ContentManager';
+import SuperAdminPanel from './SuperAdminPanel';
 import { useEnhancedAdminContent } from '@/hooks/useEnhancedAdminContent';
 
 const SuperAdminDashboard = () => {
@@ -26,12 +28,13 @@ const SuperAdminDashboard = () => {
     approved: content.filter(item => item.approval_status === 'approved').length,
     rejected: content.filter(item => item.approval_status === 'rejected').length,
     scheduled: content.filter(item => item.status === 'scheduled').length,
+    promoted: content.filter(item => item.is_promoted).length,
   };
 
   return (
     <div className="space-y-6">
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -91,11 +94,27 @@ const SuperAdminDashboard = () => {
             </div>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Promoted</p>
+                <p className="text-2xl font-bold text-yellow-600">{stats.promoted}</p>
+              </div>
+              <Crown className="w-8 h-8 text-yellow-500" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Content Management Tabs */}
-      <Tabs defaultValue="upload" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 bg-black/20 backdrop-blur-md">
+      <Tabs defaultValue="super-admin" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5 bg-black/20 backdrop-blur-md">
+          <TabsTrigger value="super-admin" className="text-white data-[state=active]:bg-purple-600">
+            <Crown className="w-4 h-4 mr-2" />
+            Super Admin
+          </TabsTrigger>
           <TabsTrigger value="upload" className="text-white data-[state=active]:bg-purple-600">
             <Upload className="w-4 h-4 mr-2" />
             Upload Content
@@ -113,6 +132,10 @@ const SuperAdminDashboard = () => {
             Analytics
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="super-admin" className="space-y-6">
+          <SuperAdminPanel />
+        </TabsContent>
 
         <TabsContent value="upload" className="space-y-6">
           <EnhancedContentUpload />
