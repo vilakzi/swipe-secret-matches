@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useVideoPlayer } from '@/hooks/useVideoPlayer';
 import { useSmartVideoControls } from '@/hooks/useSmartVideoControls';
@@ -13,13 +12,15 @@ interface ImprovedVideoPlayerProps {
   poster?: string;
   className?: string;
   autoPlay?: boolean;
+  controls?: boolean; // <-- Add controls prop
 }
 
 const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   src,
   poster,
   className = '',
-  autoPlay = false
+  autoPlay = false,
+  controls = false // <-- Default to false for backward compatibility
 }) => {
   const [showVideo, setShowVideo] = useState(autoPlay);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -126,7 +127,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   }
 
   // Always show controls when not playing or when user is interacting
-  const controlsVisible = !isPlaying || showControls || isLoading || isBuffering;
+  const controlsVisible = controls || !isPlaying || showControls || isLoading || isBuffering;
 
   return (
     <VideoPlayerContainer
