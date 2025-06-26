@@ -1,4 +1,3 @@
-
 import React from 'react';
 import ImprovedVideoPlayer from './video/ImprovedVideoPlayer';
 import EnhancedVideoPreview from './video/EnhancedVideoPreview';
@@ -28,8 +27,20 @@ const PostVideoPlayer = ({ src, poster, className = '', duration }: PostVideoPla
       src={src}
       poster={poster}
       className={className}
+      controls // Pass controls to enable native video controls
     />
   );
 };
 
 export default PostVideoPlayer;
+
+// In ImprovedVideoPlayer.tsx
+const ImprovedVideoPlayer = ({ src, poster, className = '', controls = false, ...rest }) => (
+  <video
+    src={src}
+    poster={poster}
+    className={className}
+    controls={controls}
+    {...rest}
+  />
+);
