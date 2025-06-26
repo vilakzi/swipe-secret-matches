@@ -12,18 +12,12 @@ interface FeedProfileCardProps {
 }
 
 const FeedProfileCard = (props: FeedProfileCardProps) => {
-  // Filter out admin/superadmin roles for ProfileCard compatibility
-  const filteredItem = {
-    ...props.item,
-    profile: {
-      ...props.item.profile,
-      userType: ['admin', 'superadmin'].includes(props.item.profile.userType) 
-        ? 'service_provider' as const 
-        : props.item.profile.userType as "user" | "service_provider"
-    }
-  };
-
-  return <ProfileCard {...props} item={filteredItem} />;
+  // Narrow userType to only "user" | "service_provider"
+  const { item, ...rest } = props;
+  if (item.profile.userType !== "user" && item.profile.userType !== "service_provider") {
+    return null;
+  }
+  return <ProfileCard {...rest} item={{ ...item, profile: { ...item.profile, userType: item.profile.userType as "user" | "service_provider" } }} />;
 };
 
 export default FeedProfileCard;
