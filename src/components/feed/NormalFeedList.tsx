@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { isValidMedia } from "@/utils/feed/mediaUtils";
 import WelcomeCard from "./WelcomeCard";
 import FeedProfileCard from "./FeedProfileCard";
@@ -30,8 +30,8 @@ const NormalFeedList: React.FC<NormalFeedListProps> = ({
   onLike,
   onContact,
 }) => {
-  // Remove filtering: show ALL posts, including admin/provider/super admin
-  const shuffledFeed = shuffleArray(userFeed);
+  // Shuffle feed only when userFeed changes for performance
+  const shuffledFeed = useMemo(() => shuffleArray(userFeed), [userFeed]);
 
   if (shuffledFeed.length === 0) {
     return (
