@@ -19,11 +19,11 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   src,
   poster,
   className = '',
-  autoPlay = false,
-  controls = false // <-- Default to false for backward compatibility
+  autoPlay = true,
+  controls = true // <-- Default to false for backward compatibility
 }) => {
   const [showVideo, setShowVideo] = useState(autoPlay);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(true);
 
   const {
     videoRef,
