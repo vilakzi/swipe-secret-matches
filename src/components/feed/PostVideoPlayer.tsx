@@ -1,16 +1,13 @@
-import React from 'react';
 import ImprovedVideoPlayer from './video/ImprovedVideoPlayer';
-import EnhancedVideoPreview from './video/EnhancedVideoPreview';
 import { isVideo } from '@/utils/feed/mediaUtils';
 
 interface PostVideoPlayerProps {
   src: string;
   poster?: string;
   className?: string;
-  duration?: number;
 }
 
-const PostVideoPlayer = ({ src, poster, className = '', duration }: PostVideoPlayerProps) => {
+const PostVideoPlayer = ({ src, poster, className = '' }: PostVideoPlayerProps) => {
   // Validate video source
   if (!src || src.trim() === '' || !isVideo(src)) {
     return (
@@ -27,20 +24,10 @@ const PostVideoPlayer = ({ src, poster, className = '', duration }: PostVideoPla
       src={src}
       poster={poster}
       className={className}
-      controls // Pass controls to enable native video controls
+      controls // Ensure native video controls are enabled
     />
   );
 };
 
 export default PostVideoPlayer;
 
-// In ImprovedVideoPlayer.tsx
-const ImprovedVideoPlayer = ({ src, poster, className = '', controls = false, ...rest }) => (
-  <video
-    src={src}
-    poster={poster}
-    className={className}
-    controls={controls}
-    {...rest}
-  />
-);
