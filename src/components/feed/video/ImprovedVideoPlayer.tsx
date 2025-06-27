@@ -4,7 +4,7 @@ import { useVideoPlayer } from '@/hooks/useVideoPlayer';
 import { useSmartVideoControls } from '@/hooks/useSmartVideoControls';
 import EnhancedVideoPreview from './EnhancedVideoPreview';
 import VideoPlayerContainer from './VideoPlayerContainer';
-import VideoControlsOverlay from './VideoControlsOverlay';
+import VideoControls from './VideoControls';
 import VideoLoadingIndicator from './VideoLoadingIndicator';
 import VideoErrorDisplay from './VideoErrorDisplay';
 
@@ -20,8 +20,8 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   src,
   poster,
   className = '',
-  autoPlay = true, // Default to true for feed videos
-  controls = true // Default to true for better UX
+  autoPlay = true,
+  controls = true
 }) => {
   const [showVideo, setShowVideo] = useState(autoPlay);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -47,7 +47,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     handleTouchStart,
     handleClick
   } = useSmartVideoControls({
-    hideDelay: 2000, // Shorter delay for better UX
+    hideDelay: 3000,
     showOnHover: true,
     showOnTouch: true
   });
@@ -55,24 +55,20 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   const handlePlayClick = async () => {
     if (!showVideo) {
       setShowVideo(true);
-      // Immediate play for better UX
-      setTimeout(() => togglePlay(), 50);
+      setTimeout(() => togglePlay(), 100);
     } else {
       await togglePlay();
     }
   };
 
   const handleScreenTap = (event?: React.MouseEvent | React.TouchEvent) => {
-    // Don't interfere with control button clicks
     if (event && (event.target as HTMLElement).closest('button')) {
       return;
     }
     
-    // Toggle play/pause when user taps the screen area
     if (showVideo && !isLoading) {
       togglePlay();
     }
-    // Also trigger the smart controls
     handleClick();
   };
 
@@ -91,7 +87,6 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     }
   };
 
-  // Sync video player state with smart controls
   useEffect(() => {
     if (isPlaying) {
       handleVideoPlay();
@@ -100,7 +95,6 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     }
   }, [isPlaying, handleVideoPlay, handleVideoPause]);
 
-  // Handle fullscreen changes
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
@@ -109,13 +103,6 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
-
-  // Auto-start video when component mounts (for feed experience)
-  useEffect(() => {
-    if (autoPlay && !showVideo) {
-      setShowVideo(true);
-    }
-  }, [autoPlay, showVideo]);
 
   if (error) {
     return <VideoErrorDisplay videoError={error} src={src} />;
@@ -131,9 +118,6 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
       />
     );
   }
-
-  // Smart controls visibility - always show when paused or interacting
-  const controlsVisible = !isPlaying || showControls || isLoading || isBuffering;
 
   return (
     <VideoPlayerContainer
@@ -153,18 +137,20 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
         showPoster={false}
       />
       
-      <VideoControlsOverlay
-        showControls={controlsVisible}
-        showVideo={showVideo}
+      <VideoControls
         isPlaying={isPlaying}
         isBuffering={isBuffering}
-        isMuted={isMuted}
-        volume={volume}
+        isLoading={isLoading}
         isFullscreen={isFullscreen}
-        onPlayClick={handlePlayClick}
-        onToggleMute={toggleMute}
+        showControls={showControls || !isPlaying}
+        showPoster={false}
+        videoError={error}
+        volume={volume}
+        isMuted={isMuted}
+        onPlay={handlePlayClick}
+        onFullscreen={toggleFullscreen}
         onVolumeChange={handleVolumeChange}
-        onToggleFullscreen={toggleFullscreen}
+        onMuteToggle={toggleMute}
       />
     </VideoPlayerContainer>
   );

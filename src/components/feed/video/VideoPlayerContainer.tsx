@@ -39,7 +39,7 @@ const VideoPlayerContainer: React.FC<VideoPlayerContainerProps> = ({
       className={`relative w-full ${
         isFullscreen 
           ? 'h-screen' 
-          : 'aspect-[9/16] min-h-96 max-h-[600px]' // Better aspect ratio for feed videos
+          : 'aspect-video h-72'
       } bg-black rounded-lg overflow-hidden ${className}`}
       onMouseMove={onMouseMove}
       onTouchStart={onTouchStart}
@@ -54,8 +54,8 @@ const VideoPlayerContainer: React.FC<VideoPlayerContainerProps> = ({
         playsInline
         muted={isMuted}
         preload="metadata"
-        autoPlay // Enable autoplay for smoother UX
-        loop // Loop videos for better feed experience
+        autoPlay
+        loop
       />
       {children}
     </div>
