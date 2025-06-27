@@ -8,14 +8,34 @@ interface FeedHeaderActionsProps {
   showFilters: boolean;
   setShowFilters: (show: boolean) => void;
   onRefresh?: () => void;
+  onImageUpload?: () => void;
+  onVideoUpload?: () => void;
 }
 
 const FeedHeaderActions = ({
   showFilters,
   setShowFilters,
-  onRefresh
+  onRefresh,
+  onImageUpload,
+  onVideoUpload
 }: FeedHeaderActionsProps) => {
   const { handleImageUpload, handleVideoUpload, maxSize, user } = useFileUpload(onRefresh);
+
+  const handleImageClick = () => {
+    if (onImageUpload) {
+      onImageUpload();
+    } else {
+      handleImageUpload();
+    }
+  };
+
+  const handleVideoClick = () => {
+    if (onVideoUpload) {
+      onVideoUpload();
+    } else {
+      handleVideoUpload();
+    }
+  };
 
   return (
     <div className="flex items-center space-x-2">
@@ -42,7 +62,7 @@ const FeedHeaderActions = ({
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleImageUpload}
+            onClick={handleImageClick}
             className="text-white hover:bg-white/10"
             title={`Upload Image (max ${Math.round(maxSize / (1024*1024))}MB)`}
           >
@@ -51,7 +71,7 @@ const FeedHeaderActions = ({
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleVideoUpload}
+            onClick={handleVideoClick}
             className="text-white hover:bg-white/10"
             title={`Upload Video (max ${Math.round(maxSize / (1024*1024))}MB)`}
           >

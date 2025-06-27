@@ -1,3 +1,4 @@
+
 import AdminTileCarousel from './AdminTileCarousel';
 import { useAuth } from '@/contexts/AuthContext';
 import { useContentFeed } from '@/hooks/useContentFeed';
@@ -15,6 +16,8 @@ interface FeedContentProps {
   isSubscribed: boolean;
   onLike: (itemId: string, profileId: string) => void;
   onContact: (profile: Profile) => void;
+  onRefresh?: () => void;
+  engagementTracker?: any;
 }
 
 const FeedContent = ({
@@ -22,7 +25,9 @@ const FeedContent = ({
   likedItems,
   isSubscribed,
   onLike,
-  onContact
+  onContact,
+  onRefresh,
+  engagementTracker
 }: FeedContentProps) => {
   useAuth();
   useUserRole();
@@ -153,4 +158,3 @@ async function handleContentLike(contentId: string, profileId: string) {
     console.error('Failed to like content:', error);
   }
 }
-
