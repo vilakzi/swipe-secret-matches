@@ -20,11 +20,11 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   src,
   poster,
   className = '',
-  autoPlay = false,
-  controls = false
+  autoPlay = true, // Default to true for feed videos
+  controls = true // Default to true for better UX
 }) => {
   const [showVideo, setShowVideo] = useState(autoPlay);
-  const [isFullscreen, setIsFullscreen] = useState(false); // Fix: Initialize as false
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const {
     videoRef,
@@ -47,7 +47,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     handleTouchStart,
     handleClick
   } = useSmartVideoControls({
-    hideDelay: 3000,
+    hideDelay: 2000, // Shorter delay for better UX
     showOnHover: true,
     showOnTouch: true
   });
@@ -55,8 +55,8 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   const handlePlayClick = async () => {
     if (!showVideo) {
       setShowVideo(true);
-      // Wait for video to be ready before playing
-      setTimeout(() => togglePlay(), 100);
+      // Immediate play for better UX
+      setTimeout(() => togglePlay(), 50);
     } else {
       await togglePlay();
     }
@@ -110,6 +110,13 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
+  // Auto-start video when component mounts (for feed experience)
+  useEffect(() => {
+    if (autoPlay && !showVideo) {
+      setShowVideo(true);
+    }
+  }, [autoPlay, showVideo]);
+
   if (error) {
     return <VideoErrorDisplay videoError={error} src={src} />;
   }
@@ -125,8 +132,8 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     );
   }
 
-  // Smart controls visibility: show when not playing, when user is interacting, or when explicitly enabled
-  const controlsVisible = controls || !isPlaying || showControls || isLoading || isBuffering;
+  // Smart controls visibility - always show when paused or interacting
+  const controlsVisible = !isPlaying || showControls || isLoading || isBuffering;
 
   return (
     <VideoPlayerContainer
