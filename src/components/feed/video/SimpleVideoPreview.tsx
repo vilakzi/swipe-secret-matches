@@ -1,41 +1,51 @@
-
-import React from 'react';
-import { Play } from 'lucide-react';
+import React, { useState } from 'react';
+import { Play, AlertCircle } from 'lucide-react';
 
 interface SimpleVideoPreviewProps {
   src: string;
   poster?: string;
   onPlay: () => void;
   className?: string;
+  duration?: number;
 }
 
 const SimpleVideoPreview: React.FC<SimpleVideoPreviewProps> = ({
   src,
   poster,
   onPlay,
-  className = ''
+  className = '',
+  duration
 }) => {
+  const [imageError, setImageError] = useState(false);
+
+  const formatDuration = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
   return (
     <div 
       className={`relative bg-gray-900 overflow-hidden cursor-pointer h-72 ${className}`}
       onClick={onPlay}
     >
-      {poster ? (
+      {poster && !imageError ? (
         <img
           src={poster}
           alt="Video preview"
           className="w-full h-full object-cover"
           loading="lazy"
-          onError={(e) => {
-            // Hide poster if it fails to load
-            e.currentTarget.style.display = 'none';
-          }}
+          onError={() => setImageError(true)}
         />
       ) : (
         <div className="w-full h-full bg-gray-800 flex items-center justify-center">
           <div className="text-gray-400 text-center">
-            <Play className="w-12 h-12 mx-auto mb-2" />
-            <div className="text-sm">Video</div>
+            {imageError ? (
+              <AlertCircle className="w-12 h-12 mx-auto mb-2" />
+            ) : (
+              <Play className="w-12 h-12 mx-auto mb-2" />
+            )}
+            <div className="text-sm">{imageError ? 'Preview unavailable' : 'Video'}</div>
           </div>
         </div>
       )}
@@ -47,9 +57,10 @@ const SimpleVideoPreview: React.FC<SimpleVideoPreviewProps> = ({
         </div>
       </div>
       
-      {/* Video indicator */}
-      <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-        Video
+      {/* Video indicator and duration */}
+      <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded flex items-center">
+        <span className="mr-1">Video</span>
+        {duration && <span>{formatDuration(duration)}</span>}
       </div>
     </div>
   );
