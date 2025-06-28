@@ -1,8 +1,5 @@
-<<<<<<< HEAD
 import * as React from 'react';
-=======
-
->>>>>>> 1c654a599d473aa6ca00fa703751f88c98cf9d32
+import { useState } from 'react';
 import AdminTileCarousel from './AdminTileCarousel';
 import { useAuth } from '@/contexts/AuthContext';
 import { useContentFeed } from '@/hooks/useContentFeed';
@@ -13,6 +10,7 @@ import { isProfileImageChanged } from '@/utils/feed/profileUtils';
 import { isNewJoiner } from '@/utils/feed/joinerUtils';
 import { FeedItem, Profile } from './types/feedTypes';
 import NormalFeedList from './NormalFeedList';
+import FeedFilters, { SortOption, FilterOption } from './FeedFilters';
 
 interface FeedContentProps {
   feedItems: FeedItem[];
@@ -20,12 +18,8 @@ interface FeedContentProps {
   isSubscribed: boolean;
   onLike: (itemId: string, profileId: string) => void;
   onContact: (profile: Profile) => void;
-<<<<<<< HEAD
-  onRefresh: () => void;
-=======
   onRefresh?: () => void;
   engagementTracker?: any;
->>>>>>> 1c654a599d473aa6ca00fa703751f88c98cf9d32
 }
 
 const FeedContent = ({
@@ -34,13 +28,11 @@ const FeedContent = ({
   isSubscribed,
   onLike,
   onContact,
-<<<<<<< HEAD
-  onRefresh
-=======
   onRefresh,
   engagementTracker
->>>>>>> 1c654a599d473aa6ca00fa703751f88c98cf9d32
 }: FeedContentProps) => {
+  const [sortOption, setSortOption] = useState&lt;SortOption&gt;('newest');
+  const [filterOption, setFilterOption] = useState&lt;FilterOption&gt;('all');
   const { contentFeedItems, handleContentLike, handleContentShare } = useContentFeed();
   const { user } = useAuth();
   const { role } = useUserRole();
@@ -112,9 +104,57 @@ const FeedContent = ({
     }))
   ];
 
+  // Apply sorting to feed items
+  const sortFeedItems = (items: any[]) => {
+    switch (sortOption) {
+      case 'oldest':
+        return [...items].sort((a, b) => 
+          new Date(a.createdAt || a.timestamp || 0).getTime() - 
+          new Date(b.createdAt || b.timestamp || 0).getTime()
+        );
+      case 'popular':
+        return [...items].sort((a, b) => 
+          (b.likes?.length || 0) - (a.likes?.length || 0)
+        );
+      case 'newest':
+      default:
+        return [...items].sort((a, b) => 
+          new Date(b.createdAt || b.timestamp || 0).getTime() - 
+          new Date(a.createdAt || a.timestamp || 0).getTime()
+        );
+    }
+  };
+
+  // Apply filtering to feed items
+  const filterFeedItems = (items: any[]) => {
+    switch (filterOption) {
+      case 'posts':
+        return items.filter(item => item.type === 'post');
+      case 'profiles':
+        return items.filter(item => item.type === 'profile');
+      case 'welcome':
+        return items.filter(item => item.isWelcome);
+      case 'admin':
+        return items.filter(item => item.isAdminCard);
+      case 'all':
+      default:
+        return items;
+    }
+  };
+
+  // Apply sorting and filtering to allFeedItems
+  const processedFeedItems = filterFeedItems(sortFeedItems(allFeedItems));
+
   return (
-    &lt;div className=&quot;space-y-6 px-4 pb-6&quot; role=&quot;list&quot; aria-label=&quot;Social feed items&quot;&gt;
-      {adminFeed.length &gt; 0 &amp;&amp; (
+    &lt;div className=&quot;space-y-6 pb-6&quot; role=&quot;list&quot; aria-label=&quot;Social feed items&quot;&gt;
+      &lt;FeedFilters 
+        currentSort={sortOption}
+        currentFilter={filterOption}
+        onSortChange={setSortOption}
+        onFilterChange={setFilterOption}
+      /&gt;
+      
+      {adminFeed.length &gt; 0 &amp;&amp; filterOption !== 'posts' &amp;&amp; filterOption !== 'profiles' &amp;&amp; (
         &lt;AdminTileCarousel
           adminFeed={adminFeed}
           likedItems={likedItems}
@@ -129,7 +169,7 @@ const FeedContent = ({
       )}
       
       &lt;NormalFeedList
-        userFeed={allFeedItems}
+        userFeed={processedFeedItems}
         likedItems={likedItems}
         isSubscribed={isSubscribed}
         onLike={onLike}
@@ -139,37 +179,4 @@ const FeedContent = ({
   );
 };
 
-<<<<<<< HEAD
 export default FeedContent;
-=======
-export default FeedContent;
-
-// Handles sharing a content item, e.g., by calling an API or updating state
-async function handleContentShare(contentId: string) {
-  try {
-    // Example: Call an API endpoint to share the content
-    await fetch(`/api/content/${contentId}/share`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    // Optionally, you could update local state or show a notification here
-  } catch (error) {
-    console.error('Failed to share content:', error);
-  }
-}
-
-// Handles liking a content item, e.g., by calling an API or updating state
-async function handleContentLike(contentId: string, profileId: string) {
-  try {
-    // Example: Call an API endpoint to like the content
-    await fetch(`/api/content/${contentId}/like`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ profileId }),
-    });
-    // Optionally, you could update local state or show a notification here
-  } catch (error) {
-    console.error('Failed to like content:', error);
-  }
-}
->>>>>>> 1c654a599d473aa6ca00fa703751f88c98cf9d32
