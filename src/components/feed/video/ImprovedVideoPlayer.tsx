@@ -1,11 +1,9 @@
-import React, { useRef, useState, useEffect } from 'react';
+
+import React, { useRef, useState, useCallback, useMemo, useEffect } from 'react';
 import { useVideoPlayer } from '@/hooks/useVideoPlayer';
-import { useSmartVideoControls } from '@/hooks/useSmartVideoControls';
-import EnhancedVideoPreview from './EnhancedVideoPreview';
 import VideoPlayerContainer from './VideoPlayerContainer';
-import VideoControls from './VideoControls';
 import VideoLoadingIndicator from './VideoLoadingIndicator';
-import VideoErrorDisplay from './VideoErrorDisplay';
+import VideoControls from './VideoControls';
 
 interface ImprovedVideoPlayerProps {
   src: string;
@@ -27,12 +25,11 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   playsInline = true,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [showVideo, setShowVideo] = useState(autoPlay);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showControls, setShowControls] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
-  const [isMuted, setIsMuted] = useState(muted);
 
   const {
     isPlaying,
@@ -48,118 +45,81 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     playsInline
   });
 
-  const {
-    showControls,
-    handleVideoPlay,
-    handleVideoPause,
-    handleMouseMove,
-    handleTouchStart,
-    handleClick
-  } = useSmartVideoControls({
-    hideDelay: 3000,
-    showOnHover: true,
-    showOnTouch: true
-  });
+  useEffect(() => {
+    if (autoPlay && videoRef.current) {
+      videoRef.current.play().catch(error => console.error("Autoplay failed:", error));
+    }
+  }, [autoPlay]);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    const updateTime = () => setCurrentTime(video.currentTime);
     const updateDuration = () => setDuration(video.duration);
-
-    video.addEventListener('timeupdate', updateTime);
     video.addEventListener('loadedmetadata', updateDuration);
-
-    return () => {
-      video.removeEventListener('timeupdate', updateTime);
-      video.removeEventListener('loadedmetadata', updateDuration);
-    };
+    return () => video.removeEventListener('loadedmetadata', updateDuration);
   }, []);
 
-  const handlePlayClick = async () => {
-    if (!showVideo) {
-      setShowVideo(true);
-      setTimeout(() => togglePlay(), 100);
-    } else {
-      await togglePlay();
-    }
-  };
-
-  const handleScreenTap = (event?: React.MouseEvent | React.TouchEvent) => {
-    if (event && (event.target as HTMLElement).closest('button')) {
-      return;
-    }
-    
-    if (showVideo && !isLoading) {
-      togglePlay();
-    }
-    handleClick();
-  };
-
-  const toggleFullscreen = () => {
-    const container = videoRef.current?.parentElement;
-    if (!container) return;
-
-    if (!isFullscreen) {
-      if (container.requestFullscreen) {
-        container.requestFullscreen();
-      }
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      }
-    }
-  };
-
-  useEffect(() => {
-    if (isPlaying) {
-      handleVideoPlay();
-    } else {
-      handleVideoPause();
-    }
-  }, [isPlaying, handleVideoPlay, handleVideoPause]);
-
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  const handleMouseMove = useCallback(() => {
+    setShowControls(true);
   }, []);
 
-  if (error) {
-    return <VideoErrorDisplay videoError={error} src={src} />;
-  }
+  const handleTouchStart = useCallback(() => {
+    setShowControls(true);
+  }, []);
 
-  if (!showVideo) {
-    return (
-      <EnhancedVideoPreview
-        src={src}
-        poster={poster}
-        onPlay={handlePlayClick}
-        className={className}
-      />
-    );
-  }
+  const handleScreenTap = useCallback(() => {
+    togglePlay();
+  }, [togglePlay]);
 
-  const handleSeek = (time: number) => {
-    const video = videoRef.current;
-    if (!video) return;
-    video.currentTime = time;
-    setCurrentTime(time);
-  };
+  const handleSeek = useCallback((time: number) => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = time;
+      setCurrentTime(time);
+    }
+  }, []);
 
-  const handleVolumeChangeWrapper = (newVolume: number) => {
-    handleVolumeChange(newVolume);
+  const handleVolumeChangeWrapper = useCallback((newVolume: number) => {
     setVolume(newVolume);
-  };
+    handleVolumeChange(newVolume);
+  }, [handleVolumeChange]);
 
-  const handleToggleMute = () => {
+  const handleToggleMute = useCallback(() => {
     toggleMute();
-    setIsMuted(!isMuted);
-  };
+    setVolume(prev => prev === 0 ? 1 : 0);
+  }, [toggleMute]);
+
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      videoRef.current?.requestFullscreen();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  }, []);
+
+  const memoizedVideoControls = useMemo(() => (
+    <VideoControls
+      isPlaying={isPlaying}
+      isBuffering={isBuffering}
+      isLoading={isLoading}
+      isFullscreen={isFullscreen}
+      currentTime={currentTime}
+      duration={duration}
+      volume={volume}
+      isMuted={volume === 0}
+      showControls={showControls || !isPlaying}
+      showPoster={false}
+      videoError={error}
+      onPlay={togglePlay}
+      onPlayPause={togglePlay}
+      onSeek={handleSeek}
+      onVolumeChange={handleVolumeChangeWrapper}
+      onToggleMute={handleToggleMute}
+      onToggleFullscreen={toggleFullscreen}
+    />
+  ), [isPlaying, isBuffering, isLoading, isFullscreen, currentTime, duration, volume, showControls, error, togglePlay, handleSeek, handleVolumeChangeWrapper, handleToggleMute, toggleFullscreen]);
 
   return (
     <VideoPlayerContainer
@@ -168,7 +128,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
       className={className}
       videoRef={videoRef}
       isFullscreen={isFullscreen}
-      isMuted={isMuted}
+      isMuted={volume === 0}
       onMouseMove={handleMouseMove}
       onTouchStart={handleTouchStart}
       onClick={handleScreenTap}
@@ -178,26 +138,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
         isBuffering={isBuffering}
         showPoster={false}
       />
-      
-      <VideoControls
-        isPlaying={isPlaying}
-        isBuffering={isBuffering}
-        isLoading={isLoading}
-        isFullscreen={isFullscreen}
-        currentTime={currentTime}
-        duration={duration}
-        volume={volume}
-        isMuted={isMuted}
-        showControls={showControls || !isPlaying}
-        showPoster={false}
-        videoError={error}
-        onPlay={togglePlay}
-        onPlayPause={togglePlay}
-        onSeek={handleSeek}
-        onVolumeChange={handleVolumeChangeWrapper}
-        onMuteToggle={handleToggleMute}
-        onFullscreen={toggleFullscreen}
-      />
+      {memoizedVideoControls}
     </VideoPlayerContainer>
   );
 };
