@@ -1,3 +1,6 @@
+import React from 'react';
+import './VideoControls.css';
+
 interface VideoControlsProps {
   isPlaying: boolean;
   isBuffering: boolean;
@@ -17,3 +20,25 @@ interface VideoControlsProps {
   onMuteToggle: () => void;
   onFullscreen: () => void;
 }
+
+const VideoControls: React.FC<VideoControlsProps> = ({
+  isPlaying,
+  onPlayPause,
+  onFullscreen,
+  // ... other props
+}) => {
+  return (
+    <div className="video-card">
+      <video className={`video-player ${isFullscreen ? 'expanded' : ''}`} controls>
+        {/* Video source and other attributes */}
+      </video>
+      <div className="controls">
+        <button onClick={onPlayPause}>{isPlaying ? 'Pause' : 'Play'}</button>
+        <button onClick={onFullscreen}>Fullscreen</button>
+        {/* Other controls */}
+      </div>
+    </div>
+  );
+};
+
+export default VideoControls;
