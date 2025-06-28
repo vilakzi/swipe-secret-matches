@@ -1,3 +1,4 @@
+
 import * as React from 'react';
 import { useState } from 'react';
 import AdminTileCarousel from './AdminTileCarousel';
@@ -14,7 +15,7 @@ import FeedFilters, { SortOption, FilterOption } from './FeedFilters';
 
 interface FeedContentProps {
   feedItems: FeedItem[];
-  likedItems: Set&lt;string&gt;;
+  likedItems: Set<string>;
   isSubscribed: boolean;
   onLike: (itemId: string, profileId: string) => void;
   onContact: (profile: Profile) => void;
@@ -31,13 +32,13 @@ const FeedContent = ({
   onRefresh,
   engagementTracker
 }: FeedContentProps) => {
-  const [sortOption, setSortOption] = useState&lt;SortOption&gt;('newest');
-  const [filterOption, setFilterOption] = useState&lt;FilterOption&gt;('all');
+  const [sortOption, setSortOption] = useState<SortOption>('newest');
+  const [filterOption, setFilterOption] = useState<FilterOption>('all');
   const { contentFeedItems, handleContentLike, handleContentShare } = useContentFeed();
   const { user } = useAuth();
   const { role } = useUserRole();
 
-  const adminRoles = [&quot;admin&quot;, &quot;superadmin&quot;];
+  const adminRoles = ["admin", "superadmin"];
 
   // Create wrapper functions to match expected signatures
   const handleContentLikeWrapper = async (contentId: string, profileId: string) => {
@@ -61,26 +62,26 @@ const FeedContent = ({
 
   // Convert content feed items to FeedItem type compatible format
   const contentAsRegularFeed = contentFeedItems.filter(
-    c =&gt; !!c &amp;&amp; !!c.id &amp;&amp; isValidMedia(c.postImage)
-  ).map(item =&gt; ({
+    c => !!c && !!c.id && isValidMedia(c.postImage)
+  ).map(item => ({
     ...item,
     isContent: true,
     isAdminCard: true,
     // Ensure the profile matches FeedItem's Profile type
     profile: {
       ...item.profile,
-      userType: item.profile.userType as &quot;user&quot; | &quot;service_provider&quot; | &quot;admin&quot; | &quot;superadmin&quot;
+      userType: item.profile.userType as "user" | "service_provider" | "admin" | "superadmin"
     }
-  } as FeedItem &amp; { isContent: true; isAdminCard: true }));
+  } as FeedItem & { isContent: true; isAdminCard: true }));
 
   // Admin carousel: posts from admin/superadmin, and published content feed
   const adminFeed = [
     ...contentAsRegularFeed,
-    ...enrichedFeedItems.filter(item =&gt;
-      adminRoles.includes(String(item.profile.role).toLowerCase()) &amp;&amp;
-      ((item.type === &#39;post&#39; &amp;&amp; isValidMedia(item.postImage)) ||
-        (item.type === &#39;profile&#39; &amp;&amp; isProfileImageChanged(item.profile.image)))
-    ).map(item =&gt; ({
+    ...enrichedFeedItems.filter(item =>
+      adminRoles.includes(String(item.profile.role).toLowerCase()) &&
+      ((item.type === 'post' && isValidMedia(item.postImage)) ||
+        (item.type === 'profile' && isProfileImageChanged(item.profile.image)))
+    ).map(item => ({
       ...item,
       isAdminCard: true
     }))
@@ -89,17 +90,17 @@ const FeedContent = ({
   // All feed items combined for normal display
   const allFeedItems = [
     ...contentAsRegularFeed,
-    ...enrichedFeedItems.filter(item =&gt; {
-      const hasMedia = (item.profile.posts &amp;&amp; item.profile.posts.some(isValidMedia)) || 
-                      (item.type === &#39;post&#39; &amp;&amp; isValidMedia(item.postImage));
+    ...enrichedFeedItems.filter(item => {
+      const hasMedia = (item.profile.posts && item.profile.posts.some(isValidMedia)) || 
+                      (item.type === 'post' && isValidMedia(item.postImage));
       const imgChanged = isProfileImageChanged(item.profile.image);
       const newJoiner = isNewJoiner(item.profile.joinDate);
       
       return hasMedia || imgChanged || newJoiner;
-    }).map(item =&gt; ({
+    }).map(item => ({
       ...item,
-      isWelcome: isNewJoiner(item.profile.joinDate) &amp;&amp; 
-                 (!item.profile.posts || item.profile.posts.length === 0) &amp;&amp; 
+      isWelcome: isNewJoiner(item.profile.joinDate) && 
+                 (!item.profile.posts || item.profile.posts.length === 0) && 
                  !isProfileImageChanged(item.profile.image)
     }))
   ];
@@ -146,16 +147,16 @@ const FeedContent = ({
   const processedFeedItems = filterFeedItems(sortFeedItems(allFeedItems));
 
   return (
-    &lt;div className=&quot;space-y-6 pb-6&quot; role=&quot;list&quot; aria-label=&quot;Social feed items&quot;&gt;
-      &lt;FeedFilters 
+    <div className="space-y-6 pb-6" role="list" aria-label="Social feed items">
+      <FeedFilters 
         currentSort={sortOption}
         currentFilter={filterOption}
         onSortChange={setSortOption}
         onFilterChange={setFilterOption}
-      /&gt;
+      />
       
-      {adminFeed.length &gt; 0 &amp;&amp; filterOption !== 'posts' &amp;&amp; filterOption !== 'profiles' &amp;&amp; (
-        &lt;AdminTileCarousel
+      {adminFeed.length > 0 && filterOption !== 'posts' && filterOption !== 'profiles' && (
+        <AdminTileCarousel
           adminFeed={adminFeed}
           likedItems={likedItems}
           isSubscribed={isSubscribed}
@@ -165,17 +166,17 @@ const FeedContent = ({
           onContentShare={handleContentShareWrapper}
           tilesToShow={2}
           rotationIntervalMs={5000}
-        /&gt;
+        />
       )}
       
-      &lt;NormalFeedList
+      <NormalFeedList
         userFeed={processedFeedItems}
         likedItems={likedItems}
         isSubscribed={isSubscribed}
         onLike={onLike}
         onContact={onContact}
-      /&gt;
-    &lt;/div&gt;
+      />
+    </div>
   );
 };
 
