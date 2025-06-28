@@ -174,9 +174,23 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     resetControlsTimeout();
   }, [resetControlsTimeout]);
 
-  const handleClick = useCallback(() => {
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card swipe on video click
     resetControlsTimeout();
   }, [resetControlsTimeout]);
+
+  // Prevent touch events from bubbling to parent card
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    e.stopPropagation();
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    e.stopPropagation();
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    e.stopPropagation();
+  }, []);
 
   const memoizedVideoControls = useMemo(() => (
     <VideoControls
@@ -217,9 +231,12 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
 
   return (
     <div 
-      className={`relative rounded-lg overflow-hidden ${className}`}
+      className={`relative rounded-lg overflow-hidden video-controls ${className}`}
       onMouseMove={handleMouseMove}
       onClick={handleClick}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       <video
         ref={videoRef}
@@ -231,6 +248,9 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
         muted={muted}
         playsInline={playsInline}
         className="w-full h-full object-cover rounded-lg"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       />
       {controls && memoizedVideoControls}
     </div>

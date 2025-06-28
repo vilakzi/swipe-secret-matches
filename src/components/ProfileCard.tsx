@@ -31,52 +31,89 @@ const ProfileCard = memo<ProfileCardProps>(({
   const [rotation, setRotation] = useState(0);
   const cardRef = useRef<HTMLDivElement>(null);
   const startPos = useRef({ x: 0, y: 0 });
+  const dragStartTime = useRef<number>(0);
 
-  // Memoized handlers
+  // Enhanced handlers with better touch detection
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (disabled) return;
+    
+    // Don't start drag on video elements or interactive controls
+    const target = e.target as HTMLElement;
+    if (target.closest('video, button, .video-controls, [role="button"]')) {
+      return;
+    }
+    
     setIsDragging(true);
+    dragStartTime.current = Date.now();
     startPos.current = { x: e.clientX, y: e.clientY };
+    e.preventDefault();
   }, [disabled]);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (disabled) return;
+    
+    // Don't start drag on video elements or interactive controls
+    const target = e.target as HTMLElement;
+    if (target.closest('video, button, .video-controls, [role="button"]')) {
+      return;
+    }
+    
     setIsDragging(true);
+    dragStartTime.current = Date.now();
     const touch = e.touches[0];
     startPos.current = { x: touch.clientX, y: touch.clientY };
   }, [disabled]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!isDragging || disabled) return;
+    
     const deltaX = e.clientX - startPos.current.x;
     const deltaY = e.clientY - startPos.current.y;
-    setDragOffset({ x: deltaX, y: deltaY });
-    setRotation(deltaX * 0.1);
+    
+    // Only update if drag is significant enough
+    if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
+      setDragOffset({ x: deltaX, y: deltaY });
+      setRotation(deltaX * 0.05); // Reduced rotation sensitivity
+    }
   }, [isDragging, disabled]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!isDragging || disabled) return;
+    
     const touch = e.touches[0];
     const deltaX = touch.clientX - startPos.current.x;
     const deltaY = touch.clientY - startPos.current.y;
-    setDragOffset({ x: deltaX, y: deltaY });
-    setRotation(deltaX * 0.1);
+    
+    // Only update if drag is significant enough
+    if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
+      setDragOffset({ x: deltaX, y: deltaY });
+      setRotation(deltaX * 0.05); // Reduced rotation sensitivity
+    }
   }, [isDragging, disabled]);
 
   const handleEnd = useCallback(async () => {
     if (!isDragging || disabled) return;
+    
     setIsDragging(false);
-    const threshold = 100;
-    if (Math.abs(dragOffset.x) > threshold) {
+    const dragDuration = Date.now() - dragStartTime.current;
+    const threshold = 120; // Increased threshold for more intentional swipes
+    const minDragTime = 100; // Minimum drag time to prevent accidental swipes
+    
+    // Only trigger swipe if drag was intentional (sufficient distance, time, and horizontal movement)
+    if (Math.abs(dragOffset.x) > threshold && 
+        dragDuration > minDragTime && 
+        Math.abs(dragOffset.x) > Math.abs(dragOffset.y) * 1.5) { // More horizontal than vertical
       onSwipe(dragOffset.x > 0 ? 'right' : 'left');
-    } else if (onNavigate) {
+    } else if (onNavigate && Math.abs(dragOffset.x) < 20 && Math.abs(dragOffset.y) < 20) {
       await onNavigate();
     }
+    
     setDragOffset({ x: 0, y: 0 });
     setRotation(0);
-  }, [isDragging, disabled, dragOffset.x, onSwipe, onNavigate]);
+  }, [isDragging, disabled, dragOffset.x, dragOffset.y, onSwipe, onNavigate]);
 
-  const handleWhatsAppClick = useCallback(() => {
+  const handleWhatsAppClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!isSubscribed) {
       onSwipe('right');
       return;
@@ -85,7 +122,8 @@ const ProfileCard = memo<ProfileCardProps>(({
     window.open(`https://wa.me/${profile.whatsapp.replace('+', '')}?text=${message}`, '_blank');
   }, [isSubscribed, onSwipe, profile.name, profile.whatsapp]);
 
-  const handleLikeClick = useCallback(() => {
+  const handleLikeClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     onSwipe('right');
   }, [onSwipe]);
 
@@ -102,7 +140,7 @@ const ProfileCard = memo<ProfileCardProps>(({
     opacity: disabled ? 0.6 : 1,
   };
 
-  const overlayOpacity = Math.min(Math.abs(dragOffset.x) / 100, 1);
+  const overlayOpacity = Math.min(Math.abs(dragOffset.x) / 120, 1);
   const isLikeDirection = dragOffset.x > 0;
 
   return (
@@ -143,7 +181,7 @@ const ProfileCard = memo<ProfileCardProps>(({
               <Heart className="w-4 h-4 text-white fill-white" />
             </div>
           )}
-          {isDragging && (
+          {isDragging && Math.abs(dragOffset.x) > 60 && (
             <div
               className={`absolute inset-0 flex items-center justify-center ${
                 isLikeDirection ? 'bg-green-500' : 'bg-red-500'
