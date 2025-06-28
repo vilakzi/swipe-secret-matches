@@ -13,7 +13,7 @@ interface PostCardProps {
   };
 }
 
-const PostCard = ({ post }: PostCardProps) => {
+const PostCard: React.FC<PostCardProps> = ({ post }) => {
   return (
     <Card className="bg-black/20 backdrop-blur-md border-gray-700 p-4">
       <div className="flex items-center justify-between">
@@ -33,10 +33,11 @@ const PostCard = ({ post }: PostCardProps) => {
                 style={{ aspectRatio: '1/1', maxHeight: '4rem' }}
                 controls
                 preload="metadata"
+                aria-label="Video content"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <Video className="w-8 h-8 text-gray-400" />
+                <Video className="w-8 h-8 text-gray-400" aria-hidden="true" />
               </div>
             )}
           </div>
