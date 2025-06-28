@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useVideoPlayer } from '@/hooks/useVideoPlayer';
 import { useSmartVideoControls } from '@/hooks/useSmartVideoControls';
 import EnhancedVideoPreview from './EnhancedVideoPreview';
@@ -13,30 +13,42 @@ interface ImprovedVideoPlayerProps {
   className?: string;
   autoPlay?: boolean;
   controls?: boolean;
+  loop?: boolean;
+  muted?: boolean;
+  playsInline?: boolean;
 }
 
 const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   src,
   poster,
   className = '',
-  autoPlay = true,
-  controls = true
+  autoPlay = false,
+  controls = true,
+  loop = true,
+  muted = true,
+  playsInline = true,
 }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [showVideo, setShowVideo] = useState(autoPlay);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(muted);
 
   const {
-    videoRef,
     isPlaying,
     isLoading,
     isBuffering,
     error,
-    isMuted,
-    volume,
     togglePlay,
     toggleMute,
     handleVolumeChange
-  } = useVideoPlayer(src);
+  } = useVideoPlayer(src, {
+    loop,
+    muted,
+    playsInline
+  });
 
   const {
     showControls,
@@ -50,6 +62,22 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     showOnHover: true,
     showOnTouch: true
   });
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const updateTime = () => setCurrentTime(video.currentTime);
+    const updateDuration = () => setDuration(video.duration);
+
+    video.addEventListener('timeupdate', updateTime);
+    video.addEventListener('loadedmetadata', updateDuration);
+
+    return () => {
+      video.removeEventListener('timeupdate', updateTime);
+      video.removeEventListener('loadedmetadata', updateDuration);
+    };
+  }, []);
 
   const handlePlayClick = async () => {
     if (!showVideo) {
@@ -138,19 +166,44 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
       
       <VideoControls
         isPlaying={isPlaying}
-        isBuffering={isBuffering}
-        isLoading={isLoading}
-        isFullscreen={isFullscreen}
+        currentTime={currentTime}
+        duration={duration}
+        volume={volume}
+        isMuted={isMuted}
         showControls={showControls || !isPlaying}
         showPoster={false}
         videoError={error}
-        volume={volume}
-        isMuted={isMuted}
-        onPlay={handlePlayClick}
-        onFullscreen={toggleFullscreen}
+        onPlayPause={togglePlay}
+        onSeek={(time: number) => {
+          const video = videoRef.current;
+          if (!video) return;
+          video.currentTime = time;
+          setCurrentTime(time);
+        }}
         onVolumeChange={handleVolumeChange}
-        onMuteToggle={toggleMute}
-      />
+        onToggleMute={toggleMute}
+const {
+  isPlaying,
+  isLoading,
+  isBuffering,
+  error,
+  togglePlay,
+  toggleMute,
+  handleVolumeChange
+} = useVideoPlayer(videoRef, {
+  src,interface ImprovedVideoPlayerProps {
+    src: string;
+    poster?: string;
+    className?: string;
+    autoPlay?: boolean;
+    loop?: boolean;
+    muted?: boolean;
+    playsInline?: boolean;
+  }
+  loop,
+  muted,
+  playsInline
+});      />
     </VideoPlayerContainer>
   );
 };

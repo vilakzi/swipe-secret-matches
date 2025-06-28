@@ -1,4 +1,18 @@
-
+interface VideoControlsProps {
+  isPlaying: boolean;
+  currentTime: number;
+  duration: number;
+  volume: number;
+  isMuted: boolean;
+  showControls: boolean;
+  showPoster: boolean;
+  videoError: string | null;
+  onPlayPause: () => void;
+  onSeek: (time: number) => void;
+  onVolumeChange: (volume: number) => void;
+  onToggleMute: () => void;
+  onToggleFullscreen: () => void;
+}
 import React from 'react';
 import { Play, Pause, Maximize, Minimize, Volume2, VolumeX } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
