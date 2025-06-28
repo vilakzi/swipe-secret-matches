@@ -1,3 +1,4 @@
+import * as React from 'react';
 import AdminTileCarousel from './AdminTileCarousel';
 import { useAuth } from '@/contexts/AuthContext';
 import { useContentFeed } from '@/hooks/useContentFeed';
@@ -11,10 +12,11 @@ import NormalFeedList from './NormalFeedList';
 
 interface FeedContentProps {
   feedItems: FeedItem[];
-  likedItems: Set<string>;
+  likedItems: Set&lt;string&gt;;
   isSubscribed: boolean;
   onLike: (itemId: string, profileId: string) => void;
   onContact: (profile: Profile) => void;
+  onRefresh: () => void;
 }
 
 const FeedContent = ({
@@ -22,12 +24,14 @@ const FeedContent = ({
   likedItems,
   isSubscribed,
   onLike,
-  onContact
+  onContact,
+  onRefresh
 }: FeedContentProps) => {
-  useAuth();
-  useUserRole();
+  const { contentFeedItems, handleContentLike, handleContentShare } = useContentFeed();
+  const { user } = useAuth();
+  const { role } = useUserRole();
 
-  const adminRoles = ["admin", "superadmin"];
+  const adminRoles = [&quot;admin&quot;, &quot;superadmin&quot;];
 
   // Create wrapper functions to match expected signatures
   const handleContentLikeWrapper = async (contentId: string, profileId: string) => {
@@ -49,57 +53,55 @@ const FeedContent = ({
     }
   }));
 
-  // Get content feed items from the custom hook
-  const { contentFeedItems = [] } = useContentFeed();
-
   // Convert content feed items to FeedItem type compatible format
   const contentAsRegularFeed = contentFeedItems.filter(
-    c => !!c && !!c.id && isValidMedia(c.postImage)
-  ).map(item => ({
+    c =&gt; !!c &amp;&amp; !!c.id &amp;&amp; isValidMedia(c.postImage)
+  ).map(item =&gt; ({
     ...item,
     isContent: true,
     isAdminCard: true,
     // Ensure the profile matches FeedItem's Profile type
     profile: {
       ...item.profile,
-      userType: item.profile.userType as "user" | "service_provider" | "admin" | "superadmin"
+      userType: item.profile.userType as &quot;user&quot; | &quot;service_provider&quot; | &quot;admin&quot; | &quot;superadmin&quot;
     }
-  } as FeedItem & { isContent: true; isAdminCard: true }));
+  } as FeedItem &amp; { isContent: true; isAdminCard: true }));
 
   // Admin carousel: posts from admin/superadmin, and published content feed
   const adminFeed = [
     ...contentAsRegularFeed,
-    ...enrichedFeedItems.filter(item =>
-      adminRoles.includes(String(item.profile.role).toLowerCase()) &&
-      ((item.type === 'post' && isValidMedia(item.postImage)) ||
-        (item.type === 'profile' && isProfileImageChanged(item.profile.image)))
-    ).map(item => ({
+    ...enrichedFeedItems.filter(item =&gt;
+      adminRoles.includes(String(item.profile.role).toLowerCase()) &amp;&amp;
+      ((item.type === &#39;post&#39; &amp;&amp; isValidMedia(item.postImage)) ||
+        (item.type === &#39;profile&#39; &amp;&amp; isProfileImageChanged(item.profile.image)))
+    ).map(item =&gt; ({
       ...item,
       isAdminCard: true
     }))
   ];
 
-  // All feed items combined for normal display (no filtering by role, show all)
+  // All feed items combined for normal display
   const allFeedItems = [
     ...contentAsRegularFeed,
-    ...enrichedFeedItems.filter(item => {
-      const hasMedia = (item.profile.posts && item.profile.posts.some(isValidMedia)) || 
-                      (item.type === 'post' && isValidMedia(item.postImage));
+    ...enrichedFeedItems.filter(item =&gt; {
+      const hasMedia = (item.profile.posts &amp;&amp; item.profile.posts.some(isValidMedia)) || 
+                      (item.type === &#39;post&#39; &amp;&amp; isValidMedia(item.postImage));
       const imgChanged = isProfileImageChanged(item.profile.image);
       const newJoiner = isNewJoiner(item.profile.joinDate);
+      
       return hasMedia || imgChanged || newJoiner;
-    }).map(item => ({
+    }).map(item =&gt; ({
       ...item,
-      isWelcome: isNewJoiner(item.profile.joinDate) && 
-                 (!item.profile.posts || item.profile.posts.length === 0) && 
+      isWelcome: isNewJoiner(item.profile.joinDate) &amp;&amp; 
+                 (!item.profile.posts || item.profile.posts.length === 0) &amp;&amp; 
                  !isProfileImageChanged(item.profile.image)
     }))
   ];
 
   return (
-    <div className="space-y-6 px-4 pb-6" role="list" aria-label="Social feed items">
-      {adminFeed.length > 0 && (
-        <AdminTileCarousel
+    &lt;div className=&quot;space-y-6 px-4 pb-6&quot; role=&quot;list&quot; aria-label=&quot;Social feed items&quot;&gt;
+      {adminFeed.length &gt; 0 &amp;&amp; (
+        &lt;AdminTileCarousel
           adminFeed={adminFeed}
           likedItems={likedItems}
           isSubscribed={isSubscribed}
@@ -109,48 +111,18 @@ const FeedContent = ({
           onContentShare={handleContentShareWrapper}
           tilesToShow={2}
           rotationIntervalMs={5000}
-        />
+        /&gt;
       )}
       
-      <NormalFeedList
+      &lt;NormalFeedList
         userFeed={allFeedItems}
         likedItems={likedItems}
         isSubscribed={isSubscribed}
         onLike={onLike}
         onContact={onContact}
-      />
-    </div>
+      /&gt;
+    &lt;/div&gt;
   );
 };
 
 export default FeedContent;
-
-// Handles sharing a content item, e.g., by calling an API or updating state
-async function handleContentShare(contentId: string) {
-  try {
-    // Example: Call an API endpoint to share the content
-    await fetch(`/api/content/${contentId}/share`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    // Optionally, you could update local state or show a notification here
-  } catch (error) {
-    console.error('Failed to share content:', error);
-  }
-}
-
-// Handles liking a content item, e.g., by calling an API or updating state
-async function handleContentLike(contentId: string, profileId: string) {
-  try {
-    // Example: Call an API endpoint to like the content
-    await fetch(`/api/content/${contentId}/like`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ profileId }),
-    });
-    // Optionally, you could update local state or show a notification here
-  } catch (error) {
-    console.error('Failed to like content:', error);
-  }
-}
-
