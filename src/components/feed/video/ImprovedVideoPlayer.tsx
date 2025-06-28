@@ -144,6 +144,23 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     );
   }
 
+  const handleSeek = (time: number) => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.currentTime = time;
+    setCurrentTime(time);
+  };
+
+  const handleVolumeChangeWrapper = (newVolume: number) => {
+    handleVolumeChange(newVolume);
+    setVolume(newVolume);
+  };
+
+  const handleToggleMute = () => {
+    toggleMute();
+    setIsMuted(!isMuted);
+  };
+
   return (
     <VideoPlayerContainer
       src={src}
@@ -176,14 +193,9 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
         videoError={error}
         onPlay={togglePlay}
         onPlayPause={togglePlay}
-        onSeek={(time: number) => {
-          const video = videoRef.current;
-          if (!video) return;
-          video.currentTime = time;
-          setCurrentTime(time);
-        }}
-        onVolumeChange={handleVolumeChange}
-        onMuteToggle={toggleMute}
+        onSeek={handleSeek}
+        onVolumeChange={handleVolumeChangeWrapper}
+        onMuteToggle={handleToggleMute}
         onFullscreen={toggleFullscreen}
       />
     </VideoPlayerContainer>

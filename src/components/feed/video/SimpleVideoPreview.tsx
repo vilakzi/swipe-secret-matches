@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Play, AlertCircle } from 'lucide-react';
 
 interface SimpleVideoPreviewProps {
-  src: string;
   poster?: string;
   onPlay: () => void;
   className?: string;
@@ -10,7 +9,6 @@ interface SimpleVideoPreviewProps {
 }
 
 const SimpleVideoPreview: React.FC<SimpleVideoPreviewProps> = ({
-  src,
   poster,
   onPlay,
   className = '',

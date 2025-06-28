@@ -1,8 +1,11 @@
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useEffect, useCallback, RefObject } from 'react';
 
-export const useVideoPlayer = (src: string) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
+export const useVideoPlayer = (
+  videoRef: RefObject<HTMLVideoElement>,
+  src: string,
+  options: { loop?: boolean; muted?: boolean; playsInline?: boolean }
+) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isBuffering, setIsBuffering] = useState(false);
@@ -72,6 +75,11 @@ export const useVideoPlayer = (src: string) => {
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+
+    video.src = src;
+    video.loop = options.loop ?? false;
+    video.muted = options.muted ?? false;
+    video.playsInline = options.playsInline ?? true;
 
     const handleLoadStart = () => {
       console.log('Video load started for:', src);
@@ -154,7 +162,7 @@ export const useVideoPlayer = (src: string) => {
       video.removeEventListener('error', handleError);
       video.removeEventListener('ended', handleEnded);
     };
-  }, [src]);
+  }, [videoRef, src, options]);
 
   // Reset when src changes
   useEffect(() => {
