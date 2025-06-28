@@ -12,7 +12,6 @@ interface ImprovedVideoPlayerProps {
   poster?: string;
   className?: string;
   autoPlay?: boolean;
-  controls?: boolean;
   loop?: boolean;
   muted?: boolean;
   playsInline?: boolean;
@@ -23,7 +22,6 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   poster,
   className = '',
   autoPlay = false,
-  controls = true,
   loop = true,
   muted = true,
   playsInline = true,
@@ -44,7 +42,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     togglePlay,
     toggleMute,
     handleVolumeChange
-  } = useVideoPlayer(src, {
+  } = useVideoPlayer(videoRef, src, {
     loop,
     muted,
     playsInline
@@ -166,6 +164,9 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
       
       <VideoControls
         isPlaying={isPlaying}
+        isBuffering={isBuffering}
+        isLoading={isLoading}
+        isFullscreen={isFullscreen}
         currentTime={currentTime}
         duration={duration}
         volume={volume}
@@ -173,6 +174,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
         showControls={showControls || !isPlaying}
         showPoster={false}
         videoError={error}
+        onPlay={togglePlay}
         onPlayPause={togglePlay}
         onSeek={(time: number) => {
           const video = videoRef.current;
@@ -181,31 +183,11 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
           setCurrentTime(time);
         }}
         onVolumeChange={handleVolumeChange}
-        onToggleMute={toggleMute}
-const {
-  isPlaying,
-  isLoading,
-  isBuffering,
-  error,
-  togglePlay,
-  toggleMute,
-  handleVolumeChange
-} = useVideoPlayer(videoRef, {
-  src,interface ImprovedVideoPlayerProps {
-    src: string;
-    poster?: string;
-    className?: string;
-    autoPlay?: boolean;
-    loop?: boolean;
-    muted?: boolean;
-    playsInline?: boolean;
-  }
-  loop,
-  muted,
-  playsInline
-});      />
+        onMuteToggle={toggleMute}
+        onFullscreen={toggleFullscreen}
+      />
     </VideoPlayerContainer>
   );
 };
 
-export default ImprovedVideoPlayer;
+export default React.memo(ImprovedVideoPlayer);
