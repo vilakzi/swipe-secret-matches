@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-function DashboardHeader() {
+const DashboardHeader: React.FC = () => {
   const navigate = useNavigate();
 
   const handleBackToFeed = () => {
@@ -11,14 +11,14 @@ function DashboardHeader() {
   };
 
   return (
-    <div className="flex items-center justify-between mb-8">
+    <div className="flex items-center justify-between mb-8" role="banner">
       <Button
         onClick={handleBackToFeed}
         variant="ghost"
         className="text-white hover:bg-white/10 flex items-center space-x-2"
         aria-label="Back to Feed"
       >
-        <ArrowLeft className="w-4 h-4" />
+        <ArrowLeft className="w-4 h-4" aria-hidden="true" />
         <span>Back to Feed</span>
       </Button>
       
