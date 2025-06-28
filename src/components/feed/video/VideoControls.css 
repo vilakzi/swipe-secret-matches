@@ -1,0 +1,19 @@
+.video-card {
+  width: 100%;
+  max-width: 650px; /* Slightly larger than before */
+  margin: 0 auto;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.video-player {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16/9; /* Maintain aspect ratio */
+}
+
+.video-player.expanded {
+  max-width: 850px; /* Adjust for expanded view */
+  max-height: 480px; /* Adjust for expanded view */
+}
