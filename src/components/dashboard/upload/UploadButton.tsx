@@ -1,5 +1,3 @@
-
-import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload, CheckCircle, AlertTriangle, Wifi, WifiOff } from 'lucide-react';
 import { useUserRole } from "@/hooks/useUserRole";
@@ -45,7 +43,7 @@ function UploadButton({
 
   return (
     <div className="space-y-3">
-      {/* Enhanced Network Status Warning */}
+      {/* Network Status Warning */}
       {!isOnline && (
         <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-3">
           <div className="flex items-center space-x-2">
@@ -120,37 +118,7 @@ function UploadButton({
             : 'bg-gray-700 hover:bg-gray-600 text-gray-300 cursor-not-allowed border-gray-600'
         }`}
       >
-        {!isOnline ? (
-          <div className="flex items-center space-x-2">
-            <WifiOff className="w-5 h-5" />
-            <span>No Connection</span>
-          </div>
-        ) : uploading ? (
-          <div className="flex items-center space-x-2">
-            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            <span>Uploading...</span>
-          </div>
-        ) : isValidating ? (
-          <div className="flex items-center space-x-2">
-            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            <span>Validating...</span>
-          </div>
-        ) : hasError ? (
-          <div className="flex items-center space-x-2">
-            <AlertTriangle className="w-5 h-5" />
-            <span>Error - Cannot Upload</span>
-          </div>
-        ) : selectedFile ? (
-          <div className="flex items-center space-x-2">
-            <Upload className="w-5 h-5" />
-            <span>Upload Post - {getPromotionPrice(promotionType)}</span>
-          </div>
-        ) : (
-          <div className="flex items-center space-x-2">
-            <Upload className="w-5 h-5" />
-            <span>Select a file to upload</span>
-          </div>
-        )}
+        {renderButtonContent()}
       </Button>
       
       {/* Status Footer */}
@@ -171,6 +139,52 @@ function UploadButton({
       </div>
     </div>
   );
+
+  function renderButtonContent() {
+    if (!isOnline) {
+      return (
+        <div className="flex items-center space-x-2">
+          <WifiOff className="w-5 h-5" />
+          <span>No Connection</span>
+        </div>
+      );
+    } else if (uploading) {
+      return (
+        <div className="flex items-center space-x-2">
+          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          <span>Uploading...</span>
+        </div>
+      );
+    } else if (isValidating) {
+      return (
+        <div className="flex items-center space-x-2">
+          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          <span>Validating...</span>
+        </div>
+      );
+    } else if (hasError) {
+      return (
+        <div className="flex items-center space-x-2">
+          <AlertTriangle className="w-5 h-5" />
+          <span>Error - Cannot Upload</span>
+        </div>
+      );
+    } else if (selectedFile) {
+      return (
+        <div className="flex items-center space-x-2">
+          <Upload className="w-5 h-5" />
+          <span>Upload Post - {getPromotionPrice(promotionType)}</span>
+        </div>
+      );
+    } else {
+      return (
+        <div className="flex items-center space-x-2">
+          <Upload className="w-5 h-5" />
+          <span>Select a file to upload</span>
+        </div>
+      );
+    }
+  }
 }
 
 export default UploadButton;
