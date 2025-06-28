@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload, CheckCircle, AlertTriangle, Wifi, WifiOff } from 'lucide-react';
 import { useUserRole } from "@/hooks/useUserRole";
