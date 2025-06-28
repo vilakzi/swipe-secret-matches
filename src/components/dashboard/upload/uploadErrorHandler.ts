@@ -3,7 +3,7 @@ import { toast } from '@/hooks/use-toast';
 import { getUploadErrorMessage } from '@/utils/errorMessages';
 
 export const handleUploadError = (error: any) => {
-  console.error('Upload error:', error);
+  console.error('Mobile upload error:', error);
   
   const message = getUploadErrorMessage(error);
   
@@ -18,42 +18,37 @@ export const checkNetworkConnection = async () => {
   if (!navigator.onLine) {
     toast({
       title: "No internet connection",
-      description: "Please check your connection and try again",
+      description: "Please check your mobile connection and try again",
       variant: "destructive"
     });
     return false;
   }
 
-  // Enhanced connection quality check for mobile
+  // Enhanced mobile connection quality check
   const connection = (navigator as any).connection;
   if (connection) {
-    if (connection.effectiveType === 'slow-2g') {
+    console.log('Mobile network info:', {
+      type: connection.type,
+      effectiveType: connection.effectiveType,
+      downlink: connection.downlink,
+      rtt: connection.rtt,
+      saveData: connection.saveData
+    });
+
+    // More lenient for mobile - allow slower connections
+    if (connection.effectiveType === 'slow-2g' && connection.downlink < 0.1) {
       toast({
-        title: "Very slow connection detected",
-        description: "Upload may fail. Consider using WiFi or a smaller file.",
-        variant: "destructive"
-      });
-      return false;
-    } else if (connection.effectiveType === '2g') {
-      toast({
-        title: "Slow connection detected",
-        description: "Upload may take longer than usual. Consider using WiFi.",
+        title: "Very slow connection",
+        description: "Your connection is very slow. Upload may take longer but will continue.",
         variant: "default"
       });
-    } else if (connection.downlink < 0.5) {
-      toast({
-        title: "Poor connection quality",
-        description: "Your connection seems very unstable. Try moving to better signal area.",
-        variant: "destructive"
-      });
-      return false;
     }
   }
 
-  // Test actual connection by making a small request
+  // Quick mobile connection test
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const timeoutId = setTimeout(() => controller.abort(), 2000); // Very short timeout
     
     const response = await fetch('https://galrcqwogqqdsqdzfrrd.supabase.co/rest/v1/', {
       method: 'HEAD',
@@ -64,38 +59,16 @@ export const checkNetworkConnection = async () => {
     });
     
     clearTimeout(timeoutId);
-    
-    if (!response.ok) {
-      toast({
-        title: "Server connection failed",
-        description: "Cannot reach upload server. Please try again later.",
-        variant: "destructive"
-      });
-      return false;
-    }
-    
+    console.log('Mobile connection test passed');
     return true;
   } catch (error: any) {
-    console.error('Connection test failed:', error);
-    
-    if (error.name === 'AbortError') {
-      toast({
-        title: "Connection timeout",
-        description: "Server response too slow. Please try again with better connection.",
-        variant: "destructive"
-      });
-    } else {
-      toast({
-        title: "Cannot reach server",
-        description: "Please check your internet connection and try again.",
-        variant: "destructive"
-      });
-    }
-    return false;
+    console.warn('Mobile connection test failed, but allowing upload:', error.message);
+    // Don't block upload based on connection test failure - mobile networks can be flaky
+    return true;
   }
 };
 
-// Enhanced network monitoring with better error messages
+// Enhanced mobile network monitoring
 export const monitorNetworkStatus = (callback: (isOnline: boolean) => void) => {
   const handleOnline = () => {
     callback(true);
@@ -109,62 +82,88 @@ export const monitorNetworkStatus = (callback: (isOnline: boolean) => void) => {
     callback(false);
     toast({
       title: "Connection lost",
-      description: "Your uploads will be paused until connection is restored",
+      description: "Your uploads will resume when connection is restored",
       variant: "destructive",
     });
   };
 
+  // Mobile-specific network change handling
+  const handleConnectionChange = () => {
+    const connection = (navigator as any).connection;
+    if (connection) {
+      console.log('Mobile connection changed:', connection.effectiveType);
+      
+      if (connection.effectiveType === 'slow-2g') {
+        toast({
+          title: "Slow connection detected",
+          description: "Uploads may take longer on this connection",
+          variant: "default"
+        });
+      }
+    }
+  };
+
   window.addEventListener('online', handleOnline);
   window.addEventListener('offline', handleOffline);
+  
+  // Listen for mobile network changes
+  const connection = (navigator as any).connection;
+  if (connection) {
+    connection.addEventListener('change', handleConnectionChange);
+  }
 
   return () => {
     window.removeEventListener('online', handleOnline);
     window.removeEventListener('offline', handleOffline);
+    if (connection) {
+      connection.removeEventListener('change', handleConnectionChange);
+    }
   };
 };
 
-// Retry mechanism for failed uploads with mobile-specific handling
-export const retryUploadWithFallback = async (uploadFn: () => Promise<any>, maxRetries = 3): Promise<any> => {
+// Mobile-optimized retry mechanism with shorter delays
+export const retryUploadWithFallback = async (uploadFn: () => Promise<any>, maxRetries = 5): Promise<any> => {
   let lastError: Error;
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      // Check connection before each retry
-      const connectionOk = await checkNetworkConnection();
-      if (!connectionOk && attempt > 1) {
-        throw new Error('Connection check failed');
-      }
+      console.log(`Mobile upload attempt ${attempt}/${maxRetries}`);
       
       const result = await uploadFn();
-      return result;
+      if (result) {
+        console.log(`Mobile upload succeeded on attempt ${attempt}`);
+        return result;
+      }
     } catch (error: any) {
       lastError = error;
-      console.error(`Upload attempt ${attempt} failed:`, error);
+      console.error(`Mobile upload attempt ${attempt} failed:`, error.message);
       
       // Don't retry for certain error types
       if (error.message?.includes('unauthorized') || 
           error.message?.includes('forbidden') ||
           error.message?.includes('invalid file type') ||
-          error.message?.includes('file too large') ||
-          error.message?.includes('Very slow connection') ||
-          error.message?.includes('Poor connection')) {
+          error.message?.includes('file too large')) {
         throw error;
       }
       
       if (attempt < maxRetries) {
-        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 8000);
-        console.log(`Retrying upload in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
+        // Shorter delays for mobile
+        const delay = Math.min(500 * attempt, 3000);
+        console.log(`Retrying mobile upload in ${delay}ms`);
         
-        toast({
-          title: `Upload failed (attempt ${attempt}/${maxRetries})`,
-          description: `Retrying in ${Math.ceil(delay / 1000)} seconds...`,
-          variant: "default"
-        });
+        if (attempt <= 2) {
+          toast({
+            title: `Upload attempt ${attempt} failed`,
+            description: `Retrying in ${Math.ceil(delay / 1000)} seconds...`,
+            variant: "default"
+          });
+        }
         
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
   }
   
+  console.error('All mobile upload attempts failed');
   throw lastError;
 };

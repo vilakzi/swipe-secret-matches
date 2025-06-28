@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { useVideoPlayer } from '@/hooks/useVideoPlayer';
 import { useSmartVideoControls } from '@/hooks/useSmartVideoControls';
 import EnhancedVideoPreview from './EnhancedVideoPreview';
 import VideoPlayerContainer from './VideoPlayerContainer';
-import VideoControlsOverlay from './VideoControlsOverlay';
+import VideoControls from './VideoControls';
 import VideoLoadingIndicator from './VideoLoadingIndicator';
 import VideoErrorDisplay from './VideoErrorDisplay';
 
@@ -12,7 +13,7 @@ interface ImprovedVideoPlayerProps {
   poster?: string;
   className?: string;
   autoPlay?: boolean;
-  controls?: boolean; // <-- Add controls prop
+  controls?: boolean;
 }
 
 const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
@@ -20,7 +21,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   poster,
   className = '',
   autoPlay = true,
-  controls = true // <-- Default to false for backward compatibility
+  controls = true
 }) => {
   const [showVideo, setShowVideo] = useState(autoPlay);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -54,7 +55,6 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   const handlePlayClick = async () => {
     if (!showVideo) {
       setShowVideo(true);
-      // Wait for video to be ready before playing
       setTimeout(() => togglePlay(), 100);
     } else {
       await togglePlay();
@@ -62,16 +62,13 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   };
 
   const handleScreenTap = (event?: React.MouseEvent | React.TouchEvent) => {
-    // Don't interfere with control button clicks
     if (event && (event.target as HTMLElement).closest('button')) {
       return;
     }
     
-    // Toggle play/pause when user taps the screen area
     if (showVideo && !isLoading) {
       togglePlay();
     }
-    // Also trigger the smart controls
     handleClick();
   };
 
@@ -82,17 +79,14 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     if (!isFullscreen) {
       if (container.requestFullscreen) {
         container.requestFullscreen();
-        setIsFullscreen(true);
       }
     } else {
       if (document.exitFullscreen) {
         document.exitFullscreen();
-        setIsFullscreen(false);
       }
     }
   };
 
-  // Sync video player state with smart controls
   useEffect(() => {
     if (isPlaying) {
       handleVideoPlay();
@@ -101,7 +95,6 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     }
   }, [isPlaying, handleVideoPlay, handleVideoPause]);
 
-  // Handle fullscreen changes
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
@@ -126,9 +119,6 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     );
   }
 
-  // Always show controls when not playing or when user is interacting
-  const controlsVisible = controls || !isPlaying || showControls || isLoading || isBuffering;
-
   return (
     <VideoPlayerContainer
       src={src}
@@ -147,18 +137,20 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
         showPoster={false}
       />
       
-      <VideoControlsOverlay
-        showControls={controlsVisible}
-        showVideo={showVideo}
+      <VideoControls
         isPlaying={isPlaying}
         isBuffering={isBuffering}
-        isMuted={isMuted}
-        volume={volume}
+        isLoading={isLoading}
         isFullscreen={isFullscreen}
-        onPlayClick={handlePlayClick}
-        onToggleMute={toggleMute}
+        showControls={showControls || !isPlaying}
+        showPoster={false}
+        videoError={error}
+        volume={volume}
+        isMuted={isMuted}
+        onPlay={handlePlayClick}
+        onFullscreen={toggleFullscreen}
         onVolumeChange={handleVolumeChange}
-        onToggleFullscreen={toggleFullscreen}
+        onMuteToggle={toggleMute}
       />
     </VideoPlayerContainer>
   );

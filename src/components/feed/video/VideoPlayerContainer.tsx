@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 interface VideoPlayerContainerProps {
@@ -35,7 +36,11 @@ const VideoPlayerContainer: React.FC<VideoPlayerContainerProps> = ({
 
   return (
     <div 
-      className={`relative w-full ${isFullscreen ? 'h-screen' : 'aspect-video'} bg-black rounded-lg overflow-hidden ${className}`}
+      className={`relative w-full ${
+        isFullscreen 
+          ? 'h-screen' 
+          : 'aspect-video h-72'
+      } bg-black rounded-lg overflow-hidden ${className}`}
       onMouseMove={onMouseMove}
       onTouchStart={onTouchStart}
       onClick={handleClick}
@@ -50,7 +55,7 @@ const VideoPlayerContainer: React.FC<VideoPlayerContainerProps> = ({
         muted={isMuted}
         preload="metadata"
         autoPlay
-        controls
+        loop
       />
       {children}
     </div>

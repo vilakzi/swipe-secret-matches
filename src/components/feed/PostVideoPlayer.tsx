@@ -1,3 +1,4 @@
+
 import ImprovedVideoPlayer from './video/ImprovedVideoPlayer';
 import { isVideo } from '@/utils/feed/mediaUtils';
 
@@ -8,7 +9,6 @@ interface PostVideoPlayerProps {
 }
 
 const PostVideoPlayer = ({ src, poster, className = '' }: PostVideoPlayerProps) => {
-  // Validate video source
   if (!src || src.trim() === '' || !isVideo(src)) {
     return (
       <div className={`bg-gray-800 flex items-center justify-center h-72 ${className}`}>
@@ -24,7 +24,8 @@ const PostVideoPlayer = ({ src, poster, className = '' }: PostVideoPlayerProps) 
       src={src}
       poster={poster}
       className={className}
-      controls // Ensure native video controls are enabled
+      autoPlay={true}
+      controls={true}
     />
   );
 };

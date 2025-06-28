@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import * as React from 'react';
+=======
+
+>>>>>>> 1c654a599d473aa6ca00fa703751f88c98cf9d32
 import AdminTileCarousel from './AdminTileCarousel';
 import { useAuth } from '@/contexts/AuthContext';
 import { useContentFeed } from '@/hooks/useContentFeed';
@@ -16,7 +20,12 @@ interface FeedContentProps {
   isSubscribed: boolean;
   onLike: (itemId: string, profileId: string) => void;
   onContact: (profile: Profile) => void;
+<<<<<<< HEAD
   onRefresh: () => void;
+=======
+  onRefresh?: () => void;
+  engagementTracker?: any;
+>>>>>>> 1c654a599d473aa6ca00fa703751f88c98cf9d32
 }
 
 const FeedContent = ({
@@ -25,7 +34,12 @@ const FeedContent = ({
   isSubscribed,
   onLike,
   onContact,
+<<<<<<< HEAD
   onRefresh
+=======
+  onRefresh,
+  engagementTracker
+>>>>>>> 1c654a599d473aa6ca00fa703751f88c98cf9d32
 }: FeedContentProps) => {
   const { contentFeedItems, handleContentLike, handleContentShare } = useContentFeed();
   const { user } = useAuth();
@@ -125,4 +139,37 @@ const FeedContent = ({
   );
 };
 
+<<<<<<< HEAD
 export default FeedContent;
+=======
+export default FeedContent;
+
+// Handles sharing a content item, e.g., by calling an API or updating state
+async function handleContentShare(contentId: string) {
+  try {
+    // Example: Call an API endpoint to share the content
+    await fetch(`/api/content/${contentId}/share`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    // Optionally, you could update local state or show a notification here
+  } catch (error) {
+    console.error('Failed to share content:', error);
+  }
+}
+
+// Handles liking a content item, e.g., by calling an API or updating state
+async function handleContentLike(contentId: string, profileId: string) {
+  try {
+    // Example: Call an API endpoint to like the content
+    await fetch(`/api/content/${contentId}/like`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ profileId }),
+    });
+    // Optionally, you could update local state or show a notification here
+  } catch (error) {
+    console.error('Failed to like content:', error);
+  }
+}
+>>>>>>> 1c654a599d473aa6ca00fa703751f88c98cf9d32
