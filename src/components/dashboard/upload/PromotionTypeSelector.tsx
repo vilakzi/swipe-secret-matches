@@ -9,7 +9,7 @@ interface PromotionTypeSelectorProps {
   onPromotionTypeChange: (type: PromotionType) => void;
 }
 
-const PromotionTypeSelector = ({ promotionType, onPromotionTypeChange }: PromotionTypeSelectorProps) => {
+const PromotionTypeSelector: React.FC<PromotionTypeSelectorProps> = ({ promotionType, onPromotionTypeChange }) => {
   return (
     <div>
       <label className="block text-sm font-medium text-gray-300 mb-2">
