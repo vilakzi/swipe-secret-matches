@@ -1,3 +1,4 @@
+
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from "@/hooks/useUserRole";
 import { getMaxUploadSize } from "@/utils/getMaxUploadSize";
@@ -53,12 +54,11 @@ export const useFileUpload = (onRefresh?: () => void) => {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/mobile_${type}_${Date.now()}.${fileExt}`;
       
-      // Mobile-optimized upload to Supabase Storage
+      // Mobile-optimized upload to Supabase Storage (removed RequestDuplex)
       const uploadOptions = {
         cacheControl: '3600',
         upsert: false,
         contentType: file.type,
-        duplex: 'half' as RequestDuplex
       };
 
       const { data, error: uploadError } = await supabase.storage

@@ -77,12 +77,11 @@ export const uploadFileToStorage = async (
 
     console.log('Attempting mobile-optimized upload to Supabase storage...');
     
-    // Mobile-specific upload with smaller chunk size
+    // Mobile-specific upload options (removed RequestDuplex)
     const uploadOptions = {
       cacheControl: '3600',
       upsert: false,
       contentType: file.type,
-      duplex: 'half' as RequestDuplex, // Mobile optimization
     };
 
     const { data, error } = await supabase.storage
