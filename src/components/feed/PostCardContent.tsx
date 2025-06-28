@@ -26,13 +26,13 @@ const PostCardContent = ({
       {isVideoPost ? (
         <PostVideoPlayer
           src={postImage}
-          className="w-full"
+          className="w-full rounded-lg"
         />
       ) : (
         <OptimizedImage
           src={postImage}
           alt={`Post image from ${profileName}`}
-          className="w-full h-72 hover:opacity-95 transition-opacity"
+          className="w-full h-80 md:h-96 hover:opacity-95 transition-opacity rounded-lg object-cover"
           onClick={onPostImageClick}
           expandable
           loading="lazy"

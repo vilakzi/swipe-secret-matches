@@ -1,6 +1,6 @@
 
 import React, { useMemo, useState, useRef, useCallback } from 'react';
-import VideoControls from './VideoControls'; // Assuming this component exists
+import VideoControls from './VideoControls';
 
 interface ImprovedVideoPlayerProps {
   src: string;
@@ -31,9 +31,9 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
   const [showControls, setShowControls] = useState(true);
-  const [error, setError] = useState&lt;string | null&gt;(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const videoRef = useRef&lt;HTMLVideoElement&gt;(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const togglePlay = useCallback(() => {
     if (videoRef.current) {
@@ -77,7 +77,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   }, [isFullscreen]);
 
   const memoizedVideoControls = useMemo(() => (
-    &lt;VideoControls
+    <VideoControls
       isPlaying={isPlaying}
       isBuffering={isBuffering}
       isLoading={isLoading}
@@ -87,7 +87,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
       volume={volume}
       isMuted={volume === 0}
       showControls={showControls || !isPlaying}
-      showPoster={!isPlaying &amp;&amp; currentTime === 0}
+      showPoster={!isPlaying && currentTime === 0}
       videoError={error}
       onPlay={togglePlay}
       onPlayPause={togglePlay}
@@ -95,7 +95,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
       onVolumeChange={handleVolumeChangeWrapper}
       onMuteToggle={handleToggleMute}
       onFullscreen={toggleFullscreen}
-    /&gt;
+    />
   ), [
     isPlaying,
     isBuffering,
@@ -114,8 +114,8 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   ]);
 
   return (
-    &lt;div className={`relative ${className}`}&gt;
-      &lt;video
+    <div className={`relative rounded-lg overflow-hidden ${className}`}>
+      <video
         ref={videoRef}
         src={src}
         poster={poster}
@@ -124,10 +124,10 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
         loop={loop}
         muted={muted}
         playsInline={playsInline}
-        className=&quot;w-full h-full&quot;
-      /&gt;
+        className="w-full h-full object-cover rounded-lg"
+      />
       {memoizedVideoControls}
-    &lt;/div&gt;
+    </div>
   );
 };
 
