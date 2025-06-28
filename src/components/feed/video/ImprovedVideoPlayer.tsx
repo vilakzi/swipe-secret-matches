@@ -1,5 +1,5 @@
 
-import React, { useMemo, useState, useRef, useCallback } from 'react';
+import React, { useMemo, useState, useRef, useCallback, useEffect } from 'react';
 import VideoControls from './VideoControls';
 
 interface ImprovedVideoPlayerProps {
@@ -32,8 +32,98 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   const [volume, setVolume] = useState(1);
   const [showControls, setShowControls] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userInteracted, setUserInteracted] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
+  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Auto-hide controls when playing
+  const resetControlsTimeout = useCallback(() => {
+    if (controlsTimeoutRef.current) {
+      clearTimeout(controlsTimeoutRef.current);
+    }
+    
+    setShowControls(true);
+    
+    if (isPlaying) {
+      controlsTimeoutRef.current = setTimeout(() => {
+        setShowControls(false);
+      }, 3000);
+    }
+  }, [isPlaying]);
+
+  const handleVideoEvents = useCallback(() => {
+    if (videoRef.current) {
+      const video = videoRef.current;
+      
+      const handleLoadedMetadata = () => {
+        setDuration(video.duration);
+        setIsLoading(false);
+      };
+      
+      const handleTimeUpdate = () => {
+        setCurrentTime(video.currentTime);
+      };
+      
+      const handlePlay = () => {
+        setIsPlaying(true);
+        setIsBuffering(false);
+        resetControlsTimeout();
+      };
+      
+      const handlePause = () => {
+        setIsPlaying(false);
+        setShowControls(true);
+        if (controlsTimeoutRef.current) {
+          clearTimeout(controlsTimeoutRef.current);
+        }
+      };
+      
+      const handleWaiting = () => {
+        setIsBuffering(true);
+      };
+      
+      const handleCanPlay = () => {
+        setIsBuffering(false);
+      };
+      
+      const handleError = () => {
+        setError('Video failed to load');
+        setIsLoading(false);
+      };
+
+      video.addEventListener('loadedmetadata', handleLoadedMetadata);
+      video.addEventListener('timeupdate', handleTimeUpdate);
+      video.addEventListener('play', handlePlay);
+      video.addEventListener('pause', handlePause);
+      video.addEventListener('waiting', handleWaiting);
+      video.addEventListener('canplay', handleCanPlay);
+      video.addEventListener('error', handleError);
+
+      return () => {
+        video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+        video.removeEventListener('timeupdate', handleTimeUpdate);
+        video.removeEventListener('play', handlePlay);
+        video.removeEventListener('pause', handlePause);
+        video.removeEventListener('waiting', handleWaiting);
+        video.removeEventListener('canplay', handleCanPlay);
+        video.removeEventListener('error', handleError);
+      };
+    }
+  }, [resetControlsTimeout]);
+
+  useEffect(() => {
+    const cleanup = handleVideoEvents();
+    return cleanup;
+  }, [handleVideoEvents]);
+
+  useEffect(() => {
+    return () => {
+      if (controlsTimeoutRef.current) {
+        clearTimeout(controlsTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const togglePlay = useCallback(() => {
     if (videoRef.current) {
@@ -42,7 +132,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
       } else {
         videoRef.current.play();
       }
-      setIsPlaying(!isPlaying);
+      setUserInteracted(true);
     }
   }, [isPlaying]);
 
@@ -50,6 +140,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     if (videoRef.current) {
       videoRef.current.currentTime = time;
       setCurrentTime(time);
+      setUserInteracted(true);
     }
   }, []);
 
@@ -57,6 +148,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     if (videoRef.current) {
       videoRef.current.volume = newVolume;
       setVolume(newVolume);
+      setUserInteracted(true);
     }
   }, []);
 
@@ -64,6 +156,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     if (videoRef.current) {
       videoRef.current.muted = !videoRef.current.muted;
       setVolume(videoRef.current.muted ? 0 : 1);
+      setUserInteracted(true);
     }
   }, []);
 
@@ -74,7 +167,16 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
       document.exitFullscreen();
     }
     setIsFullscreen(!isFullscreen);
+    setUserInteracted(true);
   }, [isFullscreen]);
+
+  const handleMouseMove = useCallback(() => {
+    resetControlsTimeout();
+  }, [resetControlsTimeout]);
+
+  const handleClick = useCallback(() => {
+    resetControlsTimeout();
+  }, [resetControlsTimeout]);
 
   const memoizedVideoControls = useMemo(() => (
     <VideoControls
@@ -85,8 +187,8 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
       currentTime={currentTime}
       duration={duration}
       volume={volume}
-      isMuted={volume === 0}
-      showControls={showControls || !isPlaying}
+      isMuted={videoRef.current?.muted || volume === 0}
+      showControls={showControls}
       showPoster={!isPlaying && currentTime === 0}
       videoError={error}
       onPlay={togglePlay}
@@ -114,19 +216,23 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   ]);
 
   return (
-    <div className={`relative rounded-lg overflow-hidden ${className}`}>
+    <div 
+      className={`relative rounded-lg overflow-hidden ${className}`}
+      onMouseMove={handleMouseMove}
+      onClick={handleClick}
+    >
       <video
         ref={videoRef}
         src={src}
         poster={poster}
         autoPlay={autoPlay}
-        controls={controls}
+        controls={false}
         loop={loop}
         muted={muted}
         playsInline={playsInline}
         className="w-full h-full object-cover rounded-lg"
       />
-      {memoizedVideoControls}
+      {controls && memoizedVideoControls}
     </div>
   );
 };

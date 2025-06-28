@@ -32,7 +32,7 @@ const PostCardContent = ({
         <OptimizedImage
           src={postImage}
           alt={`Post image from ${profileName}`}
-          className="w-full h-80 md:h-96 hover:opacity-95 transition-opacity rounded-lg object-cover"
+          className="w-full h-96 md:h-[450px] hover:opacity-95 transition-opacity rounded-lg object-cover"
           onClick={onPostImageClick}
           expandable
           loading="lazy"

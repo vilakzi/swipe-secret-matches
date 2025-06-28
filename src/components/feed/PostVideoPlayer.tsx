@@ -16,7 +16,7 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, poster, classNam
 
   if (!src || src.trim() === '' || !isVideo(src)) {
     return (
-      <div className={`bg-gray-800 flex items-center justify-center h-80 ${className}`}>
+      <div className={`bg-gray-800 flex items-center justify-center h-96 ${className}`}>
         <div className="text-center text-gray-400">
           <div className="text-sm">No video available</div>
         </div>
@@ -29,11 +29,11 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, poster, classNam
   };
 
   return (
-    <div className={`relative ${isExpanded ? 'fixed inset-4 z-50 bg-black rounded-lg' : ''}`}>
+    <div className={`relative ${isExpanded ? 'fixed inset-6 z-50 bg-black/90 rounded-lg backdrop-blur-sm' : ''}`}>
       <ImprovedVideoPlayer
         src={src}
         poster={poster}
-        className={`w-full ${isExpanded ? 'h-full max-h-[80vh]' : 'h-80 md:h-96'} object-contain ${className}`}
+        className={`w-full ${isExpanded ? 'h-full max-h-[85vh] max-w-[90vw] mx-auto' : 'h-96 md:h-[450px]'} object-contain ${className}`}
         autoPlay={false}
         controls={true}
         loop={true}
@@ -41,12 +41,19 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, poster, classNam
         playsInline={true}
       />
       <Button
-        className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white border-none z-10"
+        className="absolute top-4 right-4 bg-black/60 hover:bg-black/80 text-white border-white/20 z-20"
         size="sm"
         onClick={toggleExpand}
       >
         {isExpanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
       </Button>
+      
+      {isExpanded && (
+        <div 
+          className="absolute inset-0 bg-black/50 -z-10"
+          onClick={toggleExpand}
+        />
+      )}
     </div>
   );
 };
