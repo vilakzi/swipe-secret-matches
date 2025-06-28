@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useVideoPlayer } from '@/hooks/useVideoPlayer';
 import { useSmartVideoControls } from '@/hooks/useSmartVideoControls';
