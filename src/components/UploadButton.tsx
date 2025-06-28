@@ -1,27 +1,45 @@
 import React, { useState } from 'react';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, Upload, Check, X } from 'lucide-react';
+import { AlertCircle, Upload } from 'lucide-react';
 
 interface UploadButtonProps {
-  onUpload: (file: File) => Promise&lt;boolean&gt;;
+  onUpload: (file: File) => Promise<boolean>;
+  acceptedFileTypes?: string;
+  maxFileSize?: number; // in bytes
 }
 
-export const UploadButton: React.FC&lt;UploadButtonProps&gt; = ({ onUpload }) =&gt; {
+export const UploadButton: React.FC<UploadButtonProps> = ({ 
+  onUpload, 
+  acceptedFileTypes = 'image/*,video/*', 
+  maxFileSize = 10 * 1024 * 1024 // 10MB default
+}) => {
   const isOnline = useNetworkStatus();
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadStatus, setUploadStatus] = useState&lt;'idle' | 'success' | 'error'&gt;('idle');
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleFileChange = async (event: React.ChangeEvent&lt;HTMLInputElement&gt;) =&gt; {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      if (file.size > maxFileSize) {
+        setErrorMessage(`File size exceeds the limit of ${maxFileSize / (1024 * 1024)}MB`);
+        return;
+      }
+
       setIsUploading(true);
       setUploadStatus('idle');
+      setErrorMessage(null);
+
       try {
         const success = await onUpload(file);
         setUploadStatus(success ? 'success' : 'error');
+        if (!success) {
+          setErrorMessage('Upload failed. Please try again.');
+        }
       } catch (error) {
         setUploadStatus('error');
+        setErrorMessage('An unexpected error occurred. Please try again.');
       } finally {
         setIsUploading(false);
       }
@@ -29,46 +47,40 @@ export const UploadButton: React.FC&lt;UploadButtonProps&gt; = ({ onUpload }) =&
   };
 
   return (
-    &lt;div className="flex flex-col items-center space-y-4"&gt;
-      &lt;input
+    <div className="flex flex-col items-center space-y-4">
+      <input
         type="file"
         onChange={handleFileChange}
         className="hidden"
         id="upload-input"
         disabled={!isOnline || isUploading}
-      /&gt;
-      &lt;label htmlFor="upload-input"&gt;
-        &lt;Button disabled={!isOnline || isUploading} variant="outline"&gt;
+        accept={acceptedFileTypes}
+      />
+      <label htmlFor="upload-input">
+        <Button disabled={!isOnline || isUploading} variant="outline">
           {isUploading ? (
-            &lt;Upload className="mr-2 h-4 w-4 animate-spin" /&gt;
+            <Upload className="mr-2 h-4 w-4 animate-spin" />
           ) : (
-            &lt;Upload className="mr-2 h-4 w-4" /&gt;
+            <Upload className="mr-2 h-4 w-4" />
           )}
           {isOnline
             ? isUploading
               ? 'Uploading...'
               : 'Upload File'
             : 'Offline - Cannot Upload'}
-        &lt;/Button&gt;
-      &lt;/label&gt;
-      {!isOnline &amp;&amp; (
-        &lt;div className="flex items-center text-yellow-500"&gt;
-          &lt;AlertCircle className="mr-2" size={16} /&gt;
-          &lt;p className="text-sm"&gt;You are currently offline. Please check your internet connection.&lt;/p&gt;
-        &lt;/div&gt;
+        </Button>
+      </label>
+      {errorMessage && (
+        <div className="text-red-500 flex items-center">
+          <AlertCircle className="mr-2 h-4 w-4" />
+          {errorMessage}
+        </div>
       )}
-      {uploadStatus === 'success' &amp;&amp; (
-        &lt;div className="flex items-center text-green-500"&gt;
-          &lt;Check className="mr-2" size={16} /&gt;
-          &lt;p className="text-sm"&gt;File uploaded successfully!&lt;/p&gt;
-        &lt;/div&gt;
+      {uploadStatus === 'success' && (
+        <div className="text-green-500">Upload successful!</div>
       )}
-      {uploadStatus === 'error' &amp;&amp; (
-        &lt;div className="flex items-center text-red-500"&gt;
-          &lt;X className="mr-2" size={16} /&gt;
-          &lt;p className="text-sm"&gt;Error uploading file. Please try again.&lt;/p&gt;
-        &lt;/div&gt;
-      )}
-    &lt;/div&gt;
+    </div>
   );
 };
+
+export default UploadButton;
