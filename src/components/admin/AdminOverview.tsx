@@ -45,7 +45,7 @@ const AdminOverview = () => {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-      // Run all queries in parallel
+      // Run all queries in parallel with error handling
       const [
         usersRes,
         subscribersRes,
@@ -54,7 +54,7 @@ const AdminOverview = () => {
         activeUsersRes,
         revenueRes,
         matchesRes
-      ] = await Promise.all([
+      ] = await Promise.allSettled([
         supabase.from('profiles').select('*', { count: 'exact', head: true }),
         supabase.from('subscribers').select('*', { count: 'exact', head: true }).eq('subscribed', true),
         supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('user_type', 'service_provider'),
@@ -64,27 +64,74 @@ const AdminOverview = () => {
         supabase.from('matches').select('*', { count: 'exact', head: true })
       ]);
 
-      // Check for errors
-      if (
-        usersRes.error || subscribersRes.error || providersRes.error ||
-        postsRes.error || activeUsersRes.error || revenueRes.error || matchesRes.error
-      ) {
-        throw new Error('Failed to fetch one or more stats');
-      }
+      // Extract results with error handling
+      const getUserCount = () => {
+        if (usersRes.status === 'fulfilled' && !usersRes.value.error) {
+          return usersRes.value.count || 0;
+        }
+        console.error('Users query failed:', usersRes.status === 'rejected' ? usersRes.reason : usersRes.value.error);
+        return 0;
+      };
 
-      const totalRevenue = (revenueRes.data || []).reduce(
-        (sum: number, payment: { amount: number }) => sum + (Number(payment.amount) || 0),
-        0
-      );
+      const getSubscriberCount = () => {
+        if (subscribersRes.status === 'fulfilled' && !subscribersRes.value.error) {
+          return subscribersRes.value.count || 0;
+        }
+        console.error('Subscribers query failed:', subscribersRes.status === 'rejected' ? subscribersRes.reason : subscribersRes.value.error);
+        return 0;
+      };
+
+      const getProviderCount = () => {
+        if (providersRes.status === 'fulfilled' && !providersRes.value.error) {
+          return providersRes.value.count || 0;
+        }
+        console.error('Providers query failed:', providersRes.status === 'rejected' ? providersRes.reason : providersRes.value.error);
+        return 0;
+      };
+
+      const getPostCount = () => {
+        if (postsRes.status === 'fulfilled' && !postsRes.value.error) {
+          return postsRes.value.count || 0;
+        }
+        console.error('Posts query failed:', postsRes.status === 'rejected' ? postsRes.reason : postsRes.value.error);
+        return 0;
+      };
+
+      const getActiveUserCount = () => {
+        if (activeUsersRes.status === 'fulfilled' && !activeUsersRes.value.error) {
+          return activeUsersRes.value.count || 0;
+        }
+        console.error('Active users query failed:', activeUsersRes.status === 'rejected' ? activeUsersRes.reason : activeUsersRes.value.error);
+        return 0;
+      };
+
+      const getTotalRevenue = () => {
+        if (revenueRes.status === 'fulfilled' && !revenueRes.value.error) {
+          return (revenueRes.value.data || []).reduce(
+            (sum: number, payment: { amount: number }) => sum + (Number(payment.amount) || 0),
+            0
+          );
+        }
+        console.error('Revenue query failed:', revenueRes.status === 'rejected' ? revenueRes.reason : revenueRes.value.error);
+        return 0;
+      };
+
+      const getMatchCount = () => {
+        if (matchesRes.status === 'fulfilled' && !matchesRes.value.error) {
+          return matchesRes.value.count || 0;
+        }
+        console.error('Matches query failed:', matchesRes.status === 'rejected' ? matchesRes.reason : matchesRes.value.error);
+        return 0;
+      };
 
       setStats({
-        totalUsers: usersRes.count || 0,
-        totalSubscribers: subscribersRes.count || 0,
-        totalServiceProviders: providersRes.count || 0,
-        totalPosts: postsRes.count || 0,
-        activeUsers7d: activeUsersRes.count || 0,
-        totalRevenue,
-        totalMatches: matchesRes.count || 0
+        totalUsers: getUserCount(),
+        totalSubscribers: getSubscriberCount(),
+        totalServiceProviders: getProviderCount(),
+        totalPosts: getPostCount(),
+        activeUsers7d: getActiveUserCount(),
+        totalRevenue: getTotalRevenue(),
+        totalMatches: getMatchCount()
       });
     } catch (error) {
       console.error('Error fetching overview stats:', error);

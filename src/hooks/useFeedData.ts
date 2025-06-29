@@ -26,8 +26,8 @@ export const useFeedData = (itemsPerPage: number = 8) => {
   console.log("📱 Data status:", {
     profilesLoading,
     newJoinersLoading,
-    profilesCount: realProfiles.length,
-    postsCount: posts.length,
+    profilesCount: realProfiles?.length || 0,
+    postsCount: posts?.length || 0,
     shuffleKey,
     userExists: !!user
   });
@@ -36,23 +36,24 @@ export const useFeedData = (itemsPerPage: number = 8) => {
   const engagementTracker = useEngagementTracking();
 
   const allProfiles = useMemo(() => {
-    console.log(`📱 Total profiles: ${realProfiles.length} (all real accounts)`);
-    return realProfiles;
+    const profiles = realProfiles || [];
+    console.log(`📱 Total profiles: ${profiles.length} (all real accounts)`);
+    return profiles;
   }, [realProfiles]);
 
   // Apply role-based filtering with posts data
-  const roleFilteredProfiles = useFilteredFeedData(allProfiles, newJoiners, posts);
-  const filteredProfiles = roleFilteredProfiles;
+  const roleFilteredProfiles = useFilteredFeedData(allProfiles, newJoiners || [], posts || []);
+  const filteredProfiles = roleFilteredProfiles || [];
 
   // Create all feed items with improved error handling
   const rawFeedItems = useFeedItemCreation({
     filteredProfiles,
-    posts,
+    posts: posts || [],
     shuffleKey,
     userId: user?.id
   });
 
-  console.log("📱 Raw feed items created:", rawFeedItems.length);
+  console.log("📱 Raw feed items created:", rawFeedItems?.length || 0);
 
   // Apply dynamic algorithm for intelligent content ranking
   const {
@@ -61,14 +62,14 @@ export const useFeedData = (itemsPerPage: number = 8) => {
     manualRefresh: refreshAlgorithm,
     refreshCount
   } = useDynamicFeedAlgorithm({
-    rawFeedItems,
+    rawFeedItems: rawFeedItems || [],
     enabled: true,
     autoRefreshInterval: 300000, // 5 minutes
     maxItemsPerLoad: itemsPerPage * 4
   });
 
   console.log("📱 Algorithmic feed processed:", {
-    itemCount: algorithmicFeed.length,
+    itemCount: algorithmicFeed?.length || 0,
     isProcessing: algorithmProcessing,
     refreshCount
   });
@@ -80,12 +81,12 @@ export const useFeedData = (itemsPerPage: number = 8) => {
     isLoadingMore: paginationLoading,
     handleLoadMore,
     resetPagination
-  } = useFeedPagination(algorithmicFeed, itemsPerPage);
+  } = useFeedPagination(algorithmicFeed || [], itemsPerPage);
 
   const isLoadingMore = paginationLoading || profilesLoading || newJoinersLoading;
 
   console.log("📱 Final display status:", {
-    displayedItemsCount: displayedItems.length,
+    displayedItemsCount: displayedItems?.length || 0,
     hasMoreItems,
     isLoadingMore
   });
@@ -95,13 +96,18 @@ export const useFeedData = (itemsPerPage: number = 8) => {
     try {
       console.log('📱 Refreshing feed with dynamic algorithm (refresh #' + (refreshCount + 1) + ')');
       resetPagination();
-      refetchPosts();
+      
+      if (refetchPosts) {
+        refetchPosts();
+      }
       
       // Generate new shuffle key for fresh algorithm results
       setShuffleKey(prev => prev + Math.floor(Math.random() * 1000));
       
       // Trigger algorithm refresh
-      refreshAlgorithm();
+      if (refreshAlgorithm) {
+        refreshAlgorithm();
+      }
       
       // Clear old engagement data safely
       if (engagementTracker?.clearOldEngagementData) {
@@ -113,8 +119,8 @@ export const useFeedData = (itemsPerPage: number = 8) => {
   }, [resetPagination, refetchPosts, refreshAlgorithm, engagementTracker, refreshCount]);
 
   return {
-    displayedItems,
-    hasMoreItems,
+    displayedItems: displayedItems || [],
+    hasMoreItems: hasMoreItems || false,
     isLoadingMore,
     handleLoadMore,
     handleRefresh,

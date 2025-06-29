@@ -16,7 +16,7 @@ interface ImprovedVideoPlayerProps {
 const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   src,
   poster,
-  className,
+  className = '',
   autoPlay = false,
   controls = true,
   loop = false,
@@ -57,37 +57,61 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     if (!video) return;
     
     const handleLoadedMetadata = () => {
-      setDuration(video.duration || 0);
-      setIsLoading(false);
-      setError(null);
+      try {
+        setDuration(video.duration || 0);
+        setIsLoading(false);
+        setError(null);
+      } catch (err) {
+        console.error('Error handling loadedmetadata:', err);
+      }
     };
     
     const handleTimeUpdate = () => {
-      setCurrentTime(video.currentTime || 0);
+      try {
+        setCurrentTime(video.currentTime || 0);
+      } catch (err) {
+        console.error('Error handling timeupdate:', err);
+      }
     };
     
     const handlePlay = () => {
-      setIsPlaying(true);
-      setIsBuffering(false);
-      setError(null);
-      resetControlsTimeout();
+      try {
+        setIsPlaying(true);
+        setIsBuffering(false);
+        setError(null);
+        resetControlsTimeout();
+      } catch (err) {
+        console.error('Error handling play:', err);
+      }
     };
     
     const handlePause = () => {
-      setIsPlaying(false);
-      setShowControls(true);
-      if (controlsTimeoutRef.current) {
-        clearTimeout(controlsTimeoutRef.current);
+      try {
+        setIsPlaying(false);
+        setShowControls(true);
+        if (controlsTimeoutRef.current) {
+          clearTimeout(controlsTimeoutRef.current);
+        }
+      } catch (err) {
+        console.error('Error handling pause:', err);
       }
     };
     
     const handleWaiting = () => {
-      setIsBuffering(true);
+      try {
+        setIsBuffering(true);
+      } catch (err) {
+        console.error('Error handling waiting:', err);
+      }
     };
     
     const handleCanPlay = () => {
-      setIsBuffering(false);
-      setError(null);
+      try {
+        setIsBuffering(false);
+        setError(null);
+      } catch (err) {
+        console.error('Error handling canplay:', err);
+      }
     };
     
     const handleError = (e: Event) => {
@@ -97,24 +121,33 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
       setIsBuffering(false);
     };
 
-    // Add all event listeners
-    video.addEventListener('loadedmetadata', handleLoadedMetadata);
-    video.addEventListener('timeupdate', handleTimeUpdate);
-    video.addEventListener('play', handlePlay);
-    video.addEventListener('pause', handlePause);
-    video.addEventListener('waiting', handleWaiting);
-    video.addEventListener('canplay', handleCanPlay);
-    video.addEventListener('error', handleError);
+    // Add all event listeners with error handling
+    try {
+      video.addEventListener('loadedmetadata', handleLoadedMetadata);
+      video.addEventListener('timeupdate', handleTimeUpdate);
+      video.addEventListener('play', handlePlay);
+      video.addEventListener('pause', handlePause);
+      video.addEventListener('waiting', handleWaiting);
+      video.addEventListener('canplay', handleCanPlay);
+      video.addEventListener('error', handleError);
 
-    return () => {
-      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      video.removeEventListener('timeupdate', handleTimeUpdate);
-      video.removeEventListener('play', handlePlay);
-      video.removeEventListener('pause', handlePause);
-      video.removeEventListener('waiting', handleWaiting);
-      video.removeEventListener('canplay', handleCanPlay);
-      video.removeEventListener('error', handleError);
-    };
+      return () => {
+        try {
+          video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+          video.removeEventListener('timeupdate', handleTimeUpdate);
+          video.removeEventListener('play', handlePlay);
+          video.removeEventListener('pause', handlePause);
+          video.removeEventListener('waiting', handleWaiting);
+          video.removeEventListener('canplay', handleCanPlay);
+          video.removeEventListener('error', handleError);
+        } catch (err) {
+          console.error('Error removing event listeners:', err);
+        }
+      };
+    } catch (err) {
+      console.error('Error adding event listeners:', err);
+      return () => {};
+    }
   }, [resetControlsTimeout]);
 
   useEffect(() => {
@@ -136,7 +169,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
 
     try {
       if (isPlaying) {
-        video.pause();
+        await video.pause();
       } else {
         await video.play();
       }
@@ -151,8 +184,9 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     if (!video) return;
 
     try {
-      video.currentTime = Math.max(0, Math.min(time, video.duration || 0));
-      setCurrentTime(time);
+      const seekTime = Math.max(0, Math.min(time, video.duration || 0));
+      video.currentTime = seekTime;
+      setCurrentTime(seekTime);
     } catch (err) {
       console.error('Seek error:', err);
     }
@@ -198,48 +232,78 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   }, []);
 
   const handleMouseMove = useCallback(() => {
-    resetControlsTimeout();
+    try {
+      resetControlsTimeout();
+    } catch (err) {
+      console.error('Mouse move error:', err);
+    }
   }, [resetControlsTimeout]);
 
   const handleClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    resetControlsTimeout();
+    try {
+      e.stopPropagation();
+      resetControlsTimeout();
+    } catch (err) {
+      console.error('Click error:', err);
+    }
   }, [resetControlsTimeout]);
 
   // Prevent touch events from bubbling to parent card
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    e.stopPropagation();
+    try {
+      e.stopPropagation();
+    } catch (err) {
+      console.error('Touch start error:', err);
+    }
   }, []);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    e.stopPropagation();
+    try {
+      e.stopPropagation();
+    } catch (err) {
+      console.error('Touch move error:', err);
+    }
   }, []);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    e.stopPropagation();
+    try {
+      e.stopPropagation();
+    } catch (err) {
+      console.error('Touch end error:', err);
+    }
   }, []);
 
-  const memoizedVideoControls = useMemo(() => (
-    <VideoControls
-      isPlaying={isPlaying}
-      isBuffering={isBuffering}
-      isLoading={isLoading}
-      isFullscreen={isFullscreen}
-      currentTime={currentTime}
-      duration={duration}
-      volume={volume}
-      isMuted={videoRef.current?.muted || volume === 0}
-      showControls={showControls}
-      showPoster={!isPlaying && currentTime === 0}
-      videoError={error}
-      onPlay={togglePlay}
-      onPlayPause={togglePlay}
-      onSeek={handleSeek}
-      onVolumeChange={handleVolumeChangeWrapper}
-      onMuteToggle={handleToggleMute}
-      onFullscreen={toggleFullscreen}
-    />
-  ), [
+  const memoizedVideoControls = useMemo(() => {
+    if (!controls) return null;
+    
+    try {
+      return (
+        <VideoControls
+          isPlaying={isPlaying}
+          isBuffering={isBuffering}
+          isLoading={isLoading}
+          isFullscreen={isFullscreen}
+          currentTime={currentTime}
+          duration={duration}
+          volume={volume}
+          isMuted={videoRef.current?.muted || volume === 0}
+          showControls={showControls}
+          showPoster={!isPlaying && currentTime === 0}
+          videoError={error}
+          onPlay={togglePlay}
+          onPlayPause={togglePlay}
+          onSeek={handleSeek}
+          onVolumeChange={handleVolumeChangeWrapper}
+          onMuteToggle={handleToggleMute}
+          onFullscreen={toggleFullscreen}
+        />
+      );
+    } catch (err) {
+      console.error('Error creating video controls:', err);
+      return null;
+    }
+  }, [
+    controls,
     isPlaying,
     isBuffering,
     isLoading,
@@ -256,9 +320,9 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     toggleFullscreen
   ]);
 
-  if (!src || src.trim() === '') {
+  if (!src || typeof src !== 'string' || src.trim() === '') {
     return (
-      <div className={`bg-gray-800 flex items-center justify-center h-96 ${className}`}>
+      <div className={`bg-gray-800 flex items-center justify-center h-96 rounded-lg ${className}`}>
         <div className="text-center text-gray-400">
           <div className="text-sm">No video source provided</div>
         </div>
@@ -290,7 +354,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
         onTouchEnd={handleTouchEnd}
         preload="metadata"
       />
-      {controls && memoizedVideoControls}
+      {memoizedVideoControls}
     </div>
   );
 };
