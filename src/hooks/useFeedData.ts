@@ -17,7 +17,7 @@ export const useFeedData = (itemsPerPage: number = 8) => {
   const { user } = useAuth() || {};
   const [shuffleKey, setShuffleKey] = useState(0);
 
-  console.debug("📱 useFeedData - user value:", user?.id || 'no user');
+  console.debug("📱 useFeedData - user:", user?.id || 'no user');
 
   const { realProfiles, loading: profilesLoading } = useRealProfiles();
   const { newJoiners, loading: newJoinersLoading } = useNewJoiners();
@@ -32,7 +32,7 @@ export const useFeedData = (itemsPerPage: number = 8) => {
     userExists: !!user
   });
 
-  // Engagement tracking
+  // Engagement tracking with error handling
   const engagementTracker = useEngagementTracking();
 
   const allProfiles = useMemo(() => {
@@ -44,7 +44,7 @@ export const useFeedData = (itemsPerPage: number = 8) => {
   const roleFilteredProfiles = useFilteredFeedData(allProfiles, newJoiners, posts);
   const filteredProfiles = roleFilteredProfiles;
 
-  // Create all feed items with fixed duplication algorithm
+  // Create all feed items with improved error handling
   const rawFeedItems = useFeedItemCreation({
     filteredProfiles,
     posts,
@@ -64,7 +64,7 @@ export const useFeedData = (itemsPerPage: number = 8) => {
     rawFeedItems,
     enabled: true,
     autoRefreshInterval: 300000, // 5 minutes
-    maxItemsPerLoad: itemsPerPage * 4 // More items for better algorithm performance
+    maxItemsPerLoad: itemsPerPage * 4
   });
 
   console.log("📱 Algorithmic feed processed:", {
@@ -90,20 +90,26 @@ export const useFeedData = (itemsPerPage: number = 8) => {
     isLoadingMore
   });
 
-  // Enhanced refresh with algorithm reset
+  // Enhanced refresh with algorithm reset and error handling
   const handleRefresh = useCallback(() => {
-    console.log('📱 Refreshing feed with dynamic algorithm (refresh #' + (refreshCount + 1) + ')');
-    resetPagination();
-    refetchPosts();
-    
-    // Generate new shuffle key for fresh algorithm results
-    setShuffleKey(prev => prev + Math.floor(Math.random() * 1000));
-    
-    // Trigger algorithm refresh
-    refreshAlgorithm();
-    
-    // Clear old engagement data
-    engagementTracker.clearOldEngagementData();
+    try {
+      console.log('📱 Refreshing feed with dynamic algorithm (refresh #' + (refreshCount + 1) + ')');
+      resetPagination();
+      refetchPosts();
+      
+      // Generate new shuffle key for fresh algorithm results
+      setShuffleKey(prev => prev + Math.floor(Math.random() * 1000));
+      
+      // Trigger algorithm refresh
+      refreshAlgorithm();
+      
+      // Clear old engagement data safely
+      if (engagementTracker?.clearOldEngagementData) {
+        engagementTracker.clearOldEngagementData();
+      }
+    } catch (error) {
+      console.error('Error refreshing feed:', error);
+    }
   }, [resetPagination, refetchPosts, refreshAlgorithm, engagementTracker, refreshCount]);
 
   return {
