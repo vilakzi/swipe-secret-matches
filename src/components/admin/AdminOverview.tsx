@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -113,10 +114,11 @@ const AdminOverview = () => {
 
   const statCards = [
     {
-      title: 'Total Users',
+      title: 'Total Platform Users',
       value: stats.totalUsers.toLocaleString(),
       icon: Users,
-      color: 'text-blue-400'
+      color: 'text-blue-400',
+      highlight: true // Make this card stand out
     },
     {
       title: 'Subscribers',
@@ -162,15 +164,24 @@ const AdminOverview = () => {
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <Card key={index} className="bg-black/20 backdrop-blur-md border-gray-700">
+            <Card 
+              key={index} 
+              className={`bg-black/20 backdrop-blur-md border-gray-700 ${
+                stat.highlight ? 'ring-2 ring-blue-400/50 bg-blue-900/10' : ''
+              }`}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-gray-300">
+                <CardTitle className={`text-sm font-medium ${
+                  stat.highlight ? 'text-blue-300' : 'text-gray-300'
+                }`}>
                   {stat.title}
                 </CardTitle>
                 <Icon className={`h-4 w-4 ${stat.color}`} />
               </CardHeader>
               <CardContent>
-                <div className={`text-2xl font-bold ${stat.color}`}>
+                <div className={`text-2xl font-bold ${stat.color} ${
+                  stat.highlight ? 'text-3xl' : ''
+                }`}>
                   {stat.value}
                 </div>
               </CardContent>
@@ -183,4 +194,3 @@ const AdminOverview = () => {
 };
 
 export default AdminOverview;
-

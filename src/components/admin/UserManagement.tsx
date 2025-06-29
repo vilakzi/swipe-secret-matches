@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Search, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import UserManagementTable from "./UserManagementTable";
@@ -29,11 +29,13 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [removingContentUserId, setRemovingContentUserId] = useState<string | null>(null);
+  const [totalUserCount, setTotalUserCount] = useState(0);
 
   const { addError } = useError();
 
   useEffect(() => {
     fetchUsers();
+    fetchTotalUserCount();
   }, []);
 
   useEffect(() => {
@@ -59,6 +61,21 @@ const UserManagement = () => {
       setUsers([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchTotalUserCount = async () => {
+    try {
+      // Get total count from profiles table
+      const { count, error } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+
+      if (error) throw error;
+      setTotalUserCount(count || 0);
+    } catch (error: any) {
+      console.error('Error fetching total user count:', error);
+      setTotalUserCount(0);
     }
   };
 
@@ -125,7 +142,15 @@ const UserManagement = () => {
     <Card className="bg-black/20 backdrop-blur-md border-gray-700">
       <CardHeader>
         <div className="flex items-center justify-between gap-2 flex-wrap">
-          <CardTitle className="text-white">User Management</CardTitle>
+          <div className="flex items-center gap-4">
+            <CardTitle className="text-white">User Management</CardTitle>
+            <div className="flex items-center gap-2 bg-purple-600/20 px-3 py-1 rounded-lg">
+              <Users className="w-4 h-4 text-purple-400" />
+              <span className="text-purple-300 font-medium">
+                Total Users: {totalUserCount.toLocaleString()}
+              </span>
+            </div>
+          </div>
           <div className="flex items-center space-x-2 w-full md:w-auto mt-2 md:mt-0">
             <Search className="w-4 h-4 text-gray-400" />
             <Input
@@ -140,8 +165,11 @@ const UserManagement = () => {
       <CardContent>
         <div className="overflow-x-auto rounded-md border-gray-700">
           {!filteredUsers.length ? (
-            <div className="flex justify-center items-center h-40 text-muted-foreground text-center text-sm">
-              No users found. {searchTerm ? "Try a different search or check your spelling." : "If you're expecting users, check your Supabase data."}
+            <div className="flex flex-col justify-center items-center h-40 text-muted-foreground text-center text-sm">
+              <p className="mb-2">No users found in the filtered view.</p>
+              <p className="text-xs text-gray-400">
+                {searchTerm ? "Try a different search term." : `Total platform users: ${totalUserCount}`}
+              </p>
             </div>
           ) : (
             <UserManagementTable
