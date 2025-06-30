@@ -13,7 +13,7 @@ export const useEngagementTracking = () => {
   const [engagementData, setEngagementData] = useState<Map<string, EngagementEvent[]>>(new Map());
   const viewTimersRef = useRef<Map<string, { startTime: number; timer: NodeJS.Timeout }>>(new Map());
 
-  // Clean up timers on unmount
+  // Clean up timers on unmount with stable dependencies
   useEffect(() => {
     return () => {
       viewTimersRef.current.forEach(({ timer }) => {
@@ -21,7 +21,7 @@ export const useEngagementTracking = () => {
       });
       viewTimersRef.current.clear();
     };
-  }, []);
+  }, []); // Empty dependency array is correct here
 
   // Track when user starts viewing an item
   const trackItemView = useCallback((itemId: string) => {

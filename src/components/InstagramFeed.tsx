@@ -19,24 +19,29 @@ interface InstagramFeedProps {
 const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFeedProps) => {
   const [showFilters, setShowFilters] = useState(false);
   
-  // Initialize feed engine with error handling
-  const feedEngine = useSimplifiedFeedEngine();
+  // Initialize feed engine with safe defaults
+  const feedEngineResult = useSimplifiedFeedEngine();
   
+  // Safely destructure with fallbacks
   const {
-    displayedItems,
-    hasMoreItems,
-    isLoadingMore,
-    handleLoadMore,
-    handleRefresh,
-    engagementTracker,
-    feedEngineStats
-  } = feedEngine || {};
+    displayedItems = [],
+    hasMoreItems = false,
+    isLoadingMore = false,
+    handleLoadMore = () => {},
+    handleRefresh = () => {},
+    engagementTracker = {},
+    feedEngineStats = {
+      totalCount: 0,
+      distributedContent: 0,
+      loadingState: 'loading'
+    }
+  } = feedEngineResult || {};
 
   const handlePullRefresh = useCallback(async () => {
     console.log('🔄 Pull refresh triggered');
     
     try {
-      if (handleRefresh) {
+      if (handleRefresh && typeof handleRefresh === 'function') {
         handleRefresh();
       }
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -60,7 +65,7 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
     console.log('🔄 Smart refresh triggered');
     
     try {
-      if (handleRefresh) {
+      if (handleRefresh && typeof handleRefresh === 'function') {
         handleRefresh();
       }
       onRefresh();
@@ -75,10 +80,11 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
   }, [handleRefresh, onRefresh]);
 
   console.log('🚀 InstagramFeed status:', {
-    displayedItems: displayedItems?.length || 0,
-    hasMoreItems: hasMoreItems || false,
-    isLoadingMore: isLoadingMore || false,
-    totalContent: feedEngineStats?.totalCount || 0
+    displayedItems: Array.isArray(displayedItems) ? displayedItems.length : 0,
+    hasMoreItems: Boolean(hasMoreItems),
+    isLoadingMore: Boolean(isLoadingMore),
+    totalContent: feedEngineStats?.totalCount || 0,
+    loadingState: feedEngineStats?.loadingState || 'unknown'
   });
 
   // Show loading spinner when no items are loaded yet
@@ -113,13 +119,13 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
       <div className="max-w-md mx-auto">
         <PullToRefresh onRefresh={handlePullRefresh} className="pt-20">
           <InfiniteScroll
-            hasMore={hasMoreItems || false}
-            isLoading={isLoadingMore || false}
+            hasMore={Boolean(hasMoreItems)}
+            isLoading={Boolean(isLoadingMore)}
             onLoadMore={handleLoadMore}
             threshold={200}
           >
             <FeedContent
-              feedItems={displayedItems || []}
+              feedItems={Array.isArray(displayedItems) ? displayedItems : []}
               likedItems={likedItems}
               isSubscribed={true}
               onLike={onLike}

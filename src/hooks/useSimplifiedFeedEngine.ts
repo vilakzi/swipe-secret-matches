@@ -9,22 +9,22 @@ import { useEngagementTracking } from './feed/useEngagementTracking';
 import { useRealTimeFeed } from './useRealTimeFeed';
 
 export const useSimplifiedFeedEngine = () => {
-  // All hooks must be called at the top level in consistent order
+  // ALL HOOKS MUST BE CALLED IN CONSISTENT ORDER - NO CONDITIONAL HOOKS
   const { user } = useAuth() || {};
   const [shuffleKey, setShuffleKey] = useState(() => Date.now());
   const [displayedItems, setDisplayedItems] = useState([]);
   const [hasMoreItems, setHasMoreItems] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // Initialize engagement tracking early to maintain hook order
+  // Initialize engagement tracking with consistent hook order
   const engagementTracker = useEngagementTracking();
 
-  // Fetch data sources
-  const { realProfiles, loading: profilesLoading } = useRealProfiles();
-  const { newJoiners, loading: newJoinersLoading } = useNewJoiners();
-  const { posts, refetchPosts } = usePostFetching();
+  // Fetch data sources - these must always be called
+  const { realProfiles = [], loading: profilesLoading = false } = useRealProfiles() || {};
+  const { newJoiners = [], loading: newJoinersLoading = false } = useNewJoiners() || {};
+  const { posts = [], refetchPosts } = usePostFetching() || {};
 
-  // Create feed items with error boundaries
+  // Create feed items with stable dependencies
   const rawFeedItems = useMemo(() => {
     console.log('🚀 Creating feed items with error handling');
     
@@ -48,7 +48,7 @@ export const useSimplifiedFeedEngine = () => {
 
   // Update displayed items when raw items change
   useEffect(() => {
-    if (!rawFeedItems) return;
+    if (!rawFeedItems || !Array.isArray(rawFeedItems)) return;
     
     try {
       if (rawFeedItems.length > 0) {
@@ -68,20 +68,20 @@ export const useSimplifiedFeedEngine = () => {
     }
   }, [rawFeedItems]);
 
-  // Load more items with error handling
+  // Load more items with stable dependencies
   const handleLoadMore = useCallback(() => {
-    if (!rawFeedItems || isLoadingMore || !hasMoreItems) return;
+    if (!rawFeedItems || !Array.isArray(rawFeedItems) || isLoadingMore || !hasMoreItems) return;
     
     console.log('🚀 Loading more items...');
     setIsLoadingMore(true);
     
     try {
       setTimeout(() => {
-        const currentLength = displayedItems.length;
+        const currentLength = displayedItems?.length || 0;
         const nextItems = rawFeedItems.slice(currentLength, currentLength + 20);
         
         if (nextItems.length > 0) {
-          setDisplayedItems(prev => [...prev, ...nextItems]);
+          setDisplayedItems(prev => [...(prev || []), ...nextItems]);
           console.log('🚀 Loaded', nextItems.length, 'more items');
         }
         
@@ -92,9 +92,9 @@ export const useSimplifiedFeedEngine = () => {
       console.error('Error loading more items:', error);
       setIsLoadingMore(false);
     }
-  }, [rawFeedItems, displayedItems.length, isLoadingMore, hasMoreItems]);
+  }, [rawFeedItems, displayedItems?.length, isLoadingMore, hasMoreItems]);
 
-  // Refresh handler
+  // Refresh handler with stable dependencies
   const handleRefresh = useCallback(() => {
     console.log('🚀 Refreshing feed');
     
@@ -104,7 +104,7 @@ export const useSimplifiedFeedEngine = () => {
       setHasMoreItems(true);
       setIsLoadingMore(false);
       
-      if (refetchPosts) {
+      if (refetchPosts && typeof refetchPosts === 'function') {
         refetchPosts();
       }
     } catch (error) {
@@ -112,32 +112,41 @@ export const useSimplifiedFeedEngine = () => {
     }
   }, [refetchPosts]);
 
-  // Real-time updates
+  // Real-time updates with stable callback dependencies
+  const handleNewPost = useCallback(() => {
+    console.log('📡 New post - refreshing feed');
+    handleRefresh();
+  }, [handleRefresh]);
+
+  const handlePostUpdate = useCallback(() => {
+    console.log('📡 Post updated - refreshing feed');
+    handleRefresh();
+  }, [handleRefresh]);
+
+  const handlePostDelete = useCallback(() => {
+    console.log('📡 Post deleted - refreshing feed');
+    handleRefresh();
+  }, [handleRefresh]);
+
+  const handleNewProfile = useCallback(() => {
+    console.log('📡 New profile - refreshing feed');
+    handleRefresh();
+  }, [handleRefresh]);
+
+  // Real-time feed with stable dependencies
   useRealTimeFeed({
-    onNewPost: useCallback(() => {
-      console.log('📡 New post - refreshing feed');
-      handleRefresh();
-    }, [handleRefresh]),
-    onPostUpdate: useCallback(() => {
-      console.log('📡 Post updated - refreshing feed');
-      handleRefresh();
-    }, [handleRefresh]),
-    onPostDelete: useCallback(() => {
-      console.log('📡 Post deleted - refreshing feed');
-      handleRefresh();
-    }, [handleRefresh]),
-    onNewProfile: useCallback(() => {
-      console.log('📡 New profile - refreshing feed');
-      handleRefresh();
-    }, [handleRefresh])
+    onNewPost: handleNewPost,
+    onPostUpdate: handlePostUpdate,
+    onPostDelete: handlePostDelete,
+    onNewProfile: handleNewProfile
   });
 
   const isLoading = profilesLoading || newJoinersLoading;
 
-  // Feed statistics
+  // Feed statistics with stable computation
   const feedEngineStats = useMemo(() => {
-    const totalCount = rawFeedItems?.length || 0;
-    const distributedContent = displayedItems?.length || 0;
+    const totalCount = Array.isArray(rawFeedItems) ? rawFeedItems.length : 0;
+    const distributedContent = Array.isArray(displayedItems) ? displayedItems.length : 0;
     
     return {
       totalCount,
@@ -151,13 +160,21 @@ export const useSimplifiedFeedEngine = () => {
 
   console.log('🚀 Feed Engine Stats:', feedEngineStats);
 
+  // ALWAYS return a consistent object structure
   return {
-    displayedItems: displayedItems || [],
-    hasMoreItems: hasMoreItems || false,
-    isLoadingMore: isLoading || isLoadingMore,
-    handleLoadMore,
-    handleRefresh,
-    engagementTracker,
-    feedEngineStats
+    displayedItems: Array.isArray(displayedItems) ? displayedItems : [],
+    hasMoreItems: Boolean(hasMoreItems),
+    isLoadingMore: Boolean(isLoading || isLoadingMore),
+    handleLoadMore: handleLoadMore || (() => {}),
+    handleRefresh: handleRefresh || (() => {}),
+    engagementTracker: engagementTracker || {},
+    feedEngineStats: feedEngineStats || {
+      totalCount: 0,
+      distributedContent: 0,
+      unusedContentCount: 0,
+      activeUsers: 1,
+      distributionEfficiency: 0,
+      loadingState: 'loading'
+    }
   };
 };
