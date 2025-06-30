@@ -11,7 +11,7 @@ import { isProfileImageChanged } from '@/utils/feed/profileUtils';
 import { isNewJoiner } from '@/utils/feed/joinerUtils';
 import { FeedItem, Profile } from './types/feedTypes';
 import NormalFeedList from './NormalFeedList';
-import FeedFilters, { SortOption, FilterOption } from './FeedFilters';
+import FeedFilters, { SortOption, FilterOption, LocationOption } from './FeedFilters';
 
 interface FeedContentProps {
   feedItems: FeedItem[];
@@ -34,6 +34,7 @@ const FeedContent = ({
 }: FeedContentProps) => {
   const [sortOption, setSortOption] = useState<SortOption>('newest');
   const [filterOption, setFilterOption] = useState<FilterOption>('all');
+  const [locationOption, setLocationOption] = useState<LocationOption>('all');
   const { contentFeedItems, handleContentLike, handleContentShare } = useContentFeed();
   const { user } = useAuth();
   const { role } = useUserRole();
@@ -105,6 +106,25 @@ const FeedContent = ({
     }))
   ];
 
+  // Apply location filtering
+  const filterByLocation = (items: any[]) => {
+    if (locationOption === 'all') return items;
+    
+    return items.filter(item => {
+      const location = item.profile?.location?.toLowerCase() || '';
+      switch (locationOption) {
+        case 'soweto':
+          return location.includes('soweto');
+        case 'jhb-central':
+          return location.includes('johannesburg') || location.includes('jhb') || location.includes('central');
+        case 'pta':
+          return location.includes('pretoria') || location.includes('pta');
+        default:
+          return true;
+      }
+    });
+  };
+
   // Apply sorting to feed items
   const sortFeedItems = (items: any[]) => {
     switch (sortOption) {
@@ -143,21 +163,23 @@ const FeedContent = ({
     }
   };
 
-  // Apply sorting and filtering to allFeedItems
-  const processedFeedItems = filterFeedItems(sortFeedItems(allFeedItems));
+  // Apply all filters: location -> content type -> sorting
+  const processedFeedItems = sortFeedItems(filterFeedItems(filterByLocation(allFeedItems)));
 
   return (
     <div className="space-y-6 pb-6" role="list" aria-label="Social feed items">
       <FeedFilters 
         currentSort={sortOption}
         currentFilter={filterOption}
+        currentLocation={locationOption}
         onSortChange={setSortOption}
         onFilterChange={setFilterOption}
+        onLocationChange={setLocationOption}
       />
       
       {adminFeed.length > 0 && filterOption !== 'posts' && filterOption !== 'profiles' && (
         <AdminTileCarousel
-          adminFeed={adminFeed}
+          adminFeed={filterByLocation(adminFeed)}
           likedItems={likedItems}
           isSubscribed={isSubscribed}
           onLike={onLike}
