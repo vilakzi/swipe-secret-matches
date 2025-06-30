@@ -1,9 +1,9 @@
 
 import React from 'react';
-import MobileAuthForm from '@/components/auth/MobileAuthForm';
+import ResponsiveAuthForm from '@/components/auth/ResponsiveAuthForm';
 
 const Auth = () => {
-  return <MobileAuthForm />;
+  return <ResponsiveAuthForm />;
 };
 
 export default Auth;
