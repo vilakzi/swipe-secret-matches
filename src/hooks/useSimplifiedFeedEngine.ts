@@ -10,25 +10,40 @@ import { useRealTimeFeed } from './useRealTimeFeed';
 
 export const useSimplifiedFeedEngine = () => {
   const { user } = useAuth() || {};
+  
+  // Initialize all hooks first to maintain consistent order
   const [shuffleKey, setShuffleKey] = useState(() => Date.now());
   const [displayedItems, setDisplayedItems] = useState([]);
   const [hasMoreItems, setHasMoreItems] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // Engagement tracking moved up to maintain hook order
+  const engagementTracker = useEngagementTracking();
 
   // Fetch data sources with optimized loading
   const { realProfiles, loading: profilesLoading } = useRealProfiles();
   const { newJoiners, loading: newJoinersLoading } = useNewJoiners();
   const { posts, refetchPosts } = usePostFetching();
 
-  // Optimized feed item creation with memoization
+  // Optimized feed item creation with memoization and null checks
   const rawFeedItems = useMemo(() => {
     console.log('🚀 Creating optimized feed items');
-    return useFeedItemCreation({
-      filteredProfiles: realProfiles || [],
-      posts: posts || [],
-      shuffleKey,
-      userId: user?.id
-    });
+    if (!realProfiles || !posts) {
+      console.log('⏳ Waiting for data to load...');
+      return [];
+    }
+    
+    try {
+      return useFeedItemCreation({
+        filteredProfiles: realProfiles || [],
+        posts: posts || [],
+        shuffleKey,
+        userId: user?.id
+      });
+    } catch (error) {
+      console.error('Error creating feed items:', error);
+      return [];
+    }
   }, [realProfiles, posts, shuffleKey, user?.id]);
 
   // Update displayed items when raw items change with performance optimization
@@ -38,10 +53,14 @@ export const useSimplifiedFeedEngine = () => {
       setDisplayedItems(initialItems);
       setHasMoreItems(rawFeedItems.length > 30);
       console.log('🚀 Initial feed loaded:', initialItems.length, 'items');
+    } else if (rawFeedItems && rawFeedItems.length === 0) {
+      setDisplayedItems([]);
+      setHasMoreItems(false);
+      console.log('🚀 No feed items available');
     }
   }, [rawFeedItems]);
 
-  // Optimized load more with better performance
+  // Optimized load more with better performance and error handling
   const handleLoadMore = useCallback(() => {
     if (!rawFeedItems || isLoadingMore || !hasMoreItems) return;
     
@@ -51,34 +70,43 @@ export const useSimplifiedFeedEngine = () => {
     // Use requestAnimationFrame for smooth loading
     requestAnimationFrame(() => {
       setTimeout(() => {
-        const currentLength = displayedItems.length;
-        const nextItems = rawFeedItems.slice(currentLength, currentLength + 20);
-        
-        if (nextItems.length > 0) {
-          setDisplayedItems(prev => [...prev, ...nextItems]);
-          console.log('🚀 Loaded', nextItems.length, 'more items');
+        try {
+          const currentLength = displayedItems.length;
+          const nextItems = rawFeedItems.slice(currentLength, currentLength + 20);
+          
+          if (nextItems.length > 0) {
+            setDisplayedItems(prev => [...prev, ...nextItems]);
+            console.log('🚀 Loaded', nextItems.length, 'more items');
+          }
+          
+          setHasMoreItems(currentLength + nextItems.length < rawFeedItems.length);
+        } catch (error) {
+          console.error('Error loading more items:', error);
+        } finally {
+          setIsLoadingMore(false);
         }
-        
-        setHasMoreItems(currentLength + nextItems.length < rawFeedItems.length);
-        setIsLoadingMore(false);
-      }, 300); // Reduced delay for better UX
+      }, 300);
     });
   }, [rawFeedItems, displayedItems.length, isLoadingMore, hasMoreItems]);
 
   // Optimized refresh handler
   const handleRefresh = useCallback(() => {
     console.log('🚀 Refreshing feed with optimization');
-    setShuffleKey(Date.now() + Math.random()); // Better randomness
+    setShuffleKey(Date.now() + Math.random());
     setDisplayedItems([]);
     setHasMoreItems(true);
     setIsLoadingMore(false);
     
     if (refetchPosts) {
-      refetchPosts();
+      try {
+        refetchPosts();
+      } catch (error) {
+        console.error('Error refetching posts:', error);
+      }
     }
   }, [refetchPosts]);
 
-  // Real-time updates with debouncing
+  // Real-time updates with debouncing and error handling
   useRealTimeFeed({
     onNewPost: useCallback(() => {
       console.log('📡 New post - refreshing feed');
@@ -98,19 +126,19 @@ export const useSimplifiedFeedEngine = () => {
     }, [handleRefresh])
   });
 
-  // Engagement tracking with optimization
-  const engagementTracker = useEngagementTracking();
-
   const isLoading = profilesLoading || newJoinersLoading;
 
-  // Performance monitoring
+  // Performance monitoring with null checks
   const feedEngineStats = useMemo(() => {
+    const totalCount = rawFeedItems?.length || 0;
+    const distributedContent = displayedItems?.length || 0;
+    
     return {
-      totalCount: rawFeedItems?.length || 0,
-      distributedContent: displayedItems.length,
-      unusedContentCount: Math.max(0, (rawFeedItems?.length || 0) - displayedItems.length),
+      totalCount,
+      distributedContent,
+      unusedContentCount: Math.max(0, totalCount - distributedContent),
       activeUsers: 1,
-      distributionEfficiency: rawFeedItems?.length > 0 ? (displayedItems.length / rawFeedItems.length) : 0,
+      distributionEfficiency: totalCount > 0 ? (distributedContent / totalCount) : 0,
       loadingState: isLoading ? 'loading' : 'ready'
     };
   }, [rawFeedItems, displayedItems, isLoading]);
@@ -118,8 +146,8 @@ export const useSimplifiedFeedEngine = () => {
   console.log('🚀 Feed Engine Stats:', feedEngineStats);
 
   return {
-    displayedItems,
-    hasMoreItems,
+    displayedItems: displayedItems || [],
+    hasMoreItems: hasMoreItems || false,
     isLoadingMore: isLoading || isLoadingMore,
     handleLoadMore,
     handleRefresh,
