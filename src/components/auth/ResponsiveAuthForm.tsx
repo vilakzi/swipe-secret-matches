@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Eye, EyeOff, Heart } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 
 const ResponsiveAuthForm = () => {
@@ -16,6 +17,7 @@ const ResponsiveAuthForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
+  const navigate = useNavigate();
 
   const validateForm = () => {
     if (!email || !email.includes('@')) {
@@ -54,19 +56,26 @@ const ResponsiveAuthForm = () => {
     if (!validateForm()) return;
 
     setLoading(true);
+    
     try {
       if (isLogin) {
+        console.log('Attempting login with:', email);
         await signIn(email, password);
         toast({
           title: "Welcome back!",
           description: "Successfully signed in"
         });
+        console.log('Login successful, navigating to home');
+        navigate('/');
       } else {
+        console.log('Attempting signup with:', email, displayName);
         await signUp(email, password, displayName.trim(), 'user');
         toast({
           title: "Account created!",
           description: "Welcome to the platform"
         });
+        console.log('Signup successful, navigating to home');
+        navigate('/');
       }
     } catch (error: any) {
       console.error('Auth error:', error);

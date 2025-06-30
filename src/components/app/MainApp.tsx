@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -9,6 +8,7 @@ import AdminRoute from "@/components/AdminRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import AgeVerificationBanner from "@/components/AgeVerificationBanner";
 import { useSessionManager } from "@/hooks/useSessionManager";
+import { useAuth } from "@/contexts/AuthContext";
 import Auth from "@/pages/Auth";
 
 // Lazy load heavy components to improve mobile performance
@@ -34,6 +34,12 @@ const LoadingSpinner = () => (
 
 const MainApp = () => {
   useSessionManager();
+  const { user, loading } = useAuth();
+
+  // Show loading spinner while auth is being determined
+  if (loading) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <>
@@ -42,7 +48,10 @@ const MainApp = () => {
       <AgeVerificationBanner />
       <React.Suspense fallback={<LoadingSpinner />}>
         <Routes>
-          <Route path="/auth" element={<Auth />} />
+          <Route 
+            path="/auth" 
+            element={user ? <Navigate to="/" replace /> : <Auth />} 
+          />
           <Route path="/onboarding" element={
             <ProtectedRoute>
               <AppLayout showBottomNav={false}>
