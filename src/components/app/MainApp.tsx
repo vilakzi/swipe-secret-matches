@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
@@ -7,6 +8,7 @@ import ServiceProviderRoute from "@/components/ServiceProviderRoute";
 import AdminRoute from "@/components/AdminRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import AgeVerificationBanner from "@/components/AgeVerificationBanner";
+import ErrorBoundary from "@/components/common/ErrorBoundary";
 import { useSessionManager } from "@/hooks/useSessionManager";
 import { useAuth } from "@/contexts/AuthContext";
 import Auth from "@/pages/Auth";
@@ -42,7 +44,7 @@ const MainApp = () => {
   }
 
   return (
-    <>
+    <ErrorBoundary>
       <Toaster />
       <Sonner />
       <AgeVerificationBanner />
@@ -55,74 +57,94 @@ const MainApp = () => {
           <Route path="/onboarding" element={
             <ProtectedRoute>
               <AppLayout showBottomNav={false}>
-                <Onboarding />
+                <ErrorBoundary>
+                  <Onboarding />
+                </ErrorBoundary>
               </AppLayout>
             </ProtectedRoute>
           } />
           <Route path="/" element={
             <ProtectedRoute>
               <AppLayout>
-                <Index />
+                <ErrorBoundary>
+                  <Index />
+                </ErrorBoundary>
               </AppLayout>
             </ProtectedRoute>
           } />
           <Route path="/profile" element={
             <ProtectedRoute>
               <AppLayout>
-                <Profile />
+                <ErrorBoundary>
+                  <Profile />
+                </ErrorBoundary>
               </AppLayout>
             </ProtectedRoute>
           } />
           <Route path="/profile/:userId" element={
             <ProtectedRoute>
               <AppLayout showBottomNav={false}>
-                <UserProfile />
+                <ErrorBoundary>
+                  <UserProfile />
+                </ErrorBoundary>
               </AppLayout>
             </ProtectedRoute>
           } />
           <Route path="/provider/:providerId" element={
             <ProtectedRoute>
               <AppLayout showBottomNav={false}>
-                <ProviderProfile />
+                <ErrorBoundary>
+                  <ProviderProfile />
+                </ErrorBoundary>
               </AppLayout>
             </ProtectedRoute>
           } />
           <Route path="/matches" element={
             <ProtectedRoute>
               <AppLayout>
-                <Matches />
+                <ErrorBoundary>
+                  <Matches />
+                </ErrorBoundary>
               </AppLayout>
             </ProtectedRoute>
           } />
           <Route path="/settings" element={
             <ProtectedRoute>
               <AppLayout>
-                <Settings />
+                <ErrorBoundary>
+                  <Settings />
+                </ErrorBoundary>
               </AppLayout>
             </ProtectedRoute>
           } />
           <Route path="/dashboard" element={
             <ServiceProviderRoute>
               <AppLayout showBottomNav={false}>
-                <ServiceProviderDashboard />
+                <ErrorBoundary>
+                  <ServiceProviderDashboard />
+                </ErrorBoundary>
               </AppLayout>
             </ServiceProviderRoute>
           } />
           <Route path="/admin" element={
             <AdminRoute>
               <AppLayout showBottomNav={false}>
-                <AdminDashboard />
+                <ErrorBoundary>
+                  <AdminDashboard />
+                </ErrorBoundary>
               </AppLayout>
             </AdminRoute>
           } />
           <Route path="*" element={
             <AppLayout showBottomNav={false}>
-              <NotFound />
+              <ErrorBoundary>
+                <NotFound />
+              </ErrorBoundary>
             </AppLayout>
           } />
         </Routes>
       </React.Suspense>
-    </>
+    </ErrorBoundary>
   );
 };
 
