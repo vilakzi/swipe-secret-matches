@@ -106,11 +106,17 @@ const FeedContent = ({
     }))
   ];
 
-  // Apply location filtering
+  // Enhanced location filtering with smarter matching
   const filterByLocation = (items: any[]) => {
     if (locationOption === 'all') return items;
     
     return items.filter(item => {
+      // Check if item has location metadata from upload
+      if (item.locationMetadata?.target_locations) {
+        return item.locationMetadata.target_locations.includes(locationOption);
+      }
+      
+      // Fallback to profile location matching for older posts
       const location = item.profile?.location?.toLowerCase() || '';
       switch (locationOption) {
         case 'soweto':

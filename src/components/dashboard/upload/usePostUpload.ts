@@ -8,6 +8,7 @@ import { createPostRecord } from './postCreationService';
 import { handleUploadError, checkNetworkConnection, retryUploadWithFallback } from './uploadErrorHandler';
 
 type PromotionType = 'free_2h' | 'paid_8h' | 'paid_12h';
+type LocationOption = 'all' | 'soweto' | 'jhb-central' | 'pta';
 
 export const usePostUpload = () => {
   const { user } = useAuth();
@@ -19,6 +20,7 @@ export const usePostUpload = () => {
     selectedFile: File,
     caption: string,
     promotionType: PromotionType,
+    selectedLocations: LocationOption[],
     validationError: string | null,
     onSuccess: () => void,
     onAddToFeed: (post: any) => void,
@@ -81,6 +83,7 @@ export const usePostUpload = () => {
         selectedFile.type,
         caption,
         promotionType,
+        selectedLocations,
         setUploadProgress
       );
 

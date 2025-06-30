@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import EnhancedFileUploadSection from './upload/EnhancedFileUploadSection';
 import CaptionSection from './upload/CaptionSection';
 import PromotionTypeSelector from './upload/PromotionTypeSelector';
+import LocationSelector, { LocationOption } from './upload/LocationSelector';
 import PostPreview from './upload/PostPreview';
 import PostFormActions from './upload/PostFormActions';
 import MobileUploadProgress from './upload/MobileUploadProgress';
@@ -23,6 +24,7 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [caption, setCaption] = useState('');
   const [promotionType, setPromotionType] = useState<PromotionType>('free_2h');
+  const [selectedLocations, setSelectedLocations] = useState<LocationOption[]>([]);
   const [step, setStep] = useState<Step>(1);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [newPost, setNewPost] = useState<any>(null);
@@ -35,6 +37,7 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
     setSelectedFile(null);
     setCaption('');
     setPromotionType('free_2h');
+    setSelectedLocations([]);
     setPreviewUrl(null);
     setNewPost(null);
     setStep(1);
@@ -46,6 +49,7 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
     setSelectedFile(file);
     setCaption('');
     setPromotionType('free_2h');
+    setSelectedLocations([]);
     setNewPost(null);
     setValidationError(null);
     setIsValidating(false);
@@ -59,6 +63,14 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
     }
   };
 
+  const handleLocationToggle = (location: LocationOption) => {
+    setSelectedLocations(prev => 
+      prev.includes(location) 
+        ? prev.filter(l => l !== location)
+        : [...prev, location]
+    );
+  };
+
   const handleUpload = async () => {
     if (!selectedFile) return;
 
@@ -66,6 +78,7 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
       selectedFile,
       caption,
       promotionType,
+      selectedLocations,
       validationError,
       onUploadSuccess,
       onAddPostToFeed,
@@ -77,6 +90,7 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
       setStep(3);
       setSelectedFile(null);
       setCaption('');
+      setSelectedLocations([]);
       setPreviewUrl(null);
     }
   };
@@ -105,6 +119,13 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
           caption={caption}
           onCaptionChange={setCaption}
         />
+
+        <LocationSelector
+          selectedLocations={selectedLocations}
+          onLocationToggle={handleLocationToggle}
+          className="mb-4"
+        />
+        
         <PromotionTypeSelector
           promotionType={promotionType}
           onPromotionTypeChange={setPromotionType}

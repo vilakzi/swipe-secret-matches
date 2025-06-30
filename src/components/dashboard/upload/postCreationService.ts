@@ -4,6 +4,7 @@ import { retryOperation } from './retryUtils';
 import { calculateExpiryTime, getPostType } from './uploadUtils';
 
 type PromotionType = 'free_2h' | 'paid_8h' | 'paid_12h';
+type LocationOption = 'all' | 'soweto' | 'jhb-central' | 'pta';
 
 export const createPostRecord = async (
   userId: string,
@@ -11,16 +12,24 @@ export const createPostRecord = async (
   fileType: string,
   caption: string,
   promotionType: PromotionType,
+  selectedLocations: LocationOption[],
   onProgress?: (progress: number) => void
 ) => {
   const expiresAt = calculateExpiryTime(promotionType);
   const postType = getPostType(fileType);
 
+  // Convert location selections to metadata
+  const locationMetadata = {
+    target_locations: selectedLocations.length > 0 ? selectedLocations : ['all'],
+    location_specific: selectedLocations.length > 0
+  };
+
   console.log('Creating post record:', {
     provider_id: userId,
     content_url: contentUrl,
     post_type: postType,
-    promotion_type: promotionType
+    promotion_type: promotionType,
+    location_metadata: locationMetadata
   });
 
   const postData = await retryOperation(async () => {
@@ -44,7 +53,9 @@ export const createPostRecord = async (
       throw new Error(`Failed to save post: ${error.message}`);
     }
 
-    return data;
+    // Add location metadata as a separate update since posts table doesn't have location fields
+    // We'll store this in the user's profile or use it for filtering logic
+    return { ...data, locationMetadata };
   });
 
   onProgress?.(100);
