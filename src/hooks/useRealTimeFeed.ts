@@ -7,43 +7,58 @@ interface UseRealTimeFeedProps {
   onNewPost?: () => void;
   onPostUpdate?: () => void;
   onPostDelete?: () => void;
+  onNewProfile?: () => void;
 }
 
 export const useRealTimeFeed = ({
   onNewPost,
   onPostUpdate,
-  onPostDelete
+  onPostDelete,
+  onNewProfile
 }: UseRealTimeFeedProps = {}) => {
   
   const handleNewPost = useCallback(() => {
-    console.log('📡 New post detected, refreshing feed...');
+    console.log('📡 NEW POST: Distributing to ALL accounts immediately');
     if (onNewPost) {
       onNewPost();
     }
     toast({
-      title: "New content available!",
-      description: "Fresh posts have been added to your feed",
+      title: "Fresh content available!",
+      description: "New post distributed to all feeds instantly",
     });
   }, [onNewPost]);
 
   const handlePostUpdate = useCallback(() => {
-    console.log('📡 Post updated, refreshing feed...');
+    console.log('📡 POST UPDATED: Refreshing all feeds with updated content');
     if (onPostUpdate) {
       onPostUpdate();
     }
   }, [onPostUpdate]);
 
   const handlePostDelete = useCallback(() => {
-    console.log('📡 Post deleted, refreshing feed...');
+    console.log('📡 POST DELETED: Removing from all feeds immediately');
     if (onPostDelete) {
       onPostDelete();
     }
   }, [onPostDelete]);
 
+  const handleNewProfile = useCallback(() => {
+    console.log('📡 NEW PROFILE: Adding to all user feeds immediately');
+    if (onNewProfile) {
+      onNewProfile();
+    }
+    toast({
+      title: "New member joined!",
+      description: "Fresh profile added to your feed",
+    });
+  }, [onNewProfile]);
+
   useEffect(() => {
-    // Set up real-time subscription for posts
+    console.log('📡 REAL-TIME CONTENT DISTRIBUTION: Starting universal content sync');
+    
+    // Set up comprehensive real-time subscription for ALL content
     const channel = supabase
-      .channel('posts-changes')
+      .channel('universal-content-distribution')
       .on(
         'postgres_changes',
         {
@@ -52,7 +67,7 @@ export const useRealTimeFeed = ({
           table: 'posts'
         },
         (payload) => {
-          console.log('📡 New post inserted:', payload);
+          console.log('📡 NEW POST DETECTED - Distributing to ALL users:', payload);
           handleNewPost();
         }
       )
@@ -64,7 +79,7 @@ export const useRealTimeFeed = ({
           table: 'posts'
         },
         (payload) => {
-          console.log('📡 Post updated:', payload);
+          console.log('📡 POST UPDATE DETECTED - Updating all feeds:', payload);
           handlePostUpdate();
         }
       )
@@ -76,21 +91,47 @@ export const useRealTimeFeed = ({
           table: 'posts'
         },
         (payload) => {
-          console.log('📡 Post deleted:', payload);
+          console.log('📡 POST DELETION DETECTED - Removing from all feeds:', payload);
           handlePostDelete();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'profiles'
+        },
+        (payload) => {
+          console.log('📡 NEW PROFILE DETECTED - Adding to all feeds:', payload);
+          handleNewProfile();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles'
+        },
+        (payload) => {
+          console.log('📡 PROFILE UPDATE DETECTED - Refreshing all feeds:', payload);
+          if (onPostUpdate) {
+            onPostUpdate();
+          }
         }
       )
       .subscribe();
 
-    console.log('📡 Real-time feed subscription active');
+    console.log('📡 UNIVERSAL CONTENT DISTRIBUTION: Active for all users');
 
     return () => {
-      console.log('📡 Cleaning up real-time feed subscription');
+      console.log('📡 Cleaning up universal content distribution');
       supabase.removeChannel(channel);
     };
-  }, [handleNewPost, handlePostUpdate, handlePostDelete]);
+  }, [handleNewPost, handlePostUpdate, handlePostDelete, handleNewProfile, onPostUpdate]);
 
   return {
-    // Can expose additional methods if needed
+    // Real-time distribution is active
   };
 };

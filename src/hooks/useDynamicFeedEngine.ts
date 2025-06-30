@@ -11,31 +11,38 @@ import { useNeverEndingFeed } from './feed/useNeverEndingFeed';
 import { useEngagementTracking } from './feed/useEngagementTracking';
 import { useRealTimeFeed } from './useRealTimeFeed';
 import { useFreshFeedRotation } from './useFreshFeedRotation';
+import { useUniversalContentDistribution } from './useUniversalContentDistribution';
 
 export const useDynamicFeedEngine = () => {
   const { user } = useAuth() || {};
   const [shuffleKey, setShuffleKey] = useState(() => Date.now() + Math.random());
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  console.log("🚀 Dynamic Feed Engine - Active for user:", user?.id || 'no user');
+  console.log("🚀 UNIVERSAL FEED ENGINE: Ensuring ALL content reaches ALL users");
 
   // Fetch all data sources
   const { realProfiles, loading: profilesLoading } = useRealProfiles();
   const { newJoiners, loading: newJoinersLoading } = useNewJoiners();
   const { posts, refetchPosts } = usePostFetching();
 
-  // Universal feed data (everyone sees everyone)
+  // Universal content distribution system
+  const { distributeContentUniversally, syncContentAcrossAllUsers, distributionStats } = useUniversalContentDistribution();
+
+  // Universal feed data (everyone sees everything)
   const { profiles: allProfiles, posts: allPosts } = useUniversalFeedData(realProfiles, newJoiners, posts);
 
-  // Create comprehensive feed items
-  const allFeedItems = useFeedItemCreation({
+  // Create comprehensive feed items with universal distribution
+  const rawFeedItems = useFeedItemCreation({
     filteredProfiles: allProfiles,
     posts: allPosts,
-    shuffleKey: shuffleKey + refreshTrigger, // Include refresh trigger
+    shuffleKey: shuffleKey + refreshTrigger,
     userId: user?.id
   });
 
-  // Fresh feed rotation system
+  // Distribute ALL content universally - no unused content
+  const universallyDistributedItems = distributeContentUniversally(rawFeedItems);
+
+  // Fresh feed rotation system with universal distribution
   const {
     currentBatch: rotatedFeedItems,
     generateFreshBatch,
@@ -44,11 +51,11 @@ export const useDynamicFeedEngine = () => {
     viewedCount,
     totalCount
   } = useFreshFeedRotation({
-    allFeedItems,
-    batchSize: 30
+    allFeedItems: universallyDistributedItems,
+    batchSize: 40 // Larger batch to ensure content reaches everyone
   });
 
-  // Advanced continuous flow system
+  // Advanced continuous flow with zero waste
   const {
     dynamicContentPool,
     markAsViewed: markFlowViewed,
@@ -56,13 +63,13 @@ export const useDynamicFeedEngine = () => {
     resetSession,
     sessionStats
   } = useAdvancedContinuousFlow({
-    allAvailableContent: rotatedFeedItems.length > 0 ? rotatedFeedItems : allFeedItems,
-    contentPoolSize: 600,
-    rotationInterval: 90000,
-    freshContentPercentage: 0.7 // Higher percentage for fresher content
+    allAvailableContent: rotatedFeedItems.length > 0 ? rotatedFeedItems : universallyDistributedItems,
+    contentPoolSize: 800, // Larger pool for universal distribution
+    rotationInterval: 60000, // 1 minute rotation
+    freshContentPercentage: 0.9 // 90% fresh content always
   });
 
-  // Never-ending feed implementation
+  // Never-ending feed with universal content
   const {
     displayedItems,
     hasMoreContent,
@@ -72,56 +79,66 @@ export const useDynamicFeedEngine = () => {
     feedStats
   } = useNeverEndingFeed({
     dynamicContentPool,
-    initialBatchSize: 25,
-    loadMoreSize: 20,
-    onContentViewed: (itemId) => {
-      markAsViewed(itemId);
-      markFlowViewed(itemId);
+    initialBatchSize: 30,
+    loadMoreSize: 25,
+    onContentViewed: (itemIds) => {
+      markAsViewed(itemIds[0]);
+      markFlowViewed(itemIds);
     }
   });
 
-  // Enhanced refresh for complete freshness
-  const handleCompleteFreshRefresh = useCallback(() => {
-    console.log('🚀 Complete fresh refresh - generating entirely new content flow');
+  // Enhanced refresh for universal distribution
+  const handleUniversalRefresh = useCallback(() => {
+    console.log('🚀 UNIVERSAL REFRESH: Generating completely fresh content for ALL users');
     
-    // Increment refresh trigger to force new shuffle
+    // Increment refresh trigger for new content
     setRefreshTrigger(prev => prev + 1);
     
-    // Reset all rotation and flow systems
+    // Reset all systems
     resetRotation();
     resetFeed();
     resetSession();
+    
+    // Sync across all users in real-time
+    syncContentAcrossAllUsers();
     
     // Refresh data sources
     if (refetchPosts) {
       refetchPosts();
     }
     
-    // Generate new shuffle key
+    // Generate new shuffle key for universal freshness
     setShuffleKey(Date.now() + Math.random() * 1000);
     
-    // Force new content flow
+    // Force content flow refresh
     refreshContentFlow();
     
-    // Generate fresh batch
+    // Generate fresh batch for all users
     setTimeout(() => {
       generateFreshBatch();
     }, 100);
 
-    console.log('🚀 Complete fresh refresh completed - guaranteed entirely fresh content');
-  }, [resetRotation, resetFeed, resetSession, refetchPosts, refreshContentFlow, generateFreshBatch]);
+    console.log('🚀 UNIVERSAL REFRESH COMPLETE: Fresh content distributed to ALL users');
+  }, [resetRotation, resetFeed, resetSession, syncContentAcrossAllUsers, refetchPosts, refreshContentFlow, generateFreshBatch]);
 
-  // Real-time feed updates
+  // Real-time feed updates with universal distribution
   useRealTimeFeed({
-    onNewPost: handleCompleteFreshRefresh,
+    onNewPost: () => {
+      console.log('📡 NEW POST: Distributing to ALL users immediately');
+      handleUniversalRefresh();
+    },
     onPostUpdate: () => {
-      // Lighter refresh for updates
+      console.log('📡 POST UPDATE: Refreshing ALL user feeds');
       generateFreshBatch();
       refreshContentFlow();
     },
     onPostDelete: () => {
-      // Refresh to remove deleted content
-      handleCompleteFreshRefresh();
+      console.log('📡 POST DELETED: Removing from ALL user feeds');
+      handleUniversalRefresh();
+    },
+    onNewProfile: () => {
+      console.log('📡 NEW PROFILE: Adding to ALL user feeds');
+      handleUniversalRefresh();
     }
   });
 
@@ -130,15 +147,16 @@ export const useDynamicFeedEngine = () => {
 
   const isLoading = profilesLoading || newJoinersLoading;
 
-  console.log("🚀 Dynamic Feed Engine Status:", {
+  console.log("🚀 UNIVERSAL FEED STATUS:", {
     displayedItems: displayedItems.length,
     poolSize: dynamicContentPool.length,
+    distributionStats,
     hasMore: hasMoreContent,
     isLoading,
     viewedCount,
-    totalCount,
-    session: sessionStats,
-    feedStats
+    totalCount: distributionStats.totalContent,
+    unusedContent: distributionStats.unusedContent, // Should always be 0
+    activeUsers: distributionStats.activeUsers
   });
 
   return {
@@ -146,18 +164,22 @@ export const useDynamicFeedEngine = () => {
     hasMoreItems: hasMoreContent,
     isLoadingMore: isLoading || isLoadingMore,
     handleLoadMore: loadMoreContent,
-    handleRefresh: handleCompleteFreshRefresh,
+    handleRefresh: handleUniversalRefresh,
     engagementTracker,
-    // Enhanced stats for monitoring
+    // Enhanced stats showing universal distribution
     feedEngineStats: {
       ...sessionStats,
       ...feedStats,
+      ...distributionStats,
       totalProfiles: allProfiles.length,
       totalPosts: allPosts.length,
-      allContentItems: allFeedItems.length,
+      allContentItems: universallyDistributedItems.length,
       viewedCount,
-      totalCount,
-      freshContentRatio: totalCount > 0 ? ((totalCount - viewedCount) / totalCount) : 1
+      totalCount: distributionStats.totalContent,
+      unusedContentCount: distributionStats.unusedContent, // Always 0
+      freshContentRatio: distributionStats.totalContent > 0 ? ((distributionStats.totalContent - viewedCount) / distributionStats.totalContent) : 1,
+      universalDistribution: true,
+      distributionEfficiency: distributionStats.totalContent > 0 ? (distributionStats.distributedContent / distributionStats.totalContent) : 1 // Should always be 1 (100%)
     }
   };
 };

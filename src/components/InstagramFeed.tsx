@@ -18,7 +18,7 @@ interface InstagramFeedProps {
 const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFeedProps) => {
   const [showFilters, setShowFilters] = useState(false);
   
-  // Use dynamic feed engine for continuous, fresh content
+  // Universal feed engine ensuring ALL content reaches ALL users
   const {
     displayedItems,
     hasMoreItems,
@@ -30,32 +30,34 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
   } = useDynamicFeedEngine();
 
   const handlePullRefresh = useCallback(async () => {
-    console.log('🔄 Pull refresh - generating completely fresh content');
+    console.log('🔄 PULL REFRESH: Distributing ALL content to ALL users');
     handleRefresh();
     await new Promise(resolve => setTimeout(resolve, 1000));
     onRefresh();
     
     toast({
-      title: "Fresh content loaded!",
-      description: "Your feed has been completely refreshed with new content",
-    });
-  }, [handleRefresh, onRefresh]);
-
-  const handleSmartRefresh = useCallback(() => {
-    console.log('🔄 Smart refresh - ensuring fresh content rotation');
-    handleRefresh();
-    onRefresh();
-    toast({
-      title: "Fresh content loaded!",
-      description: `Feed refreshed with ${feedEngineStats.totalCount} items rotating (${Math.round(feedEngineStats.freshContentRatio * 100)}% fresh)`,
+      title: "Fresh content distributed!",
+      description: `All ${feedEngineStats.totalCount} items distributed universally - ${feedEngineStats.unusedContentCount} unused`,
     });
   }, [handleRefresh, onRefresh, feedEngineStats]);
 
-  console.log('🚀 InstagramFeed rendering with fresh content engine:', {
+  const handleSmartRefresh = useCallback(() => {
+    console.log('🔄 SMART REFRESH: Universal content distribution active');
+    handleRefresh();
+    onRefresh();
+    toast({
+      title: "Universal distribution complete!",
+      description: `${feedEngineStats.distributedContent}/${feedEngineStats.totalCount} items distributed (${Math.round((feedEngineStats.distributionEfficiency || 1) * 100)}% efficiency)`,
+    });
+  }, [handleRefresh, onRefresh, feedEngineStats]);
+
+  console.log('🚀 InstagramFeed: Universal content distribution active:', {
     displayedItems: displayedItems.length,
-    hasMore: hasMoreItems,
-    isLoading: isLoadingMore,
-    engineStats: feedEngineStats
+    totalContent: feedEngineStats.totalCount,
+    distributedContent: feedEngineStats.distributedContent,
+    unusedContent: feedEngineStats.unusedContentCount,
+    distributionEfficiency: Math.round((feedEngineStats.distributionEfficiency || 1) * 100),
+    activeUsers: feedEngineStats.activeUsers
   });
 
   return (
@@ -86,13 +88,20 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
               engagementTracker={engagementTracker}
             />
             
-            {/* Fresh content indicators */}
+            {/* Universal distribution status */}
             <div className="text-center py-6">
               <div className="text-gray-400 text-sm space-y-1">
-                <div>Fresh Feed Active • Content Pool: {feedEngineStats.totalCount}</div>
-                <div>Fresh Content: {Math.round(feedEngineStats.freshContentRatio * 100)}% • Real-time Updates</div>
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span>Universal Distribution Active</span>
+                </div>
+                <div>Content Pool: {feedEngineStats.totalCount} • Distributed: {feedEngineStats.distributedContent}</div>
+                <div className="text-green-400 font-semibold">
+                  Unused Content: {feedEngineStats.unusedContentCount} • Efficiency: {Math.round((feedEngineStats.distributionEfficiency || 1) * 100)}%
+                </div>
+                <div>Active Users: {feedEngineStats.activeUsers} • Real-time Sync</div>
                 <div className="text-xs text-gray-500">
-                  Auto-refresh • Content rotation • Never the same twice
+                  Zero waste • Universal reach • Real-time distribution
                 </div>
               </div>
             </div>
@@ -100,10 +109,10 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
         </PullToRefresh>
       </div>
 
-      {/* Smart refresh manager with shorter intervals for fresh content */}
+      {/* Faster refresh for universal distribution */}
       <RefreshManager
         onRefresh={handleSmartRefresh}
-        autoRefreshInterval={120000} // 2 minutes for fresh content
+        autoRefreshInterval={90000} // 1.5 minutes for universal sync
       />
     </div>
   );
