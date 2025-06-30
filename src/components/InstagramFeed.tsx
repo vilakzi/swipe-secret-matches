@@ -20,7 +20,7 @@ interface InstagramFeedProps {
 const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFeedProps) => {
   const [showFilters, setShowFilters] = useState(false);
   
-  // Get feed engine data - remove try/catch that was causing issues
+  // Get feed engine data
   const feedEngine = useSimplifiedFeedEngine();
   
   // Safe destructuring with guaranteed fallbacks
@@ -94,7 +94,7 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
           onRefresh={handleSmartRefresh}
         />
         
-        <div className="pt-32 flex justify-center items-center min-h-[400px]">
+        <div className="pt-44 flex justify-center items-center min-h-[400px]">
           <LoadingSpinner size="lg" text="Loading your feed..." />
         </div>
       </div>
@@ -112,7 +112,7 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
       />
       
       <div className="max-w-md mx-auto">
-        <PullToRefresh onRefresh={handlePullRefresh} className="pt-20">
+        <PullToRefresh onRefresh={handlePullRefresh} className="pt-32">
           <InfiniteScroll
             hasMore={hasMoreItems}
             isLoading={isLoadingMore}

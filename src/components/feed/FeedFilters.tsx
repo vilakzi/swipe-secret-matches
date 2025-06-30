@@ -124,47 +124,6 @@ const FeedFilters: React.FC<FeedFiltersProps> = ({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-
-      {/* Fixed Location Navigation Buttons - Optimized for Performance */}
-      <div className="fixed top-16 left-0 right-0 z-50 bg-black/95 backdrop-blur-md border-b border-gray-700 py-3 shadow-lg will-change-transform">
-        <div className="flex items-center justify-center gap-2 overflow-x-auto px-4 scrollbar-hide">
-          <button
-            onClick={() => handleLocationClick('soweto')}
-            className={`flex items-center gap-1 px-3 py-2 rounded-full text-xs font-bold shadow-lg transition-all duration-200 whitespace-nowrap transform ${
-              currentLocation === 'soweto'
-                ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white scale-105'
-                : 'bg-gradient-to-r from-gray-600 to-gray-700 text-white hover:from-purple-400 hover:to-pink-500 hover:scale-105'
-            }`}
-          >
-            <MapPin className="h-3 w-3" />
-            <span>Soweto Hookups</span>
-          </button>
-          
-          <button
-            onClick={() => handleLocationClick('jhb-central')}
-            className={`flex items-center gap-1 px-3 py-2 rounded-full text-xs font-bold shadow-lg transition-all duration-200 whitespace-nowrap transform ${
-              currentLocation === 'jhb-central'
-                ? 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white scale-105'
-                : 'bg-gradient-to-r from-gray-600 to-gray-700 text-white hover:from-blue-400 hover:to-cyan-500 hover:scale-105'
-            }`}
-          >
-            <MapPin className="h-3 w-3" />
-            <span>Jhb Central Hookups</span>
-          </button>
-          
-          <button
-            onClick={() => handleLocationClick('pta')}
-            className={`flex items-center gap-1 px-3 py-2 rounded-full text-xs font-bold shadow-lg transition-all duration-200 whitespace-nowrap transform ${
-              currentLocation === 'pta'
-                ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white scale-105'
-                : 'bg-gradient-to-r from-gray-600 to-gray-700 text-white hover:from-emerald-400 hover:to-teal-500 hover:scale-105'
-            }`}
-          >
-            <MapPin className="h-3 w-3" />
-            <span>PTA Hookups</span>
-          </button>
-        </div>
-      </div>
     </>
   );
 };
