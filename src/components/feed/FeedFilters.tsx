@@ -40,9 +40,9 @@ const FeedFilters: React.FC<FeedFiltersProps> = ({
   };
 
   return (
-    <div className="space-y-4 mb-4">
+    <>
       {/* Filter and Sort Row */}
-      <div className="flex items-center justify-between px-4">
+      <div className="flex items-center justify-between px-4 mb-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="flex items-center gap-2">
@@ -125,15 +125,15 @@ const FeedFilters: React.FC<FeedFiltersProps> = ({
         </DropdownMenu>
       </div>
 
-      {/* Fixed Location Navigation Buttons */}
-      <div className="fixed top-16 left-0 right-0 z-50 bg-black/95 backdrop-blur-md border-b border-gray-700 py-3 shadow-lg">
-        <div className="flex items-center justify-center gap-2 overflow-x-auto px-4">
+      {/* Fixed Location Navigation Buttons - Optimized for Performance */}
+      <div className="fixed top-16 left-0 right-0 z-50 bg-black/95 backdrop-blur-md border-b border-gray-700 py-3 shadow-lg will-change-transform">
+        <div className="flex items-center justify-center gap-2 overflow-x-auto px-4 scrollbar-hide">
           <button
             onClick={() => handleLocationClick('soweto')}
-            className={`flex items-center gap-1 px-3 py-2 rounded-full text-xs font-bold shadow-lg transition-all whitespace-nowrap ${
+            className={`flex items-center gap-1 px-3 py-2 rounded-full text-xs font-bold shadow-lg transition-all duration-200 whitespace-nowrap transform ${
               currentLocation === 'soweto'
                 ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white scale-105'
-                : 'bg-gradient-to-r from-gray-600 to-gray-700 text-white hover:from-purple-400 hover:to-pink-500'
+                : 'bg-gradient-to-r from-gray-600 to-gray-700 text-white hover:from-purple-400 hover:to-pink-500 hover:scale-105'
             }`}
           >
             <MapPin className="h-3 w-3" />
@@ -142,10 +142,10 @@ const FeedFilters: React.FC<FeedFiltersProps> = ({
           
           <button
             onClick={() => handleLocationClick('jhb-central')}
-            className={`flex items-center gap-1 px-3 py-2 rounded-full text-xs font-bold shadow-lg transition-all whitespace-nowrap ${
+            className={`flex items-center gap-1 px-3 py-2 rounded-full text-xs font-bold shadow-lg transition-all duration-200 whitespace-nowrap transform ${
               currentLocation === 'jhb-central'
                 ? 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white scale-105'
-                : 'bg-gradient-to-r from-gray-600 to-gray-700 text-white hover:from-blue-400 hover:to-cyan-500'
+                : 'bg-gradient-to-r from-gray-600 to-gray-700 text-white hover:from-blue-400 hover:to-cyan-500 hover:scale-105'
             }`}
           >
             <MapPin className="h-3 w-3" />
@@ -154,10 +154,10 @@ const FeedFilters: React.FC<FeedFiltersProps> = ({
           
           <button
             onClick={() => handleLocationClick('pta')}
-            className={`flex items-center gap-1 px-3 py-2 rounded-full text-xs font-bold shadow-lg transition-all whitespace-nowrap ${
+            className={`flex items-center gap-1 px-3 py-2 rounded-full text-xs font-bold shadow-lg transition-all duration-200 whitespace-nowrap transform ${
               currentLocation === 'pta'
                 ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white scale-105'
-                : 'bg-gradient-to-r from-gray-600 to-gray-700 text-white hover:from-emerald-400 hover:to-teal-500'
+                : 'bg-gradient-to-r from-gray-600 to-gray-700 text-white hover:from-emerald-400 hover:to-teal-500 hover:scale-105'
             }`}
           >
             <MapPin className="h-3 w-3" />
@@ -165,7 +165,7 @@ const FeedFilters: React.FC<FeedFiltersProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
