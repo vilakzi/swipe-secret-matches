@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Filter, SortAsc, Clock, ThumbsUp, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -124,8 +125,8 @@ const FeedFilters: React.FC<FeedFiltersProps> = ({
         </DropdownMenu>
       </div>
 
-      {/* Sticky Location Navigation Buttons */}
-      <div className="sticky top-16 z-30 bg-black/90 backdrop-blur-md border-b border-gray-700 py-3">
+      {/* Fixed Location Navigation Buttons */}
+      <div className="fixed top-16 left-0 right-0 z-50 bg-black/95 backdrop-blur-md border-b border-gray-700 py-3 shadow-lg">
         <div className="flex items-center justify-center gap-2 overflow-x-auto px-4">
           <button
             onClick={() => handleLocationClick('soweto')}
