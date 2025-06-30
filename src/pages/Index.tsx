@@ -1,7 +1,8 @@
+
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Heart, RotateCcw, User, LogOut, Settings, Briefcase, Shield } from 'lucide-react';
+import { Heart, User, Settings, Briefcase, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import OnlineStatus from '@/components/OnlineStatus';
 import InstagramFeed from '@/components/InstagramFeed';
@@ -28,20 +29,20 @@ const Index = () => {
     onInactive: () => {
       toast({
         title: "Session expired",
-        description: "You've been logged out due to inactivity for security reasons.",
+        description: "You've been logged out due to inactivity",
         variant: "destructive"
       });
       signOut();
     }
   });
 
-  // Show loading state while checking authentication
+  // Show loading state
   if (roleLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900">
         <div className="text-center p-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-white">Loading fresh content...</h2>
+          <h2 className="text-xl font-semibold text-white">Loading...</h2>
         </div>
       </div>
     );
@@ -52,7 +53,7 @@ const Index = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900">
         <div className="text-center p-8">
-          <h2 className="text-2xl font-bold text-white mb-4">Please log in to access the fresh feed</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">Please log in</h2>
           <Button
             onClick={() => navigate('/auth')}
             className="bg-purple-600 hover:bg-purple-700"
@@ -69,7 +70,6 @@ const Index = () => {
   };
 
   const handleLike = (itemId: string, profileId: string) => {
-    // Universal like system - all authenticated users can like
     if (!user) {
       addError("You must be logged in to like profiles.");
       return;
@@ -110,11 +110,11 @@ const Index = () => {
       return;
     }
     
-    console.log('🚀 Triggering complete fresh feed refresh');
+    console.log('🚀 Triggering feed refresh');
     setRefreshKey(prev => prev + 1);
     toast({
-      title: "Fresh content loaded!",
-      description: "Your feed has been completely refreshed with new content rotation",
+      title: "Feed refreshed!",
+      description: "Latest content loaded",
     });
   };
 
@@ -132,14 +132,13 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Enhanced Header with fresh feed indicators */}
       <header className="fixed top-0 left-0 right-0 z-40 bg-black/80 backdrop-blur-md border-b border-gray-700">
         <div className="p-4 flex justify-between items-center max-w-md mx-auto">
           <div className="flex items-center space-x-3">
             <Heart className="w-8 h-8 text-pink-500" />
             <div>
               <h1 className="text-2xl font-bold text-white">Connect</h1>
-              <p className="text-xs text-gray-400">Fresh • Real-time • Auto-refresh</p>
+              <p className="text-xs text-gray-400">Real-time feed</p>
             </div>
             {isAdmin && (
               <span className="bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
@@ -173,12 +172,10 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Main Content with Fresh Feed Engine */}
       <main className="pt-20">
         <div className="max-w-md mx-auto px-4">
           <ProfileCompletionPrompt />
           
-          {/* Fresh Feed Engine with Real-time Updates */}
           <InstagramFeed 
             key={refreshKey}
             onLike={handleLike}

@@ -7,7 +7,6 @@ import { useFilteredFeedData } from './useFilteredFeedData';
 import { useFeedPagination } from './useFeedPagination';
 import { usePostFetching } from './feed/usePostFetching';
 import { useFeedItemCreation } from './feed/useFeedItemCreation';
-import { useDynamicFeedAlgorithm } from './feed/useDynamicFeedAlgorithm';
 import { useEngagementTracking } from './feed/useEngagementTracking';
 import { FeedItem } from '@/components/feed/types/feedTypes';
 
@@ -17,106 +16,54 @@ export const useFeedData = (itemsPerPage: number = 8) => {
   const { user } = useAuth() || {};
   const [shuffleKey, setShuffleKey] = useState(0);
 
-  console.debug("📱 useFeedData - user:", user?.id || 'no user');
+  console.log("📱 useFeedData - user:", user?.id || 'no user');
 
   const { realProfiles, loading: profilesLoading } = useRealProfiles();
   const { newJoiners, loading: newJoinersLoading } = useNewJoiners();
   const { posts, refetchPosts } = usePostFetching();
 
-  console.log("📱 Data status:", {
-    profilesLoading,
-    newJoinersLoading,
-    profilesCount: realProfiles?.length || 0,
-    postsCount: posts?.length || 0,
-    shuffleKey,
-    userExists: !!user
-  });
-
-  // Engagement tracking with error handling
+  // Safe engagement tracking
   const engagementTracker = useEngagementTracking();
 
   const allProfiles = useMemo(() => {
-    const profiles = realProfiles || [];
-    console.log(`📱 Total profiles: ${profiles.length} (all real accounts)`);
-    return profiles;
+    if (!realProfiles) return [];
+    console.log(`📱 Total profiles: ${realProfiles.length}`);
+    return realProfiles;
   }, [realProfiles]);
 
-  // Apply role-based filtering with posts data
-  const roleFilteredProfiles = useFilteredFeedData(allProfiles, newJoiners || [], posts || []);
-  const filteredProfiles = roleFilteredProfiles || [];
+  // Apply filtering
+  const filteredProfiles = useFilteredFeedData(allProfiles, newJoiners || [], posts || []);
 
-  // Create all feed items with improved error handling
+  // Create feed items
   const rawFeedItems = useFeedItemCreation({
-    filteredProfiles,
+    filteredProfiles: filteredProfiles || [],
     posts: posts || [],
     shuffleKey,
     userId: user?.id
   });
 
-  console.log("📱 Raw feed items created:", rawFeedItems?.length || 0);
-
-  // Apply dynamic algorithm for intelligent content ranking
-  const {
-    algorithmicFeed,
-    isProcessing: algorithmProcessing,
-    manualRefresh: refreshAlgorithm,
-    refreshCount
-  } = useDynamicFeedAlgorithm({
-    rawFeedItems: rawFeedItems || [],
-    enabled: true,
-    autoRefreshInterval: 300000, // 5 minutes
-    maxItemsPerLoad: itemsPerPage * 4
-  });
-
-  console.log("📱 Algorithmic feed processed:", {
-    itemCount: algorithmicFeed?.length || 0,
-    isProcessing: algorithmProcessing,
-    refreshCount
-  });
-
-  // Handle pagination with algorithmic feed
+  // Handle pagination
   const {
     displayedItems,
     hasMoreItems,
     isLoadingMore: paginationLoading,
     handleLoadMore,
     resetPagination
-  } = useFeedPagination(algorithmicFeed || [], itemsPerPage);
+  } = useFeedPagination(rawFeedItems || [], itemsPerPage);
 
   const isLoadingMore = paginationLoading || profilesLoading || newJoinersLoading;
 
-  console.log("📱 Final display status:", {
-    displayedItemsCount: displayedItems?.length || 0,
-    hasMoreItems,
-    isLoadingMore
-  });
-
-  // Enhanced refresh with algorithm reset and error handling
+  // Simplified refresh
   const handleRefresh = useCallback(() => {
-    try {
-      console.log('📱 Refreshing feed with dynamic algorithm (refresh #' + (refreshCount + 1) + ')');
-      resetPagination();
-      
-      if (refetchPosts) {
-        refetchPosts();
-      }
-      
-      // Generate new shuffle key for fresh algorithm results
-      setShuffleKey(prev => prev + Math.floor(Math.random() * 1000));
-      
-      // Trigger algorithm refresh
-      if (refreshAlgorithm) {
-        refreshAlgorithm();
-      }
-      
-      // Clear old engagement data safely
-      if (engagementTracker?.clearOldEngagementData) {
-        engagementTracker.clearOldEngagementData();
-      }
-    } catch (error) {
-      console.error('Error refreshing feed:', error);
+    console.log('📱 Refreshing feed');
+    resetPagination();
+    
+    if (refetchPosts) {
+      refetchPosts();
     }
-  }, [resetPagination, refetchPosts, refreshAlgorithm, engagementTracker, refreshCount]);
+    
+    setShuffleKey(prev => prev + 1);
+  }, [resetPagination, refetchPosts]);
 
   return {
     displayedItems: displayedItems || [],

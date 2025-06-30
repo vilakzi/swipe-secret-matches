@@ -18,47 +18,46 @@ export const useRealTimeFeed = ({
 }: UseRealTimeFeedProps = {}) => {
   
   const handleNewPost = useCallback(() => {
-    console.log('📡 NEW POST: Distributing to ALL accounts immediately');
+    console.log('📡 New post detected');
     if (onNewPost) {
       onNewPost();
     }
     toast({
-      title: "Fresh content available!",
-      description: "New post distributed to all feeds instantly",
+      title: "New content!",
+      description: "Fresh post added to feed",
     });
   }, [onNewPost]);
 
   const handlePostUpdate = useCallback(() => {
-    console.log('📡 POST UPDATED: Refreshing all feeds with updated content');
+    console.log('📡 Post updated');
     if (onPostUpdate) {
       onPostUpdate();
     }
   }, [onPostUpdate]);
 
   const handlePostDelete = useCallback(() => {
-    console.log('📡 POST DELETED: Removing from all feeds immediately');
+    console.log('📡 Post deleted');
     if (onPostDelete) {
       onPostDelete();
     }
   }, [onPostDelete]);
 
   const handleNewProfile = useCallback(() => {
-    console.log('📡 NEW PROFILE: Adding to all user feeds immediately');
+    console.log('📡 New profile detected');
     if (onNewProfile) {
       onNewProfile();
     }
     toast({
-      title: "New member joined!",
-      description: "Fresh profile added to your feed",
+      title: "New member!",
+      description: "Someone new joined",
     });
   }, [onNewProfile]);
 
   useEffect(() => {
-    console.log('📡 REAL-TIME CONTENT DISTRIBUTION: Starting universal content sync');
+    console.log('📡 Setting up real-time feed listeners');
     
-    // Set up comprehensive real-time subscription for ALL content
     const channel = supabase
-      .channel('universal-content-distribution')
+      .channel('feed-updates')
       .on(
         'postgres_changes',
         {
@@ -66,10 +65,7 @@ export const useRealTimeFeed = ({
           schema: 'public',
           table: 'posts'
         },
-        (payload) => {
-          console.log('📡 NEW POST DETECTED - Distributing to ALL users:', payload);
-          handleNewPost();
-        }
+        handleNewPost
       )
       .on(
         'postgres_changes',
@@ -78,10 +74,7 @@ export const useRealTimeFeed = ({
           schema: 'public',
           table: 'posts'
         },
-        (payload) => {
-          console.log('📡 POST UPDATE DETECTED - Updating all feeds:', payload);
-          handlePostUpdate();
-        }
+        handlePostUpdate
       )
       .on(
         'postgres_changes',
@@ -90,10 +83,7 @@ export const useRealTimeFeed = ({
           schema: 'public',
           table: 'posts'
         },
-        (payload) => {
-          console.log('📡 POST DELETION DETECTED - Removing from all feeds:', payload);
-          handlePostDelete();
-        }
+        handlePostDelete
       )
       .on(
         'postgres_changes',
@@ -102,36 +92,17 @@ export const useRealTimeFeed = ({
           schema: 'public',
           table: 'profiles'
         },
-        (payload) => {
-          console.log('📡 NEW PROFILE DETECTED - Adding to all feeds:', payload);
-          handleNewProfile();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'profiles'
-        },
-        (payload) => {
-          console.log('📡 PROFILE UPDATE DETECTED - Refreshing all feeds:', payload);
-          if (onPostUpdate) {
-            onPostUpdate();
-          }
-        }
+        handleNewProfile
       )
       .subscribe();
 
-    console.log('📡 UNIVERSAL CONTENT DISTRIBUTION: Active for all users');
+    console.log('📡 Real-time listeners active');
 
     return () => {
-      console.log('📡 Cleaning up universal content distribution');
+      console.log('📡 Cleaning up real-time listeners');
       supabase.removeChannel(channel);
     };
-  }, [handleNewPost, handlePostUpdate, handlePostDelete, handleNewProfile, onPostUpdate]);
+  }, [handleNewPost, handlePostUpdate, handlePostDelete, handleNewProfile]);
 
-  return {
-    // Real-time distribution is active
-  };
+  return {};
 };
