@@ -31,66 +31,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let mounted = true;
 
-    // Set up auth state listener with error handling
+    // Simplified auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
 
         console.log('Auth state changed:', event);
         
-        // Clear sensitive data on sign out
         if (event === 'SIGNED_OUT') {
           setSession(null);
           setUser(null);
           setLoading(false);
-          // Clear any cached data
-          localStorage.removeItem('sb-auth-token');
-          return;
-        }
-
-        // Handle token refresh errors
-        if (event === 'TOKEN_REFRESHED' && !session) {
-          console.error('Token refresh failed');
-          toast({
-            title: "Session expired",
-            description: "Please sign in again.",
-            variant: "destructive",
-          });
-          await supabase.auth.signOut();
           return;
         }
 
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
-        
-        // Only check subscription for active sessions
-        if (session?.user && event === 'SIGNED_IN') {
-          // Use setTimeout to prevent blocking the auth flow
-          setTimeout(async () => {
-            try {
-              await supabase.functions.invoke('check-subscription', {
-                headers: {
-                  Authorization: `Bearer ${session.access_token}`,
-                },
-              });
-            } catch (error) {
-              console.error('Subscription check failed:', error);
-            }
-          }, 1000);
-        }
       }
     );
 
-    // Check for existing session with error handling
+    // Get initial session
     const getInitialSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('Error getting session:', error);
-          // If there's an error getting session, clear any stale data
-          await supabase.auth.signOut();
+          if (mounted) {
+            setLoading(false);
+          }
           return;
         }
 
@@ -155,22 +125,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
-      // Clear all local data before signing out
       setLoading(true);
       
       const { error } = await supabase.auth.signOut();
       
       if (error) {
         console.error('Sign out error:', error);
-        // Even if sign out fails, clear local state
       }
       
-      // Force clear local state
       setSession(null);
       setUser(null);
-      
-      // Clear any remaining cached data
-      localStorage.removeItem('sb-auth-token');
       
     } catch (error: any) {
       console.error('Sign out error:', error);

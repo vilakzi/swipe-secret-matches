@@ -1,9 +1,9 @@
 
 import React from 'react';
-import CleanAuthContainer from '@/components/auth/CleanAuthContainer';
+import MobileAuthForm from '@/components/auth/MobileAuthForm';
 
 const Auth = () => {
-  return <CleanAuthContainer />;
+  return <MobileAuthForm />;
 };
 
 export default Auth;

@@ -1,7 +1,7 @@
+
 import React from 'react';
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
-// If you use Sonner, keep it; otherwise, remove the next line
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ServiceProviderRoute from "@/components/ServiceProviderRoute";
@@ -9,17 +9,28 @@ import AdminRoute from "@/components/AdminRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import AgeVerificationBanner from "@/components/AgeVerificationBanner";
 import { useSessionManager } from "@/hooks/useSessionManager";
-import Index from "@/pages/Index";
 import Auth from "@/pages/Auth";
-import Profile from "@/pages/Profile";
-import UserProfile from "@/pages/UserProfile";
-import Matches from "@/pages/Matches";
-import Settings from "@/pages/Settings";
-import Onboarding from "@/pages/Onboarding";
-import ServiceProviderDashboard from "@/pages/ServiceProviderDashboard";
-import AdminDashboard from "@/pages/AdminDashboard";
-import ProviderProfile from "@/pages/ProviderProfile";
-import NotFound from "@/pages/NotFound";
+
+// Lazy load heavy components to improve mobile performance
+const Index = React.lazy(() => import("@/pages/Index"));
+const Profile = React.lazy(() => import("@/pages/Profile"));
+const UserProfile = React.lazy(() => import("@/pages/UserProfile"));
+const Matches = React.lazy(() => import("@/pages/Matches"));
+const Settings = React.lazy(() => import("@/pages/Settings"));
+const Onboarding = React.lazy(() => import("@/pages/Onboarding"));
+const ServiceProviderDashboard = React.lazy(() => import("@/pages/ServiceProviderDashboard"));
+const AdminDashboard = React.lazy(() => import("@/pages/AdminDashboard"));
+const ProviderProfile = React.lazy(() => import("@/pages/ProviderProfile"));
+const NotFound = React.lazy(() => import("@/pages/NotFound"));
+
+const LoadingSpinner = () => (
+  <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center">
+    <div className="text-center p-8">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
+      <h2 className="text-xl font-semibold text-white">Loading...</h2>
+    </div>
+  </div>
+);
 
 const MainApp = () => {
   useSessionManager();
@@ -27,80 +38,81 @@ const MainApp = () => {
   return (
     <>
       <Toaster />
-      {/* Remove Sonner below if you only use one notification system */}
       <Sonner />
       <AgeVerificationBanner />
-      <Routes>
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/onboarding" element={
-          <ProtectedRoute>
+      <React.Suspense fallback={<LoadingSpinner />}>
+        <Routes>
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/onboarding" element={
+            <ProtectedRoute>
+              <AppLayout showBottomNav={false}>
+                <Onboarding />
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/" element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Index />
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Profile />
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/profile/:userId" element={
+            <ProtectedRoute>
+              <AppLayout showBottomNav={false}>
+                <UserProfile />
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/provider/:providerId" element={
+            <ProtectedRoute>
+              <AppLayout showBottomNav={false}>
+                <ProviderProfile />
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/matches" element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Matches />
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/settings" element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Settings />
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard" element={
+            <ServiceProviderRoute>
+              <AppLayout showBottomNav={false}>
+                <ServiceProviderDashboard />
+              </AppLayout>
+            </ServiceProviderRoute>
+          } />
+          <Route path="/admin" element={
+            <AdminRoute>
+              <AppLayout showBottomNav={false}>
+                <AdminDashboard />
+              </AppLayout>
+            </AdminRoute>
+          } />
+          <Route path="*" element={
             <AppLayout showBottomNav={false}>
-              <Onboarding />
+              <NotFound />
             </AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/" element={
-          <ProtectedRoute>
-            <AppLayout>
-              <Index />
-            </AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/profile" element={
-          <ProtectedRoute>
-            <AppLayout>
-              <Profile />
-            </AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/profile/:userId" element={
-          <ProtectedRoute>
-            <AppLayout showBottomNav={false}>
-              <UserProfile />
-            </AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/provider/:providerId" element={
-          <ProtectedRoute>
-            <AppLayout showBottomNav={false}>
-              <ProviderProfile />
-            </AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/matches" element={
-          <ProtectedRoute>
-            <AppLayout>
-              <Matches />
-            </AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/settings" element={
-          <ProtectedRoute>
-            <AppLayout>
-              <Settings />
-            </AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/dashboard" element={
-          <ServiceProviderRoute>
-            <AppLayout showBottomNav={false}>
-              <ServiceProviderDashboard />
-            </AppLayout>
-          </ServiceProviderRoute>
-        } />
-        <Route path="/admin" element={
-          <AdminRoute>
-            <AppLayout showBottomNav={false}>
-              <AdminDashboard />
-            </AppLayout>
-          </AdminRoute>
-        } />
-        <Route path="*" element={
-          <AppLayout showBottomNav={false}>
-            <NotFound />
-          </AppLayout>
-        } />
-      </Routes>
+          } />
+        </Routes>
+      </React.Suspense>
     </>
   );
 };
