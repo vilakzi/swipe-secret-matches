@@ -9,31 +9,31 @@ import { useEngagementTracking } from './feed/useEngagementTracking';
 import { useRealTimeFeed } from './useRealTimeFeed';
 
 export const useSimplifiedFeedEngine = () => {
+  // All hooks must be called at the top level in consistent order
   const { user } = useAuth() || {};
-  
-  // Initialize all hooks first to maintain consistent order
   const [shuffleKey, setShuffleKey] = useState(() => Date.now());
   const [displayedItems, setDisplayedItems] = useState([]);
   const [hasMoreItems, setHasMoreItems] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // Engagement tracking moved up to maintain hook order
+  // Initialize engagement tracking early to maintain hook order
   const engagementTracker = useEngagementTracking();
 
-  // Fetch data sources with optimized loading
+  // Fetch data sources
   const { realProfiles, loading: profilesLoading } = useRealProfiles();
   const { newJoiners, loading: newJoinersLoading } = useNewJoiners();
   const { posts, refetchPosts } = usePostFetching();
 
-  // Optimized feed item creation with memoization and null checks
+  // Create feed items with error boundaries
   const rawFeedItems = useMemo(() => {
-    console.log('🚀 Creating optimized feed items');
-    if (!realProfiles || !posts) {
-      console.log('⏳ Waiting for data to load...');
-      return [];
-    }
+    console.log('🚀 Creating feed items with error handling');
     
     try {
+      if (!realProfiles || !posts) {
+        console.log('⏳ Waiting for data to load...');
+        return [];
+      }
+      
       return useFeedItemCreation({
         filteredProfiles: realProfiles || [],
         posts: posts || [],
@@ -46,67 +46,73 @@ export const useSimplifiedFeedEngine = () => {
     }
   }, [realProfiles, posts, shuffleKey, user?.id]);
 
-  // Update displayed items when raw items change with performance optimization
+  // Update displayed items when raw items change
   useEffect(() => {
-    if (rawFeedItems && rawFeedItems.length > 0) {
-      const initialItems = rawFeedItems.slice(0, 30);
-      setDisplayedItems(initialItems);
-      setHasMoreItems(rawFeedItems.length > 30);
-      console.log('🚀 Initial feed loaded:', initialItems.length, 'items');
-    } else if (rawFeedItems && rawFeedItems.length === 0) {
+    if (!rawFeedItems) return;
+    
+    try {
+      if (rawFeedItems.length > 0) {
+        const initialItems = rawFeedItems.slice(0, 30);
+        setDisplayedItems(initialItems);
+        setHasMoreItems(rawFeedItems.length > 30);
+        console.log('🚀 Initial feed loaded:', initialItems.length, 'items');
+      } else {
+        setDisplayedItems([]);
+        setHasMoreItems(false);
+        console.log('🚀 No feed items available');
+      }
+    } catch (error) {
+      console.error('Error updating displayed items:', error);
       setDisplayedItems([]);
       setHasMoreItems(false);
-      console.log('🚀 No feed items available');
     }
   }, [rawFeedItems]);
 
-  // Optimized load more with better performance and error handling
+  // Load more items with error handling
   const handleLoadMore = useCallback(() => {
     if (!rawFeedItems || isLoadingMore || !hasMoreItems) return;
     
     console.log('🚀 Loading more items...');
     setIsLoadingMore(true);
     
-    // Use requestAnimationFrame for smooth loading
-    requestAnimationFrame(() => {
+    try {
       setTimeout(() => {
-        try {
-          const currentLength = displayedItems.length;
-          const nextItems = rawFeedItems.slice(currentLength, currentLength + 20);
-          
-          if (nextItems.length > 0) {
-            setDisplayedItems(prev => [...prev, ...nextItems]);
-            console.log('🚀 Loaded', nextItems.length, 'more items');
-          }
-          
-          setHasMoreItems(currentLength + nextItems.length < rawFeedItems.length);
-        } catch (error) {
-          console.error('Error loading more items:', error);
-        } finally {
-          setIsLoadingMore(false);
+        const currentLength = displayedItems.length;
+        const nextItems = rawFeedItems.slice(currentLength, currentLength + 20);
+        
+        if (nextItems.length > 0) {
+          setDisplayedItems(prev => [...prev, ...nextItems]);
+          console.log('🚀 Loaded', nextItems.length, 'more items');
         }
+        
+        setHasMoreItems(currentLength + nextItems.length < rawFeedItems.length);
+        setIsLoadingMore(false);
       }, 300);
-    });
+    } catch (error) {
+      console.error('Error loading more items:', error);
+      setIsLoadingMore(false);
+    }
   }, [rawFeedItems, displayedItems.length, isLoadingMore, hasMoreItems]);
 
-  // Optimized refresh handler
+  // Refresh handler
   const handleRefresh = useCallback(() => {
-    console.log('🚀 Refreshing feed with optimization');
-    setShuffleKey(Date.now() + Math.random());
-    setDisplayedItems([]);
-    setHasMoreItems(true);
-    setIsLoadingMore(false);
+    console.log('🚀 Refreshing feed');
     
-    if (refetchPosts) {
-      try {
+    try {
+      setShuffleKey(Date.now() + Math.random());
+      setDisplayedItems([]);
+      setHasMoreItems(true);
+      setIsLoadingMore(false);
+      
+      if (refetchPosts) {
         refetchPosts();
-      } catch (error) {
-        console.error('Error refetching posts:', error);
       }
+    } catch (error) {
+      console.error('Error refreshing feed:', error);
     }
   }, [refetchPosts]);
 
-  // Real-time updates with debouncing and error handling
+  // Real-time updates
   useRealTimeFeed({
     onNewPost: useCallback(() => {
       console.log('📡 New post - refreshing feed');
@@ -128,7 +134,7 @@ export const useSimplifiedFeedEngine = () => {
 
   const isLoading = profilesLoading || newJoinersLoading;
 
-  // Performance monitoring with null checks
+  // Feed statistics
   const feedEngineStats = useMemo(() => {
     const totalCount = rawFeedItems?.length || 0;
     const distributedContent = displayedItems?.length || 0;

@@ -19,6 +19,9 @@ interface InstagramFeedProps {
 const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFeedProps) => {
   const [showFilters, setShowFilters] = useState(false);
   
+  // Initialize feed engine with error handling
+  const feedEngine = useSimplifiedFeedEngine();
+  
   const {
     displayedItems,
     hasMoreItems,
@@ -27,35 +30,54 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
     handleRefresh,
     engagementTracker,
     feedEngineStats
-  } = useSimplifiedFeedEngine();
+  } = feedEngine || {};
 
   const handlePullRefresh = useCallback(async () => {
     console.log('🔄 Pull refresh triggered');
-    handleRefresh();
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    onRefresh();
     
-    toast({
-      title: "Feed refreshed!",
-      description: "Latest content loaded successfully",
-    });
+    try {
+      if (handleRefresh) {
+        handleRefresh();
+      }
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      onRefresh();
+      
+      toast({
+        title: "Feed refreshed!",
+        description: "Latest content loaded successfully",
+      });
+    } catch (error) {
+      console.error('Pull refresh error:', error);
+      toast({
+        title: "Refresh failed",
+        description: "Please try again",
+        variant: "destructive"
+      });
+    }
   }, [handleRefresh, onRefresh]);
 
   const handleSmartRefresh = useCallback(() => {
     console.log('🔄 Smart refresh triggered');
-    handleRefresh();
-    onRefresh();
     
-    toast({
-      title: "Content updated!",
-      description: "Fresh content distributed",
-    });
+    try {
+      if (handleRefresh) {
+        handleRefresh();
+      }
+      onRefresh();
+      
+      toast({
+        title: "Content updated!",
+        description: "Fresh content distributed",
+      });
+    } catch (error) {
+      console.error('Smart refresh error:', error);
+    }
   }, [handleRefresh, onRefresh]);
 
   console.log('🚀 InstagramFeed status:', {
     displayedItems: displayedItems?.length || 0,
-    hasMoreItems,
-    isLoadingMore,
+    hasMoreItems: hasMoreItems || false,
+    isLoadingMore: isLoadingMore || false,
     totalContent: feedEngineStats?.totalCount || 0
   });
 
@@ -91,8 +113,8 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
       <div className="max-w-md mx-auto">
         <PullToRefresh onRefresh={handlePullRefresh} className="pt-20">
           <InfiniteScroll
-            hasMore={hasMoreItems}
-            isLoading={isLoadingMore}
+            hasMore={hasMoreItems || false}
+            isLoading={isLoadingMore || false}
             onLoadMore={handleLoadMore}
             threshold={200}
           >

@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface EngagementEvent {
@@ -13,8 +13,20 @@ export const useEngagementTracking = () => {
   const [engagementData, setEngagementData] = useState<Map<string, EngagementEvent[]>>(new Map());
   const viewTimersRef = useRef<Map<string, { startTime: number; timer: NodeJS.Timeout }>>(new Map());
 
+  // Clean up timers on unmount
+  useEffect(() => {
+    return () => {
+      viewTimersRef.current.forEach(({ timer }) => {
+        clearTimeout(timer);
+      });
+      viewTimersRef.current.clear();
+    };
+  }, []);
+
   // Track when user starts viewing an item
   const trackItemView = useCallback((itemId: string) => {
+    if (!itemId) return;
+    
     const startTime = Date.now();
     
     // Clear existing timer for this item
@@ -48,6 +60,8 @@ export const useEngagementTracking = () => {
 
   // Track when user stops viewing an item
   const trackItemViewEnd = useCallback((itemId: string) => {
+    if (!itemId) return;
+    
     const timer = viewTimersRef.current.get(itemId);
     if (timer) {
       clearTimeout(timer.timer);
@@ -57,6 +71,8 @@ export const useEngagementTracking = () => {
 
   // Track engagement events (likes, contacts, etc.)
   const trackEngagement = useCallback((itemId: string, type: EngagementEvent['type']) => {
+    if (!itemId || !type) return;
+    
     const event: EngagementEvent = {
       itemId,
       type,
@@ -84,19 +100,24 @@ export const useEngagementTracking = () => {
           if (result.error) {
             console.warn('Analytics tracking error:', result.error);
           }
+        })
+        .catch((error) => {
+          console.warn('Analytics tracking failed:', error);
         });
     }
   }, []);
 
   // Get engagement score for an item
   const getEngagementScore = useCallback((itemId: string): number => {
+    if (!itemId) return 0;
+    
     const events = engagementData.get(itemId) || [];
     let score = 0;
 
     events.forEach(event => {
       switch (event.type) {
         case 'view':
-          score += event.duration && event.duration > 3000 ? 2 : 1; // Long views worth more
+          score += event.duration && event.duration > 3000 ? 2 : 1;
           break;
         case 'like':
           score += 5;
