@@ -19,16 +19,9 @@ interface InstagramFeedProps {
 
 const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFeedProps) => {
   const [showFilters, setShowFilters] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   
-  // Get feed engine data with error handling
-  let feedEngine;
-  try {
-    feedEngine = useSimplifiedFeedEngine();
-  } catch (err) {
-    console.error('Feed engine error:', err);
-    setError('Failed to initialize feed');
-  }
+  // Get feed engine data - remove try/catch that was causing issues
+  const feedEngine = useSimplifiedFeedEngine();
   
   // Safe destructuring with guaranteed fallbacks
   const displayedItems = feedEngine?.displayedItems || [];
@@ -47,7 +40,6 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
     console.log('🔄 Pull refresh triggered');
     
     try {
-      setError(null);
       handleRefresh();
       await new Promise(resolve => setTimeout(resolve, 1000));
       onRefresh();
@@ -58,7 +50,6 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
       });
     } catch (error) {
       console.error('Pull refresh error:', error);
-      setError('Refresh failed');
       toast({
         title: "Refresh failed",
         description: "Please try again",
@@ -71,7 +62,6 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
     console.log('🔄 Smart refresh triggered');
     
     try {
-      setError(null);
       handleRefresh();
       onRefresh();
       
@@ -81,47 +71,16 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
       });
     } catch (error) {
       console.error('Smart refresh error:', error);
-      setError('Update failed');
     }
   }, [handleRefresh, onRefresh]);
-
-  const handleRetry = useCallback(() => {
-    setError(null);
-    handleSmartRefresh();
-  }, [handleSmartRefresh]);
 
   console.log('🚀 InstagramFeed render:', {
     displayedItems: displayedItems.length,
     hasMoreItems,
     isLoadingMore,
     totalContent: feedEngineStats.totalCount,
-    loadingState: feedEngineStats.loadingState,
-    error
+    loadingState: feedEngineStats.loadingState
   });
-
-  // Show error fallback if there's an error
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900">
-        <FeedHeader
-          showFilters={showFilters}
-          setShowFilters={setShowFilters}
-          onImageUpload={() => console.log('Image upload initiated')}
-          onVideoUpload={() => console.log('Video upload initiated')}
-          onRefresh={handleSmartRefresh}
-        />
-        
-        <div className="pt-32">
-          <ErrorFallback
-            error={new Error(error)}
-            onRetry={handleRetry}
-            title="Feed Error"
-            message="Something went wrong loading the feed"
-          />
-        </div>
-      </div>
-    );
-  }
 
   // Show loading spinner when loading and no items
   if (feedEngineStats.loadingState === 'loading' && displayedItems.length === 0) {

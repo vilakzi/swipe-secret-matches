@@ -15,57 +15,47 @@ export const useSimplifiedFeedEngine = () => {
   const [hasMoreItems, setHasMoreItems] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // Initialize engagement tracker first
+  // Initialize engagement tracker
   const engagementTracker = useEngagementTracking();
 
-  // Fetch data with proper error handling
+  // Fetch data with safe defaults
   const realProfilesResult = useRealProfiles();
   const newJoinersResult = useNewJoiners();
   const postFetchingResult = usePostFetching();
 
-  // Safe data extraction
+  // Safe data extraction with guaranteed arrays
   const realProfiles = realProfilesResult?.realProfiles || [];
   const profilesLoading = realProfilesResult?.loading || false;
   const newJoiners = newJoinersResult?.newJoiners || [];
   const newJoinersLoading = newJoinersResult?.loading || false;
   const posts = postFetchingResult?.posts || [];
-  const refetchPosts = postFetchingResult?.refetchPosts;
+  const refetchPosts = postFetchingResult?.refetchPosts || (() => {});
 
-  // Create feed items with stable dependencies
-  const rawFeedItems = useMemo(() => {
-    console.log('🚀 Creating feed items, profiles:', realProfiles.length, 'posts:', posts.length);
-    
-    if (realProfiles.length === 0 && posts.length === 0) {
-      return [];
-    }
-    
-    try {
-      return useFeedItemCreation({
-        filteredProfiles: realProfiles,
-        posts: posts,
-        shuffleKey,
-        userId: user?.id || null
-      });
-    } catch (error) {
-      console.error('Feed creation error:', error);
-      return [];
-    }
-  }, [realProfiles, posts, shuffleKey, user?.id]);
+  // Create feed items with the hook called properly at top level
+  const rawFeedItems = useFeedItemCreation({
+    filteredProfiles: realProfiles,
+    posts: posts,
+    shuffleKey,
+    userId: user?.id || null
+  });
 
   // Update displayed items when raw items change
   useEffect(() => {
+    console.log('🚀 Raw feed items updated:', rawFeedItems?.length || 0);
+    
     if (rawFeedItems && rawFeedItems.length > 0) {
       const initialItems = rawFeedItems.slice(0, 30);
       setDisplayedItems(initialItems);
       setHasMoreItems(rawFeedItems.length > 30);
-      console.log('🚀 Feed items updated:', initialItems.length);
+      console.log('🚀 Feed items set:', initialItems.length);
     } else {
+      // Set empty arrays instead of null/undefined
       setDisplayedItems([]);
       setHasMoreItems(false);
     }
   }, [rawFeedItems]);
 
-  // Load more handler
+  // Load more handler with better error handling
   const handleLoadMore = useCallback(() => {
     if (!rawFeedItems || isLoadingMore || !hasMoreItems) {
       return;
@@ -134,10 +124,10 @@ export const useSimplifiedFeedEngine = () => {
   // Calculate loading state
   const isLoading = profilesLoading || newJoinersLoading;
 
-  // Feed statistics
+  // Feed statistics with safe calculations
   const feedEngineStats = useMemo(() => {
-    const totalCount = rawFeedItems ? rawFeedItems.length : 0;
-    const distributedContent = displayedItems ? displayedItems.length : 0;
+    const totalCount = Array.isArray(rawFeedItems) ? rawFeedItems.length : 0;
+    const distributedContent = Array.isArray(displayedItems) ? displayedItems.length : 0;
     
     return {
       totalCount,
@@ -151,9 +141,9 @@ export const useSimplifiedFeedEngine = () => {
 
   console.log('🚀 Feed Engine Stats:', feedEngineStats);
 
-  // Always return consistent object structure
+  // Always return consistent object structure with guaranteed arrays
   return {
-    displayedItems: displayedItems || [],
+    displayedItems: Array.isArray(displayedItems) ? displayedItems : [],
     hasMoreItems: Boolean(hasMoreItems),
     isLoadingMore: Boolean(isLoadingMore),
     handleLoadMore,
