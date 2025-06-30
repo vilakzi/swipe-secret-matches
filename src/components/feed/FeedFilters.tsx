@@ -127,35 +127,41 @@ const FeedFilters: React.FC<FeedFiltersProps> = ({
 
       {/* Location Navigation Buttons */}
       <div className="flex items-center justify-center gap-2 overflow-x-auto">
-        <Button
-          variant={currentLocation === 'soweto' ? 'default' : 'outline'}
-          size="sm"
+        <button
           onClick={() => handleLocationClick('soweto')}
-          className="flex items-center gap-1 whitespace-nowrap"
+          className={`flex items-center gap-1 px-3 py-2 rounded-full text-xs font-bold shadow-lg transition-all whitespace-nowrap ${
+            currentLocation === 'soweto'
+              ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white scale-105'
+              : 'bg-gradient-to-r from-gray-600 to-gray-700 text-white hover:from-purple-400 hover:to-pink-500'
+          }`}
         >
           <MapPin className="h-3 w-3" />
-          <span className="text-xs">Soweto Hookups</span>
-        </Button>
+          <span>Soweto Hookups</span>
+        </button>
         
-        <Button
-          variant={currentLocation === 'jhb-central' ? 'default' : 'outline'}
-          size="sm"
+        <button
           onClick={() => handleLocationClick('jhb-central')}
-          className="flex items-center gap-1 whitespace-nowrap"
+          className={`flex items-center gap-1 px-3 py-2 rounded-full text-xs font-bold shadow-lg transition-all whitespace-nowrap ${
+            currentLocation === 'jhb-central'
+              ? 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white scale-105'
+              : 'bg-gradient-to-r from-gray-600 to-gray-700 text-white hover:from-blue-400 hover:to-cyan-500'
+          }`}
         >
           <MapPin className="h-3 w-3" />
-          <span className="text-xs">Jhb Central Hookups</span>
-        </Button>
+          <span>Jhb Central Hookups</span>
+        </button>
         
-        <Button
-          variant={currentLocation === 'pta' ? 'default' : 'outline'}
-          size="sm"
+        <button
           onClick={() => handleLocationClick('pta')}
-          className="flex items-center gap-1 whitespace-nowrap"
+          className={`flex items-center gap-1 px-3 py-2 rounded-full text-xs font-bold shadow-lg transition-all whitespace-nowrap ${
+            currentLocation === 'pta'
+              ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white scale-105'
+              : 'bg-gradient-to-r from-gray-600 to-gray-700 text-white hover:from-emerald-400 hover:to-teal-500'
+          }`}
         >
           <MapPin className="h-3 w-3" />
-          <span className="text-xs">PTA Hookups</span>
-        </Button>
+          <span>PTA Hookups</span>
+        </button>
       </div>
     </div>
   );

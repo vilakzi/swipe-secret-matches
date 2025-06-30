@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { MapPin } from 'lucide-react';
 
 export type LocationOption = 'all' | 'soweto' | 'jhb-central' | 'pta';
@@ -17,9 +16,9 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
   className = ""
 }) => {
   const locations = [
-    { value: 'soweto' as LocationOption, label: 'Soweto Hookups' },
-    { value: 'jhb-central' as LocationOption, label: 'Jhb Central Hookups' },
-    { value: 'pta' as LocationOption, label: 'PTA Hookups' },
+    { value: 'soweto' as LocationOption, label: 'Soweto Hookups', gradient: 'from-purple-500 to-pink-600' },
+    { value: 'jhb-central' as LocationOption, label: 'Jhb Central Hookups', gradient: 'from-blue-500 to-cyan-600' },
+    { value: 'pta' as LocationOption, label: 'PTA Hookups', gradient: 'from-emerald-500 to-teal-600' },
   ];
 
   return (
@@ -31,16 +30,18 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
       
       <div className="flex flex-wrap gap-2">
         {locations.map((location) => (
-          <Button
+          <button
             key={location.value}
-            variant={selectedLocations.includes(location.value) ? 'default' : 'outline'}
-            size="sm"
             onClick={() => onLocationToggle(location.value)}
-            className="flex items-center gap-1 whitespace-nowrap"
+            className={`flex items-center gap-1 px-3 py-2 rounded-full text-xs font-bold shadow-lg transition-all whitespace-nowrap ${
+              selectedLocations.includes(location.value)
+                ? `bg-gradient-to-r ${location.gradient} text-white scale-105`
+                : 'bg-gradient-to-r from-gray-600 to-gray-700 text-white hover:opacity-80'
+            }`}
           >
             <MapPin className="h-3 w-3" />
-            <span className="text-xs">{location.label}</span>
-          </Button>
+            <span>{location.label}</span>
+          </button>
         ))}
       </div>
       
