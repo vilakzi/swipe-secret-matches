@@ -18,7 +18,7 @@ interface InstagramFeedProps {
 const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFeedProps) => {
   const [showFilters, setShowFilters] = useState(false);
   
-  // Use dynamic feed engine for continuous, never-ending content
+  // Use dynamic feed engine for continuous, fresh content
   const {
     displayedItems,
     hasMoreItems,
@@ -30,23 +30,28 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
   } = useDynamicFeedEngine();
 
   const handlePullRefresh = useCallback(async () => {
-    console.log('🔄 Pull refresh - generating fresh content flow');
+    console.log('🔄 Pull refresh - generating completely fresh content');
     handleRefresh();
     await new Promise(resolve => setTimeout(resolve, 1000));
     onRefresh();
+    
+    toast({
+      title: "Fresh content loaded!",
+      description: "Your feed has been completely refreshed with new content",
+    });
   }, [handleRefresh, onRefresh]);
 
   const handleSmartRefresh = useCallback(() => {
-    console.log('🔄 Smart refresh - ensuring dynamic content rotation');
+    console.log('🔄 Smart refresh - ensuring fresh content rotation');
     handleRefresh();
     onRefresh();
     toast({
       title: "Fresh content loaded!",
-      description: `Dynamic feed refreshed with ${feedEngineStats.poolSize} items in rotation`,
+      description: `Feed refreshed with ${feedEngineStats.totalCount} items rotating (${Math.round(feedEngineStats.freshContentRatio * 100)}% fresh)`,
     });
-  }, [handleRefresh, onRefresh, feedEngineStats.poolSize]);
+  }, [handleRefresh, onRefresh, feedEngineStats]);
 
-  console.log('🚀 InstagramFeed rendering with dynamic engine:', {
+  console.log('🚀 InstagramFeed rendering with fresh content engine:', {
     displayedItems: displayedItems.length,
     hasMore: hasMoreItems,
     isLoading: isLoadingMore,
@@ -81,22 +86,24 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
               engagementTracker={engagementTracker}
             />
             
-            {/* Dynamic flow indicators */}
+            {/* Fresh content indicators */}
             <div className="text-center py-6">
               <div className="text-gray-400 text-sm space-y-1">
-                <div>Dynamic Feed Active • Content Pool: {feedEngineStats.poolSize}</div>
-                <div>Rotation Cycle: {feedEngineStats.rotationCycle} • Fresh Content Available</div>
-                <div className="text-xs text-gray-500">Continuous flow ensures you never run out of content</div>
+                <div>Fresh Feed Active • Content Pool: {feedEngineStats.totalCount}</div>
+                <div>Fresh Content: {Math.round(feedEngineStats.freshContentRatio * 100)}% • Real-time Updates</div>
+                <div className="text-xs text-gray-500">
+                  Auto-refresh • Content rotation • Never the same twice
+                </div>
               </div>
             </div>
           </InfiniteScroll>
         </PullToRefresh>
       </div>
 
-      {/* Smart refresh manager */}
+      {/* Smart refresh manager with shorter intervals for fresh content */}
       <RefreshManager
         onRefresh={handleSmartRefresh}
-        autoRefreshInterval={300000} // 5 minutes
+        autoRefreshInterval={120000} // 2 minutes for fresh content
       />
     </div>
   );
