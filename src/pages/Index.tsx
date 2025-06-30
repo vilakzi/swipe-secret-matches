@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Heart, User, Settings, Briefcase, Shield } from 'lucide-react';
@@ -13,6 +12,9 @@ import { useInactivityTracker } from '@/hooks/useInactivityTracker';
 import { toast } from '@/hooks/use-toast';
 import { useError } from "@/components/common/ErrorTaskBar";
 
+import ErrorBoundary from '@/components/common/ErrorBoundary';
+import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
+
 const Index = () => {
   const { user, signOut } = useAuth();
   const { isUserOnline } = usePresence();
@@ -22,6 +24,7 @@ const Index = () => {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const { addError } = useError();
+  const { logError } = usePerformanceMonitor('IndexPage');
 
   // Auto-logout after 2 minutes of inactivity
   useInactivityTracker({
@@ -130,62 +133,75 @@ const Index = () => {
     return 'bg-purple-600';
   };
 
+  // Error handler for the error boundary
+  const handleError = useCallback((error: Error) => {
+    logError(error);
+    addError(`Application error: ${error.message}`);
+  }, [logError, addError]);
+
   return (
-    <div className="min-h-screen">
-      <header className="fixed top-0 left-0 right-0 z-40 bg-black/80 backdrop-blur-md border-b border-gray-700">
-        <div className="p-4 flex justify-between items-center max-w-md mx-auto">
-          <div className="flex items-center space-x-3">
-            <Heart className="w-8 h-8 text-pink-500" />
-            <div>
-              <h1 className="text-2xl font-bold text-white">Connect</h1>
-              <p className="text-xs text-gray-400">Real-time feed</p>
-            </div>
-            {isAdmin && (
-              <span className="bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
-                ADMIN
-              </span>
-            )}
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <div className="flex items-center space-x-2 bg-black/20 backdrop-blur-md rounded-full px-3 py-2 border border-gray-700">
-              <div className={`w-8 h-8 ${getRoleColor()} rounded-full flex items-center justify-center`}>
-                {getRoleIcon()}
+    <ErrorBoundary onError={handleError}>
+      <div className="min-h-screen">
+        <header className="fixed top-0 left-0 right-0 z-40 bg-black/80 backdrop-blur-md border-b border-gray-700">
+          <div className="p-4 flex justify-between items-center max-w-md mx-auto">
+            <div className="flex items-center space-x-3">
+              <Heart className="w-8 h-8 text-pink-500" />
+              <div>
+                <h1 className="text-2xl font-bold text-white">Connect</h1>
+                <p className="text-xs text-gray-400">Real-time feed</p>
               </div>
-              <OnlineStatus 
-                isOnline={isUserOnline(user.id)} 
-                size="sm"
-              />
+              {isAdmin && (
+                <span className="bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
+                  ADMIN
+                </span>
+              )}
             </div>
             
-            {isServiceProvider && (
-              <Button
-                onClick={handleDashboard}
-                variant="ghost"
-                size="sm"
-                className="text-white hover:bg-white/10"
-              >
-                <Settings className="w-4 h-4" />
-              </Button>
-            )}
+            <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 bg-black/20 backdrop-blur-md rounded-full px-3 py-2 border border-gray-700">
+                <div className={`w-8 h-8 ${getRoleColor()} rounded-full flex items-center justify-center`}>
+                  {getRoleIcon()}
+                </div>
+                <OnlineStatus 
+                  isOnline={isUserOnline(user.id)} 
+                  size="sm"
+                />
+              </div>
+              
+              {isServiceProvider && (
+                <Button
+                  onClick={handleDashboard}
+                  variant="ghost"
+                  size="sm"
+                  className="text-white hover:bg-white/10"
+                >
+                  <Settings className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="pt-20">
-        <div className="max-w-md mx-auto px-4">
-          <ProfileCompletionPrompt />
-          
-          <InstagramFeed 
-            key={refreshKey}
+        <ErrorBoundary 
+          fallback={
+            <div className="text-center p-8">
+              <p className="text-white">Feed temporarily unavailable</p>
+              <Button onClick={() => window.location.reload()} className="mt-4">
+                Refresh Page
+              </Button>
+            </div>
+          }
+        >
+          <InstagramFeed
             onLike={handleLike}
             onContact={handleContact}
             onRefresh={handleRefresh}
             likedItems={likedItems}
+            key={refreshKey}
           />
-        </div>
-      </main>
-    </div>
+        </ErrorBoundary>
+      </div>
+    </ErrorBoundary>
   );
 };
 

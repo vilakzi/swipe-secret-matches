@@ -1,11 +1,13 @@
+
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
 interface State {
@@ -24,49 +26,48 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
+    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    
+    // Call the onError callback if provided
+    if (this.props.onError) {
+      this.props.onError(error, errorInfo);
+    }
   }
+
+  handleRetry = () => {
+    this.setState({ hasError: false, error: undefined });
+  };
 
   render() {
     if (this.state.hasError) {
+      // Custom fallback UI
       if (this.props.fallback) {
-        return (
-          <div className="flex items-center justify-center min-h-screen p-4">
-            {this.props.fallback}
-          </div>
-        );
+        return this.props.fallback;
       }
 
+      // Default error UI
       return (
-        <div className="flex items-center justify-center min-h-screen p-4">
-          <Card className="w-full max-w-md bg-gray-900 border-gray-700">
-            <CardHeader className="text-center">
-              <div className="flex justify-center mb-4">
-                <AlertTriangle className="w-16 h-16 text-red-500" />
-              </div>
-              <CardTitle className="text-white">Something went wrong</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center space-y-4">
-              <p className="text-gray-400">
-                We encountered an unexpected error. Please try refreshing the page.
-              </p>
-              {process.env.NODE_ENV === 'development' && this.state.error && (
-                <div className="bg-gray-800 border border-gray-600 rounded p-3 text-left">
-                  <p className="text-red-400 text-sm font-mono">
-                    {this.state.error.message || 'Unknown error'}
-                  </p>
-                </div>
-              )}
-              <Button
-                onClick={() => window.location.reload()}
-                className="w-full bg-purple-600 hover:bg-purple-700"
-              >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Refresh Page
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+        <Card className="w-full max-w-md mx-auto bg-red-50 border-red-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-red-700">
+              <AlertCircle className="w-5 h-5" />
+              Something went wrong
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-red-600 text-sm">
+              {this.state.error?.message || 'An unexpected error occurred'}
+            </p>
+            <Button 
+              onClick={this.handleRetry}
+              className="w-full"
+              variant="outline"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
       );
     }
 

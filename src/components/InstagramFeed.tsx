@@ -1,13 +1,13 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import FeedHeader from './feed/FeedHeader';
 import FeedContent from './feed/FeedContent';
 import PullToRefresh from './feed/PullToRefresh';
 import InfiniteScroll from './feed/InfiniteScroll';
 import RefreshManager from './feed/RefreshManager';
 import LoadingSpinner from './common/LoadingSpinner';
-import ErrorFallback from './common/ErrorFallback';
 import { useSimplifiedFeedEngine } from '@/hooks/useSimplifiedFeedEngine';
+import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 import { toast } from '@/hooks/use-toast';
 
 interface InstagramFeedProps {
@@ -17,10 +17,11 @@ interface InstagramFeedProps {
   likedItems: Set<string>;
 }
 
-const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFeedProps) => {
+const InstagramFeed = memo(({ onLike, onContact, onRefresh, likedItems }: InstagramFeedProps) => {
   const [showFilters, setShowFilters] = useState(false);
+  const { logError } = usePerformanceMonitor('InstagramFeed');
   
-  // Get feed engine data
+  // Get feed engine data with error handling
   const feedEngine = useSimplifiedFeedEngine();
   
   // Safe destructuring with guaranteed fallbacks
@@ -50,13 +51,14 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
       });
     } catch (error) {
       console.error('Pull refresh error:', error);
+      logError(error as Error);
       toast({
         title: "Refresh failed",
         description: "Please try again",
         variant: "destructive"
       });
     }
-  }, [handleRefresh, onRefresh]);
+  }, [handleRefresh, onRefresh, logError]);
 
   const handleSmartRefresh = useCallback(() => {
     console.log('🔄 Smart refresh triggered');
@@ -71,8 +73,9 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
       });
     } catch (error) {
       console.error('Smart refresh error:', error);
+      logError(error as Error);
     }
-  }, [handleRefresh, onRefresh]);
+  }, [handleRefresh, onRefresh, logError]);
 
   console.log('🚀 InstagramFeed render:', {
     displayedItems: displayedItems.length,
@@ -152,6 +155,8 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
       />
     </div>
   );
-};
+});
+
+InstagramFeed.displayName = 'InstagramFeed';
 
 export default InstagramFeed;

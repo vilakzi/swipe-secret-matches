@@ -3,11 +3,13 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
-export type UserRole = 'user' | 'service_provider' | 'admin';
+// Cache for user roles to prevent repeated API calls
+const roleCache = new Map<string, { role: string; timestamp: number }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export const useUserRole = () => {
   const { user } = useAuth();
-  const [role, setRole] = useState<UserRole>('user');
+  const [role, setRole] = useState<string>('user');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,26 +20,33 @@ export const useUserRole = () => {
         return;
       }
 
+      // Check cache first
+      const cached = roleCache.get(user.id);
+      if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+        setRole(cached.role);
+        setLoading(false);
+        return;
+      }
+
       try {
-        // First check the profiles table
-        const { data: profile, error: profileError } = await supabase
+        const { data, error } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', user.id)
           .single();
 
-        if (!profileError && profile?.role) {
-          setRole(profile.role as UserRole);
+        if (error) {
+          console.error('Error fetching user role:', error);
+          setRole('user');
         } else {
-          // Fallback to user_roles table
-          const { data: userRole, error: roleError } = await supabase
-            .rpc('get_user_role', { _user_id: user.id });
-
-          if (!roleError && userRole) {
-            setRole(userRole as UserRole);
-          } else {
-            setRole('user');
-          }
+          const userRole = data?.role || 'user';
+          setRole(userRole);
+          
+          // Cache the result
+          roleCache.set(user.id, {
+            role: userRole,
+            timestamp: Date.now()
+          });
         }
       } catch (error) {
         console.error('Error fetching user role:', error);
@@ -51,14 +60,19 @@ export const useUserRole = () => {
   }, [user]);
 
   const isAdmin = role === 'admin';
-  const isServiceProvider = role === 'service_provider';
-  const isUser = role === 'user';
+  const isServiceProvider = role === 'service_provider' || role === 'admin';
+
+  // Clear cache when user changes
+  useEffect(() => {
+    if (!user) {
+      roleCache.clear();
+    }
+  }, [user]);
 
   return {
     role,
-    loading,
     isAdmin,
     isServiceProvider,
-    isUser,
+    loading,
   };
 };
