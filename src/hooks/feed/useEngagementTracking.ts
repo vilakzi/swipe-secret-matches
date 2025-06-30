@@ -10,34 +10,39 @@ interface EngagementEvent {
 }
 
 export const useEngagementTracking = () => {
-  const [engagementData, setEngagementData] = useState<Map<string, EngagementEvent[]>>(new Map());
-  const viewTimersRef = useRef<Map<string, { startTime: number; timer: NodeJS.Timeout }>>(new Map());
+  const [engagementData, setEngagementData] = useState(new Map());
+  const viewTimersRef = useRef(new Map());
 
-  // Clean up timers on unmount with stable dependencies
+  // Clean up timers on unmount - STABLE empty dependency array
   useEffect(() => {
     return () => {
-      viewTimersRef.current.forEach(({ timer }) => {
-        clearTimeout(timer);
-      });
-      viewTimersRef.current.clear();
+      const timers = viewTimersRef.current;
+      if (timers && typeof timers.forEach === 'function') {
+        timers.forEach((timerData) => {
+          if (timerData && timerData.timer) {
+            clearTimeout(timerData.timer);
+          }
+        });
+        timers.clear();
+      }
     };
-  }, []); // Empty dependency array is correct here
+  }, []);
 
   // Track when user starts viewing an item
-  const trackItemView = useCallback((itemId: string) => {
-    if (!itemId) return;
+  const trackItemView = useCallback((itemId) => {
+    if (!itemId || typeof itemId !== 'string') return;
     
     const startTime = Date.now();
     
     // Clear existing timer for this item
     const existingTimer = viewTimersRef.current.get(itemId);
-    if (existingTimer) {
+    if (existingTimer && existingTimer.timer) {
       clearTimeout(existingTimer.timer);
     }
 
     // Set new timer - track as "viewed" after 1 second
     const timer = setTimeout(() => {
-      const event: EngagementEvent = {
+      const event = {
         itemId,
         type: 'view',
         duration: Date.now() - startTime,
@@ -59,21 +64,21 @@ export const useEngagementTracking = () => {
   }, []);
 
   // Track when user stops viewing an item
-  const trackItemViewEnd = useCallback((itemId: string) => {
-    if (!itemId) return;
+  const trackItemViewEnd = useCallback((itemId) => {
+    if (!itemId || typeof itemId !== 'string') return;
     
-    const timer = viewTimersRef.current.get(itemId);
-    if (timer) {
-      clearTimeout(timer.timer);
+    const timerData = viewTimersRef.current.get(itemId);
+    if (timerData && timerData.timer) {
+      clearTimeout(timerData.timer);
       viewTimersRef.current.delete(itemId);
     }
   }, []);
 
   // Track engagement events (likes, contacts, etc.)
-  const trackEngagement = useCallback((itemId: string, type: EngagementEvent['type']) => {
-    if (!itemId || !type) return;
+  const trackEngagement = useCallback((itemId, type) => {
+    if (!itemId || !type || typeof itemId !== 'string' || typeof type !== 'string') return;
     
-    const event: EngagementEvent = {
+    const event = {
       itemId,
       type,
       timestamp: Date.now()
@@ -108,13 +113,15 @@ export const useEngagementTracking = () => {
   }, []);
 
   // Get engagement score for an item
-  const getEngagementScore = useCallback((itemId: string): number => {
-    if (!itemId) return 0;
+  const getEngagementScore = useCallback((itemId) => {
+    if (!itemId || typeof itemId !== 'string') return 0;
     
     const events = engagementData.get(itemId) || [];
     let score = 0;
 
     events.forEach(event => {
+      if (!event || !event.type) return;
+      
       switch (event.type) {
         case 'view':
           score += event.duration && event.duration > 3000 ? 2 : 1;
@@ -138,13 +145,24 @@ export const useEngagementTracking = () => {
   }, [engagementData]);
 
   // Get trending items based on recent engagement
-  const getTrendingItems = useCallback((timeWindowMs: number = 300000): string[] => {
+  const getTrendingItems = useCallback((timeWindowMs = 300000) => {
     const cutoffTime = Date.now() - timeWindowMs;
-    const itemScores = new Map<string, number>();
+    const itemScores = new Map();
+
+    if (!engagementData || typeof engagementData.forEach !== 'function') {
+      return [];
+    }
 
     engagementData.forEach((events, itemId) => {
-      const recentEvents = events.filter(event => event.timestamp > cutoffTime);
+      if (!Array.isArray(events)) return;
+      
+      const recentEvents = events.filter(event => 
+        event && event.timestamp && event.timestamp > cutoffTime
+      );
+      
       const score = recentEvents.reduce((total, event) => {
+        if (!event || !event.type) return total;
+        
         switch (event.type) {
           case 'like': return total + 5;
           case 'contact': return total + 10;
@@ -165,17 +183,23 @@ export const useEngagementTracking = () => {
   }, [engagementData]);
 
   // Clear old engagement data to prevent memory issues
-  const clearOldEngagementData = useCallback((maxAge: number = 3600000) => { // 1 hour
+  const clearOldEngagementData = useCallback((maxAge = 3600000) => {
     const cutoffTime = Date.now() - maxAge;
     
     setEngagementData(prev => {
       const newData = new Map();
-      prev.forEach((events, itemId) => {
-        const recentEvents = events.filter(event => event.timestamp > cutoffTime);
-        if (recentEvents.length > 0) {
-          newData.set(itemId, recentEvents);
-        }
-      });
+      if (prev && typeof prev.forEach === 'function') {
+        prev.forEach((events, itemId) => {
+          if (Array.isArray(events)) {
+            const recentEvents = events.filter(event => 
+              event && event.timestamp && event.timestamp > cutoffTime
+            );
+            if (recentEvents.length > 0) {
+              newData.set(itemId, recentEvents);
+            }
+          }
+        });
+      }
       return newData;
     });
   }, []);

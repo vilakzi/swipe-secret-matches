@@ -9,131 +9,131 @@ import { useEngagementTracking } from './feed/useEngagementTracking';
 import { useRealTimeFeed } from './useRealTimeFeed';
 
 export const useSimplifiedFeedEngine = () => {
-  // ALL HOOKS MUST BE CALLED IN CONSISTENT ORDER - NO CONDITIONAL HOOKS
-  const { user } = useAuth() || {};
-  const [shuffleKey, setShuffleKey] = useState(() => Date.now());
+  // CRITICAL: ALL HOOKS MUST BE CALLED IN EXACT SAME ORDER EVERY TIME
+  const { user } = useAuth();
+  const [shuffleKey, setShuffleKey] = useState(Date.now());
   const [displayedItems, setDisplayedItems] = useState([]);
   const [hasMoreItems, setHasMoreItems] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // Initialize engagement tracking with consistent hook order
+  // ALL data fetching hooks - MUST be called unconditionally
   const engagementTracker = useEngagementTracking();
+  const realProfilesResult = useRealProfiles();
+  const newJoinersResult = useNewJoiners();
+  const postFetchingResult = usePostFetching();
 
-  // Fetch data sources - these must always be called
-  const { realProfiles = [], loading: profilesLoading = false } = useRealProfiles() || {};
-  const { newJoiners = [], loading: newJoinersLoading = false } = useNewJoiners() || {};
-  const { posts = [], refetchPosts } = usePostFetching() || {};
+  // Extract data with safe fallbacks
+  const realProfiles = realProfilesResult?.realProfiles || [];
+  const profilesLoading = realProfilesResult?.loading || false;
+  const newJoiners = newJoinersResult?.newJoiners || [];
+  const newJoinersLoading = newJoinersResult?.loading || false;
+  const posts = postFetchingResult?.posts || [];
+  const refetchPosts = postFetchingResult?.refetchPosts;
 
-  // Create feed items with stable dependencies
+  // Create feed items with completely stable dependencies
   const rawFeedItems = useMemo(() => {
-    console.log('🚀 Creating feed items with error handling');
+    console.log('🚀 Creating feed items with stable dependencies');
+    
+    if (!realProfiles || !posts) {
+      console.log('⏳ Waiting for data...');
+      return [];
+    }
     
     try {
-      if (!realProfiles || !posts) {
-        console.log('⏳ Waiting for data to load...');
-        return [];
-      }
-      
       return useFeedItemCreation({
-        filteredProfiles: realProfiles || [],
-        posts: posts || [],
+        filteredProfiles: realProfiles,
+        posts: posts,
         shuffleKey,
-        userId: user?.id
+        userId: user?.id || null
       });
     } catch (error) {
-      console.error('Error creating feed items:', error);
+      console.error('Feed creation error:', error);
       return [];
     }
   }, [realProfiles, posts, shuffleKey, user?.id]);
 
-  // Update displayed items when raw items change
+  // Update displayed items when raw items change - STABLE DEPENDENCY
   useEffect(() => {
-    if (!rawFeedItems || !Array.isArray(rawFeedItems)) return;
-    
-    try {
-      if (rawFeedItems.length > 0) {
-        const initialItems = rawFeedItems.slice(0, 30);
-        setDisplayedItems(initialItems);
-        setHasMoreItems(rawFeedItems.length > 30);
-        console.log('🚀 Initial feed loaded:', initialItems.length, 'items');
-      } else {
-        setDisplayedItems([]);
-        setHasMoreItems(false);
-        console.log('🚀 No feed items available');
-      }
-    } catch (error) {
-      console.error('Error updating displayed items:', error);
+    if (Array.isArray(rawFeedItems) && rawFeedItems.length > 0) {
+      const initialItems = rawFeedItems.slice(0, 30);
+      setDisplayedItems(initialItems);
+      setHasMoreItems(rawFeedItems.length > 30);
+      console.log('🚀 Feed loaded:', initialItems.length, 'items');
+    } else {
       setDisplayedItems([]);
       setHasMoreItems(false);
+      console.log('🚀 No feed items available');
     }
   }, [rawFeedItems]);
 
-  // Load more items with stable dependencies
+  // Stable load more handler
   const handleLoadMore = useCallback(() => {
-    if (!rawFeedItems || !Array.isArray(rawFeedItems) || isLoadingMore || !hasMoreItems) return;
+    if (!Array.isArray(rawFeedItems) || isLoadingMore || !hasMoreItems) {
+      return;
+    }
     
     console.log('🚀 Loading more items...');
     setIsLoadingMore(true);
     
-    try {
-      setTimeout(() => {
-        const currentLength = displayedItems?.length || 0;
+    setTimeout(() => {
+      try {
+        const currentLength = displayedItems.length;
         const nextItems = rawFeedItems.slice(currentLength, currentLength + 20);
         
         if (nextItems.length > 0) {
-          setDisplayedItems(prev => [...(prev || []), ...nextItems]);
+          setDisplayedItems(prev => [...prev, ...nextItems]);
           console.log('🚀 Loaded', nextItems.length, 'more items');
         }
         
         setHasMoreItems(currentLength + nextItems.length < rawFeedItems.length);
+      } catch (error) {
+        console.error('Load more error:', error);
+      } finally {
         setIsLoadingMore(false);
-      }, 300);
-    } catch (error) {
-      console.error('Error loading more items:', error);
-      setIsLoadingMore(false);
-    }
-  }, [rawFeedItems, displayedItems?.length, isLoadingMore, hasMoreItems]);
+      }
+    }, 300);
+  }, [rawFeedItems, displayedItems.length, isLoadingMore, hasMoreItems]);
 
-  // Refresh handler with stable dependencies
+  // Stable refresh handler
   const handleRefresh = useCallback(() => {
     console.log('🚀 Refreshing feed');
     
     try {
-      setShuffleKey(Date.now() + Math.random());
+      setShuffleKey(Date.now());
       setDisplayedItems([]);
       setHasMoreItems(true);
       setIsLoadingMore(false);
       
-      if (refetchPosts && typeof refetchPosts === 'function') {
+      if (typeof refetchPosts === 'function') {
         refetchPosts();
       }
     } catch (error) {
-      console.error('Error refreshing feed:', error);
+      console.error('Refresh error:', error);
     }
   }, [refetchPosts]);
 
-  // Real-time updates with stable callback dependencies
+  // Real-time handlers with stable dependencies
   const handleNewPost = useCallback(() => {
-    console.log('📡 New post - refreshing feed');
+    console.log('📡 New post - refreshing');
     handleRefresh();
   }, [handleRefresh]);
 
   const handlePostUpdate = useCallback(() => {
-    console.log('📡 Post updated - refreshing feed');
+    console.log('📡 Post updated - refreshing');
     handleRefresh();
   }, [handleRefresh]);
 
   const handlePostDelete = useCallback(() => {
-    console.log('📡 Post deleted - refreshing feed');
+    console.log('📡 Post deleted - refreshing');
     handleRefresh();
   }, [handleRefresh]);
 
   const handleNewProfile = useCallback(() => {
-    console.log('📡 New profile - refreshing feed');
+    console.log('📡 New profile - refreshing');
     handleRefresh();
   }, [handleRefresh]);
 
-  // Real-time feed with stable dependencies
+  // Real-time feed - MUST be called unconditionally
   useRealTimeFeed({
     onNewPost: handleNewPost,
     onPostUpdate: handlePostUpdate,
@@ -141,6 +141,7 @@ export const useSimplifiedFeedEngine = () => {
     onNewProfile: handleNewProfile
   });
 
+  // Calculate loading state
   const isLoading = profilesLoading || newJoinersLoading;
 
   // Feed statistics with stable computation
@@ -160,21 +161,14 @@ export const useSimplifiedFeedEngine = () => {
 
   console.log('🚀 Feed Engine Stats:', feedEngineStats);
 
-  // ALWAYS return a consistent object structure
+  // ALWAYS return exactly the same object structure
   return {
     displayedItems: Array.isArray(displayedItems) ? displayedItems : [],
     hasMoreItems: Boolean(hasMoreItems),
-    isLoadingMore: Boolean(isLoading || isLoadingMore),
-    handleLoadMore: handleLoadMore || (() => {}),
-    handleRefresh: handleRefresh || (() => {}),
+    isLoadingMore: Boolean(isLoadingMore),
+    handleLoadMore,
+    handleRefresh,
     engagementTracker: engagementTracker || {},
-    feedEngineStats: feedEngineStats || {
-      totalCount: 0,
-      distributedContent: 0,
-      unusedContentCount: 0,
-      activeUsers: 1,
-      distributionEfficiency: 0,
-      loadingState: 'loading'
-    }
+    feedEngineStats
   };
 };

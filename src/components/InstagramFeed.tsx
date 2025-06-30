@@ -19,31 +19,27 @@ interface InstagramFeedProps {
 const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFeedProps) => {
   const [showFilters, setShowFilters] = useState(false);
   
-  // Initialize feed engine with safe defaults
-  const feedEngineResult = useSimplifiedFeedEngine();
+  // Get feed engine data - this hook MUST always return a consistent object
+  const feedEngine = useSimplifiedFeedEngine();
   
-  // Safely destructure with fallbacks
-  const {
-    displayedItems = [],
-    hasMoreItems = false,
-    isLoadingMore = false,
-    handleLoadMore = () => {},
-    handleRefresh = () => {},
-    engagementTracker = {},
-    feedEngineStats = {
-      totalCount: 0,
-      distributedContent: 0,
-      loadingState: 'loading'
-    }
-  } = feedEngineResult || {};
+  // Safe destructuring with guaranteed fallbacks
+  const displayedItems = feedEngine?.displayedItems || [];
+  const hasMoreItems = feedEngine?.hasMoreItems || false;
+  const isLoadingMore = feedEngine?.isLoadingMore || false;
+  const handleLoadMore = feedEngine?.handleLoadMore || (() => {});
+  const handleRefresh = feedEngine?.handleRefresh || (() => {});
+  const engagementTracker = feedEngine?.engagementTracker || {};
+  const feedEngineStats = feedEngine?.feedEngineStats || {
+    totalCount: 0,
+    distributedContent: 0,
+    loadingState: 'loading'
+  };
 
   const handlePullRefresh = useCallback(async () => {
     console.log('🔄 Pull refresh triggered');
     
     try {
-      if (handleRefresh && typeof handleRefresh === 'function') {
-        handleRefresh();
-      }
+      handleRefresh();
       await new Promise(resolve => setTimeout(resolve, 1000));
       onRefresh();
       
@@ -65,9 +61,7 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
     console.log('🔄 Smart refresh triggered');
     
     try {
-      if (handleRefresh && typeof handleRefresh === 'function') {
-        handleRefresh();
-      }
+      handleRefresh();
       onRefresh();
       
       toast({
@@ -79,16 +73,16 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
     }
   }, [handleRefresh, onRefresh]);
 
-  console.log('🚀 InstagramFeed status:', {
-    displayedItems: Array.isArray(displayedItems) ? displayedItems.length : 0,
-    hasMoreItems: Boolean(hasMoreItems),
-    isLoadingMore: Boolean(isLoadingMore),
-    totalContent: feedEngineStats?.totalCount || 0,
-    loadingState: feedEngineStats?.loadingState || 'unknown'
+  console.log('🚀 InstagramFeed render:', {
+    displayedItems: displayedItems.length,
+    hasMoreItems,
+    isLoadingMore,
+    totalContent: feedEngineStats.totalCount,
+    loadingState: feedEngineStats.loadingState
   });
 
-  // Show loading spinner when no items are loaded yet
-  if (feedEngineStats?.loadingState === 'loading' && (!displayedItems || displayedItems.length === 0)) {
+  // Show loading spinner when loading and no items
+  if (feedEngineStats.loadingState === 'loading' && displayedItems.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900">
         <FeedHeader
@@ -119,13 +113,13 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
       <div className="max-w-md mx-auto">
         <PullToRefresh onRefresh={handlePullRefresh} className="pt-20">
           <InfiniteScroll
-            hasMore={Boolean(hasMoreItems)}
-            isLoading={Boolean(isLoadingMore)}
+            hasMore={hasMoreItems}
+            isLoading={isLoadingMore}
             onLoadMore={handleLoadMore}
             threshold={200}
           >
             <FeedContent
-              feedItems={Array.isArray(displayedItems) ? displayedItems : []}
+              feedItems={displayedItems}
               likedItems={likedItems}
               isSubscribed={true}
               onLike={onLike}
@@ -140,8 +134,8 @@ const InstagramFeed = ({ onLike, onContact, onRefresh, likedItems }: InstagramFe
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                   <span>Live Feed Active</span>
                 </div>
-                <div>Total Content: {feedEngineStats?.totalCount || 0}</div>
-                <div>Displayed: {feedEngineStats?.distributedContent || 0}</div>
+                <div>Total Content: {feedEngineStats.totalCount}</div>
+                <div>Displayed: {feedEngineStats.distributedContent}</div>
                 <div className="text-xs text-gray-500">
                   Real-time updates • Optimized for mobile
                 </div>
