@@ -65,19 +65,26 @@ const FeedContent = ({
       }
     }));
 
-    // Convert content feed items to FeedItem type compatible format
+    // Convert content feed items to FeedItem type compatible format with location filtering
     const contentAsRegularFeed = contentFeedItems.filter(
       c => !!c && !!c.id && isValidMedia(c.postImage)
     ).map(item => ({
       ...item,
       isContent: true,
       isAdminCard: true,
+      // Add location metadata for filtering
+      locationMetadata: {
+        target_locations: item.category === 'soweto' ? ['soweto'] :
+                         item.category === 'jhb-central' ? ['jhb-central'] :
+                         item.category === 'pta' ? ['pta'] : ['all'],
+        location_specific: item.category !== 'all'
+      },
       // Ensure the profile matches FeedItem's Profile type
       profile: {
         ...item.profile,
         userType: item.profile.userType as "user" | "service_provider" | "admin" | "superadmin"
       }
-    } as FeedItem & { isContent: true; isAdminCard: true }));
+    } as FeedItem & { isContent: true; isAdminCard: true; locationMetadata: any }));
 
     // Admin carousel: posts from admin/superadmin, and published content feed
     const adminFeed = [
@@ -113,15 +120,21 @@ const FeedContent = ({
     return { adminFeed, allFeedItems };
   }, [feedItems, contentFeedItems, adminRoles]);
 
-  // Optimized location filtering with better performance
+  // Enhanced location filtering with admin content support
   const filterByLocation = useMemo(() => {
     return (items: any[]) => {
       if (locationOption === 'all') return items;
       
       return items.filter(item => {
-        // Check if item has location metadata from upload
+        // Check if item has location metadata from upload (for admin content)
         if (item.locationMetadata?.target_locations) {
-          return item.locationMetadata.target_locations.includes(locationOption);
+          return item.locationMetadata.target_locations.includes(locationOption) ||
+                 item.locationMetadata.target_locations.includes('all');
+        }
+        
+        // Check admin content category-based location
+        if (item.isContent && item.category) {
+          return item.category === locationOption || item.category === 'all';
         }
         
         // Optimized profile location matching
@@ -163,7 +176,7 @@ const FeedContent = ({
     };
   }, [sortOption]);
 
-  // Optimized filtering logic
+  // Enhanced filtering logic with admin content support
   const filterFeedItems = useMemo(() => {
     return (items: any[]) => {
       switch (filterOption) {
@@ -174,7 +187,7 @@ const FeedContent = ({
         case 'welcome':
           return items.filter(item => item.isWelcome);
         case 'admin':
-          return items.filter(item => item.isAdminCard);
+          return items.filter(item => item.isAdminCard || item.isContent);
         case 'all':
         default:
           return items;

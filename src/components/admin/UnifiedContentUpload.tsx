@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Upload, Crown } from 'lucide-react';
+import { Upload, Crown, MapPin } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,19 +11,29 @@ import CaptionSection from '@/components/dashboard/upload/CaptionSection';
 import PostCard from '@/components/dashboard/PostCard';
 
 type Step = 1 | 2 | 3;
+type LocationOption = 'all' | 'soweto' | 'jhb-central' | 'pta';
 
 const UnifiedContentUpload = () => {
   const { user } = useAuth();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [caption, setCaption] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState<LocationOption>('all');
   const [uploading, setUploading] = useState(false);
   const [step, setStep] = useState<Step>(1);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [newPost, setNewPost] = useState<any>(null);
 
+  const locations = [
+    { value: 'all' as LocationOption, label: 'All Locations', gradient: 'from-gray-500 to-gray-600' },
+    { value: 'soweto' as LocationOption, label: 'Soweto Hookups', gradient: 'from-purple-500 to-pink-600' },
+    { value: 'jhb-central' as LocationOption, label: 'Jhb Central Hookups', gradient: 'from-blue-500 to-cyan-600' },
+    { value: 'pta' as LocationOption, label: 'PTA Hookups', gradient: 'from-emerald-500 to-teal-600' },
+  ];
+
   const resetForm = () => {
     setSelectedFile(null);
     setCaption('');
+    setSelectedLocation('all');
     setPreviewUrl(null);
     setNewPost(null);
     setStep(1);
@@ -94,6 +104,13 @@ const UnifiedContentUpload = () => {
       const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
       const postType = selectedFile.type.startsWith('image/') ? 'image' : 'video';
 
+      // Create metadata object with location info
+      const locationMetadata = {
+        target_locations: selectedLocation === 'all' ? ['all'] : [selectedLocation],
+        location_specific: selectedLocation !== 'all',
+        admin_content: true
+      };
+
       // Insert post record to DB - admin posts are automatically paid/promoted
       const { data: postData, error: postError } = await supabase
         .from('posts')
@@ -120,17 +137,39 @@ const UnifiedContentUpload = () => {
         return;
       }
 
+      // Store location metadata in admin_content table for better filtering
+      const { error: adminContentError } = await supabase
+        .from('admin_content')
+        .insert({
+          admin_id: user.id,
+          title: caption.trim() || 'Admin Content',
+          description: `Admin content for ${selectedLocation === 'all' ? 'all locations' : selectedLocation}`,
+          content_type: postType,
+          file_url: publicUrl,
+          status: 'published',
+          visibility: 'public',
+          approval_status: 'approved',
+          approved_by: user.id,
+          approved_at: new Date().toISOString(),
+          metadata: locationMetadata
+        });
+
+      if (adminContentError) {
+        console.warn('Failed to create admin_content record:', adminContentError);
+      }
+
       // Step 3: Show success
-      setNewPost(postData);
+      setNewPost({ ...postData, locationMetadata });
       setStep(3);
 
       toast({
         title: "Admin content uploaded successfully!",
-        description: "Your content is now live in the feed.",
+        description: `Content posted to ${selectedLocation === 'all' ? 'all locations' : selectedLocation}`,
       });
 
       setSelectedFile(null);
       setCaption('');
+      setSelectedLocation('all');
       setPreviewUrl(null);
     } catch (error: any) {
       toast({
@@ -157,7 +196,8 @@ const UnifiedContentUpload = () => {
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
             <p className="text-green-800 font-medium">✅ Content is now live in the feed</p>
             <p className="text-green-700 text-sm mt-1">
-              This admin content will be prominently displayed and has extended visibility.
+              Posted to: {newPost.locationMetadata?.target_locations?.[0] === 'all' ? 'All Locations' : 
+                locations.find(loc => loc.value === newPost.locationMetadata?.target_locations?.[0])?.label}
             </p>
           </div>
           <PostCard post={newPost} />
@@ -191,6 +231,27 @@ const UnifiedContentUpload = () => {
             <p className="text-yellow-700 text-sm">
               This content will be automatically approved and promoted in the feed with extended visibility.
             </p>
+          </div>
+
+          {/* Location Selection */}
+          <div className="space-y-3">
+            <label className="text-sm font-medium text-gray-700">Target Location</label>
+            <div className="grid grid-cols-2 gap-2">
+              {locations.map((location) => (
+                <button
+                  key={location.value}
+                  onClick={() => setSelectedLocation(location.value)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    selectedLocation === location.value
+                      ? `bg-gradient-to-r ${location.gradient} text-white shadow-md`
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <MapPin className="h-3 w-3" />
+                  <span>{location.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
           
           <div className="border rounded-lg overflow-hidden">
@@ -265,6 +326,7 @@ const UnifiedContentUpload = () => {
             <li>• Automatically approved and promoted</li>
             <li>• Extended visibility (30 days)</li>
             <li>• Priority placement in feed</li>
+            <li>• Location-based targeting</li>
             <li>• Instant publication</li>
           </ul>
         </div>
