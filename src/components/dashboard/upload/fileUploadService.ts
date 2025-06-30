@@ -7,11 +7,11 @@ export const uploadFileToStorage = async (
   file: File,
   onProgress?: (progress: number) => void
 ) => {
-  console.log(`Starting mobile-optimized upload: ${fileName}, size: ${file.size} bytes`);
+  console.log(`Starting upload: ${fileName}, size: ${file.size} bytes`);
   
   onProgress?.(5);
 
-  // Enhanced mobile file validation
+  // Basic file validation
   if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
     throw new Error('Invalid file type. Please upload an image or video file.');
   }
@@ -26,84 +26,46 @@ export const uploadFileToStorage = async (
 
   onProgress?.(10);
 
-  // Enhanced mobile connection check
+  // Check connection
   if (!navigator.onLine) {
     throw new Error('No internet connection. Please check your connection and try again.');
-  }
-
-  // Mobile-specific connection quality check
-  const connection = (navigator as any).connection;
-  if (connection) {
-    console.log('Mobile connection info:', {
-      effectiveType: connection.effectiveType,
-      downlink: connection.downlink,
-      rtt: connection.rtt
-    });
-    
-    if (connection.effectiveType === 'slow-2g' || connection.downlink < 0.15) {
-      console.warn('Very slow connection detected, but proceeding with optimized upload');
-    }
-  }
-
-  // Test connection with mobile-optimized timeout
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000); // Shorter timeout for mobile
-    
-    const response = await fetch('https://galrcqwogqqdsqdzfrrd.supabase.co/rest/v1/', {
-      method: 'HEAD',
-      signal: controller.signal,
-      headers: {
-        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhbHJjcXdvZ3FxZHNxZHpmcnJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0NzQ1MDUsImV4cCI6MjA2NDA1MDUwNX0.95iX-m8r0TqDOS0_kR-3-1xgiZMofPARvMZHzyFrPf0'
-      }
-    });
-    
-    clearTimeout(timeoutId);
-    console.log('Mobile connection test successful');
-  } catch (error: any) {
-    console.warn('Connection test failed, but proceeding with upload:', error.message);
-    // Don't throw here - continue with upload as connection test might fail but upload could work
   }
 
   onProgress?.(20);
 
   const uploadData = await retryOperation(async () => {
-    // Create mobile-optimized file path
+    // Create unique file path
     const timestamp = Date.now();
     const randomString = Math.random().toString(36).substring(2, 8);
-    const finalFileName = `mobile-${timestamp}-${randomString}-${fileName}`;
+    const finalFileName = `${timestamp}-${randomString}-${fileName}`;
     
     onProgress?.(30);
 
-    console.log('Attempting mobile-optimized upload to Supabase storage...');
+    console.log('Attempting upload to Supabase storage...');
     
-    // Mobile-specific upload options (removed RequestDuplex)
-    const uploadOptions = {
-      cacheControl: '3600',
-      upsert: false,
-      contentType: file.type,
-    };
-
     const { data, error } = await supabase.storage
       .from('posts')
-      .upload(finalFileName, file, uploadOptions);
+      .upload(finalFileName, file, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type,
+      });
 
     onProgress?.(70);
 
     if (error) {
-      console.error('Mobile upload error:', error);
+      console.error('Upload error:', error);
       
-      // Enhanced mobile-specific error handling
       if (error.message?.includes('fetch')) {
-        throw new Error('Network error on mobile. Please check your connection and try again.');
+        throw new Error('Network error. Please check your connection and try again.');
       }
       
       if (error.message?.includes('timeout')) {
-        throw new Error('Upload timeout on mobile. Please try with a smaller file or better connection.');
+        throw new Error('Upload timeout. Please try with a smaller file or better connection.');
       }
       
       if (error.message?.includes('413') || error.message?.includes('File size too large')) {
-        throw new Error('File too large for mobile upload. Please select a smaller file.');
+        throw new Error('File too large for upload. Please select a smaller file.');
       }
       
       if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
@@ -114,17 +76,16 @@ export const uploadFileToStorage = async (
         throw new Error('Bad request. Please try selecting the file again.');
       }
       
-      // Generic mobile error
-      throw new Error(`Mobile upload failed: ${error.message}`);
+      throw new Error(`Upload failed: ${error.message}`);
     }
 
-    console.log('Mobile upload successful:', data);
+    console.log('Upload successful:', data);
     return data;
-  }, 5, 1500); // More retries with shorter delay for mobile
+  }, 3, 2000);
 
   onProgress?.(80);
 
-  // Get public URL with mobile error handling
+  // Get public URL
   try {
     const { data: { publicUrl } } = supabase.storage
       .from('posts')
@@ -136,12 +97,12 @@ export const uploadFileToStorage = async (
 
     onProgress?.(95);
     
-    console.log('Mobile upload completed successfully:', publicUrl);
+    console.log('Upload completed successfully:', publicUrl);
     onProgress?.(100);
     
     return publicUrl;
   } catch (error) {
-    console.error('Failed to get public URL on mobile:', error);
+    console.error('Failed to get public URL:', error);
     throw new Error('Upload completed but failed to get file URL. Please try again.');
   }
 };
