@@ -19,9 +19,9 @@ interface InstagramFeedProps {
 
 const InstagramFeed = memo(({ onLike, onContact, onRefresh, likedItems }: InstagramFeedProps) => {
   const [showFilters, setShowFilters] = useState(false);
-  const { logError } = usePerformanceMonitor('InstagramFeed');
   
-  // Get feed engine data with error handling
+  // ALL HOOKS MUST BE CALLED AT THE TOP LEVEL
+  const { logError } = usePerformanceMonitor('InstagramFeed');
   const feedEngine = useSimplifiedFeedEngine();
   
   // Safe destructuring with guaranteed fallbacks
@@ -85,6 +85,7 @@ const InstagramFeed = memo(({ onLike, onContact, onRefresh, likedItems }: Instag
     loadingState: feedEngineStats.loadingState
   });
 
+  // NOW WE CAN HAVE CONDITIONAL RENDERING
   // Show loading spinner when loading and no items
   if (feedEngineStats.loadingState === 'loading' && displayedItems.length === 0) {
     return (

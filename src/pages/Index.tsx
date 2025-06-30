@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -26,19 +27,92 @@ const Index = () => {
   const { addError } = useError();
   const { logError } = usePerformanceMonitor('IndexPage');
 
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL LOGIC
   // Auto-logout after 2 minutes of inactivity
   useInactivityTracker({
     timeoutMinutes: 2,
-    onInactive: () => {
+    onInactive: useCallback(() => {
       toast({
         title: "Session expired",
         description: "You've been logged out due to inactivity",
         variant: "destructive"
       });
       signOut();
-    }
+    }, [signOut])
   });
 
+  // Error handler for the error boundary
+  const handleError = useCallback((error: Error) => {
+    logError(error);
+    addError(`Application error: ${error.message}`);
+  }, [logError, addError]);
+
+  const handleDashboard = useCallback(() => {
+    navigate('/dashboard');
+  }, [navigate]);
+
+  const handleLike = useCallback((itemId: string, profileId: string) => {
+    if (!user) {
+      addError("You must be logged in to like profiles.");
+      return;
+    }
+    
+    setLikedItems(prev => {
+      const newLiked = new Set(prev);
+      if (newLiked.has(itemId)) {
+        newLiked.delete(itemId);
+      } else {
+        newLiked.add(itemId);
+      }
+      return newLiked;
+    });
+
+    toast({
+      title: likedItems.has(itemId) ? "Like removed" : "Profile liked!",
+      description: likedItems.has(itemId) ? "You unliked this profile." : "Your like has been sent!",
+    });
+  }, [user, addError, likedItems]);
+
+  const handleContact = useCallback((profile: any) => {
+    if (!user) {
+      addError("You must be logged in to contact profiles.");
+      return;
+    }
+    
+    if (profile.whatsapp) {
+      window.open(`https://wa.me/${profile.whatsapp.replace(/[^0-9]/g, '')}`, '_blank');
+    } else {
+      addError("WhatsApp contact not available for this profile.");
+    }
+  }, [user, addError]);
+
+  const handleRefresh = useCallback(() => {
+    if (!user) {
+      addError("You must be logged in to refresh the feed.");
+      return;
+    }
+    
+    console.log('🚀 Triggering feed refresh');
+    setRefreshKey(prev => prev + 1);
+    toast({
+      title: "Feed refreshed!",
+      description: "Latest content loaded",
+    });
+  }, [user, addError]);
+
+  const getRoleIcon = useCallback(() => {
+    if (isAdmin) return <Shield className="w-4 h-4 text-white" />;
+    if (isServiceProvider) return <Briefcase className="w-4 h-4 text-white" />;
+    return <User className="w-4 h-4 text-white" />;
+  }, [isAdmin, isServiceProvider]);
+
+  const getRoleColor = useCallback(() => {
+    if (isAdmin) return 'bg-red-600';
+    if (isServiceProvider) return 'bg-purple-600';
+    return 'bg-purple-600';
+  }, [isAdmin, isServiceProvider]);
+
+  // NOW WE CAN HAVE CONDITIONAL RENDERING AFTER ALL HOOKS
   // Show loading state
   if (roleLoading) {
     return (
@@ -67,77 +141,6 @@ const Index = () => {
       </div>
     );
   }
-
-  const handleDashboard = () => {
-    navigate('/dashboard');
-  };
-
-  const handleLike = (itemId: string, profileId: string) => {
-    if (!user) {
-      addError("You must be logged in to like profiles.");
-      return;
-    }
-    
-    setLikedItems(prev => {
-      const newLiked = new Set(prev);
-      if (newLiked.has(itemId)) {
-        newLiked.delete(itemId);
-      } else {
-        newLiked.add(itemId);
-      }
-      return newLiked;
-    });
-
-    toast({
-      title: likedItems.has(itemId) ? "Like removed" : "Profile liked!",
-      description: likedItems.has(itemId) ? "You unliked this profile." : "Your like has been sent!",
-    });
-  };
-
-  const handleContact = (profile: any) => {
-    if (!user) {
-      addError("You must be logged in to contact profiles.");
-      return;
-    }
-    
-    if (profile.whatsapp) {
-      window.open(`https://wa.me/${profile.whatsapp.replace(/[^0-9]/g, '')}`, '_blank');
-    } else {
-      addError("WhatsApp contact not available for this profile.");
-    }
-  };
-
-  const handleRefresh = () => {
-    if (!user) {
-      addError("You must be logged in to refresh the feed.");
-      return;
-    }
-    
-    console.log('🚀 Triggering feed refresh');
-    setRefreshKey(prev => prev + 1);
-    toast({
-      title: "Feed refreshed!",
-      description: "Latest content loaded",
-    });
-  };
-
-  const getRoleIcon = () => {
-    if (isAdmin) return <Shield className="w-4 h-4 text-white" />;
-    if (isServiceProvider) return <Briefcase className="w-4 h-4 text-white" />;
-    return <User className="w-4 h-4 text-white" />;
-  };
-
-  const getRoleColor = () => {
-    if (isAdmin) return 'bg-red-600';
-    if (isServiceProvider) return 'bg-purple-600';
-    return 'bg-purple-600';
-  };
-
-  // Error handler for the error boundary
-  const handleError = useCallback((error: Error) => {
-    logError(error);
-    addError(`Application error: ${error.message}`);
-  }, [logError, addError]);
 
   return (
     <ErrorBoundary onError={handleError}>

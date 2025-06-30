@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
@@ -9,6 +8,7 @@ import AdminRoute from "@/components/AdminRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import AgeVerificationBanner from "@/components/AgeVerificationBanner";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
+import ErrorFallback from "@/components/common/ErrorFallback";
 import { useSessionManager } from "@/hooks/useSessionManager";
 import { useAuth } from "@/contexts/AuthContext";
 import Auth from "@/pages/Auth";
@@ -35,8 +35,28 @@ const LoadingSpinner = () => (
 );
 
 const MainApp = () => {
+  // Call hooks at the top level
   useSessionManager();
-  const { user, loading } = useAuth();
+  
+  let user = null;
+  let loading = true;
+  
+  // Safely use auth context with error handling
+  try {
+    const authContext = useAuth();
+    user = authContext.user;
+    loading = authContext.loading;
+  } catch (error) {
+    console.error('Auth context error:', error);
+    // If auth context fails, show error fallback
+    return (
+      <ErrorFallback
+        title="Authentication Error"
+        message="There was an issue with the authentication system. Please refresh the page."
+        showGoHome={false}
+      />
+    );
+  }
 
   // Show loading spinner while auth is being determined
   if (loading) {
