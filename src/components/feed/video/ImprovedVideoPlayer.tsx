@@ -44,12 +44,12 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     
     setShowControls(true);
     
-    if (isPlaying) {
+    if (isPlaying && controls) {
       controlsTimeoutRef.current = setTimeout(() => {
         setShowControls(false);
       }, 3000);
     }
-  }, [isPlaying]);
+  }, [isPlaying, controls]);
 
   // Event handlers
   const handleVideoEvents = useCallback(() => {
@@ -96,6 +96,11 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
       setIsBuffering(false);
     };
 
+    const handleVolumeChange = () => {
+      setVolume(video.volume);
+      setIsMuted(video.muted);
+    };
+
     video.addEventListener('loadedmetadata', handleLoadedMetadata);
     video.addEventListener('timeupdate', handleTimeUpdate);
     video.addEventListener('play', handlePlay);
@@ -103,6 +108,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     video.addEventListener('waiting', handleWaiting);
     video.addEventListener('canplay', handleCanPlay);
     video.addEventListener('error', handleError);
+    video.addEventListener('volumechange', handleVolumeChange);
 
     return () => {
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
@@ -112,6 +118,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
       video.removeEventListener('waiting', handleWaiting);
       video.removeEventListener('canplay', handleCanPlay);
       video.removeEventListener('error', handleError);
+      video.removeEventListener('volumechange', handleVolumeChange);
     };
   }, [resetControlsTimeout]);
 
@@ -148,10 +155,25 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     const video = videoRef.current;
     if (!video) return;
 
-    const newMuted = !isMuted;
+    const newMuted = !video.muted;
     video.muted = newMuted;
     setIsMuted(newMuted);
-  }, [isMuted]);
+  }, []);
+
+  const handleVolumeChange = useCallback((newVolume: number) => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.volume = newVolume;
+    setVolume(newVolume);
+    if (newVolume === 0) {
+      video.muted = true;
+      setIsMuted(true);
+    } else if (video.muted) {
+      video.muted = false;
+      setIsMuted(false);
+    }
+  }, []);
 
   const handleSeek = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const video = videoRef.current;
@@ -172,14 +194,18 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   };
 
   const handleMouseMove = useCallback(() => {
-    resetControlsTimeout();
-  }, [resetControlsTimeout]);
+    if (controls) {
+      resetControlsTimeout();
+    }
+  }, [resetControlsTimeout, controls]);
 
   const handleClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     togglePlay();
-    resetControlsTimeout();
-  }, [togglePlay, resetControlsTimeout]);
+    if (controls) {
+      resetControlsTimeout();
+    }
+  }, [togglePlay, resetControlsTimeout, controls]);
 
   if (!src || typeof src !== 'string' || src.trim() === '') {
     return (
@@ -206,29 +232,29 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
         loop={loop}
         muted={muted}
         playsInline={playsInline}
-        className="w-full h-full object-cover"
+        className="w-full h-full object-cover cursor-pointer"
         preload="metadata"
       />
 
       {/* Loading/Buffering State */}
       {(isLoading || isBuffering) && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
           <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
         </div>
       )}
 
       {/* Error State */}
       {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-10">
           <div className="text-white text-center">
             <div className="text-sm">{error}</div>
           </div>
         </div>
       )}
 
-      {/* Mobile-style Controls */}
-      {controls && showControls && (
-        <div className="absolute inset-0 pointer-events-none">
+      {/* Controls */}
+      {controls && (
+        <div className={`absolute inset-0 pointer-events-none transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'} z-20`}>
           {/* Top Controls */}
           <div className="absolute top-4 right-4 flex items-center space-x-2 pointer-events-auto">
             <button
@@ -240,22 +266,13 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
             >
               {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
             </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                // Fullscreen logic would go here
-              }}
-              className="bg-black/60 hover:bg-black/80 text-white p-2 rounded-full transition-colors"
-            >
-              <Maximize2 className="w-4 h-4" />
-            </button>
           </div>
 
           {/* Bottom Controls */}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 pointer-events-auto">
             {/* Progress Bar */}
             <div 
-              className="w-full h-1 bg-white/30 rounded-full mb-2 cursor-pointer"
+              className="w-full h-2 bg-white/30 rounded-full mb-3 cursor-pointer hover:h-3 transition-all"
               onClick={handleSeek}
             >
               <div 
@@ -264,27 +281,82 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
               />
             </div>
 
-            {/* Time Display */}
-            <div className="flex items-center justify-between text-white text-sm">
-              <span>{formatTime(currentTime)}</span>
-              <span>{formatTime(duration)}</span>
+            <div className="flex items-center justify-between">
+              {/* Play/Pause and Time */}
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    togglePlay();
+                  }}
+                  className="bg-black/60 hover:bg-black/80 text-white p-2 rounded-full transition-colors"
+                >
+                  {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+                </button>
+                
+                <div className="text-white text-sm">
+                  {formatTime(currentTime)} / {formatTime(duration)}
+                </div>
+              </div>
+
+              {/* Volume Control */}
+              <div className="flex items-center space-x-2">
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.1"
+                  value={isMuted ? 0 : volume}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    handleVolumeChange(parseFloat(e.target.value));
+                  }}
+                  className="w-20 h-1 bg-white/30 rounded-lg appearance-none cursor-pointer slider"
+                  style={{
+                    background: `linear-gradient(to right, #ffffff ${(isMuted ? 0 : volume) * 100}%, #ffffff30 ${(isMuted ? 0 : volume) * 100}%)`
+                  }}
+                />
+              </div>
             </div>
           </div>
 
-          {/* Center Play/Pause Button */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-auto">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                togglePlay();
-              }}
-              className="bg-black/60 hover:bg-black/80 text-white p-3 rounded-full transition-colors"
-            >
-              {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-1" />}
-            </button>
-          </div>
+          {/* Center Play/Pause Button - only show when paused */}
+          {!isPlaying && !isBuffering && !isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-auto">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  togglePlay();
+                }}
+                className="bg-black/60 hover:bg-black/80 text-white p-4 rounded-full transition-colors"
+              >
+                <Play className="w-8 h-8 ml-1" />
+              </button>
+            </div>
+          )}
         </div>
       )}
+
+      <style jsx>{`
+        .slider::-webkit-slider-thumb {
+          appearance: none;
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: #ffffff;
+          cursor: pointer;
+          border: 2px solid #000;
+        }
+        
+        .slider::-moz-range-thumb {
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: #ffffff;
+          cursor: pointer;
+          border: 2px solid #000;
+        }
+      `}</style>
     </div>
   );
 };

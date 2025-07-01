@@ -49,9 +49,12 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, poster, classNam
           playsInline={true}
         />
         <Button
-          className="absolute top-4 right-4 bg-black/60 hover:bg-black/80 text-white border-white/20 z-20"
+          className="absolute top-4 right-4 bg-black/60 hover:bg-black/80 text-white border-white/20 z-30"
           size="sm"
-          onClick={toggleExpand}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleExpand();
+          }}
           aria-label="Toggle fullscreen"
         >
           <Maximize2 size={16} />
@@ -77,7 +80,10 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ src, poster, classNam
             <Button
               className="absolute top-4 right-4 bg-black/60 hover:bg-black/80 text-white border-white/20 z-30"
               size="sm"
-              onClick={toggleExpand}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleExpand();
+              }}
               aria-label="Exit fullscreen"
             >
               <Minimize2 size={16} />
