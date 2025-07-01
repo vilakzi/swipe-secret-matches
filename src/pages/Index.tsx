@@ -2,7 +2,7 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Heart, User, Settings, Briefcase, Shield } from 'lucide-react';
+import { Heart, User, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import OnlineStatus from '@/components/OnlineStatus';
 import InstagramFeed from '@/components/InstagramFeed';
@@ -19,7 +19,7 @@ import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 const Index = () => {
   const { user, signOut } = useAuth();
   const { isUserOnline } = usePresence();
-  const { role, isAdmin, isServiceProvider, loading: roleLoading } = useUserRole();
+  const { role, isServiceProvider, loading: roleLoading } = useUserRole();
   const navigate = useNavigate();
   const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
   const [refreshKey, setRefreshKey] = useState(0);
@@ -100,18 +100,6 @@ const Index = () => {
     });
   }, [user, addError]);
 
-  const getRoleIcon = useCallback(() => {
-    if (isAdmin) return <Shield className="w-4 h-4 text-white" />;
-    if (isServiceProvider) return <Briefcase className="w-4 h-4 text-white" />;
-    return <User className="w-4 h-4 text-white" />;
-  }, [isAdmin, isServiceProvider]);
-
-  const getRoleColor = useCallback(() => {
-    if (isAdmin) return 'bg-red-600';
-    if (isServiceProvider) return 'bg-purple-600';
-    return 'bg-purple-600';
-  }, [isAdmin, isServiceProvider]);
-
   // NOW WE CAN HAVE CONDITIONAL RENDERING AFTER ALL HOOKS
   // Show loading state
   if (roleLoading) {
@@ -157,8 +145,8 @@ const Index = () => {
             
             <div className="flex items-center space-x-2">
               <div className="flex items-center space-x-2 bg-black/20 backdrop-blur-md rounded-full px-3 py-2 border border-gray-700">
-                <div className={`w-8 h-8 ${getRoleColor()} rounded-full flex items-center justify-center`}>
-                  {getRoleIcon()}
+                <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                  <User className="w-4 h-4 text-white" />
                 </div>
                 <OnlineStatus 
                   isOnline={isUserOnline(user.id)} 

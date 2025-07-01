@@ -210,15 +210,6 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
         preload="metadata"
       />
 
-      {/* Play/Pause Button Overlay */}
-      {!isPlaying && !isBuffering && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-          <div className="bg-black/60 rounded-full p-4 hover:bg-black/80 transition-colors">
-            <Play className="w-12 h-12 text-white ml-1" />
-          </div>
-        </div>
-      )}
-
       {/* Loading/Buffering State */}
       {(isLoading || isBuffering) && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/20">
