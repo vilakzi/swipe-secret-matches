@@ -153,11 +153,6 @@ const Index = () => {
                 <h1 className="text-2xl font-bold text-white">Connect</h1>
                 <p className="text-xs text-gray-400">Real-time feed</p>
               </div>
-              {isAdmin && (
-                <span className="bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
-                  ADMIN
-                </span>
-              )}
             </div>
             
             <div className="flex items-center space-x-2">

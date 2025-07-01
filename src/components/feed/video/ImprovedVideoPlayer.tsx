@@ -1,6 +1,6 @@
 
 import React, { useMemo, useState, useRef, useCallback, useEffect } from 'react';
-import VideoControls from './VideoControls';
+import { Play, Pause, Volume2, VolumeX, Maximize2 } from 'lucide-react';
 
 interface ImprovedVideoPlayerProps {
   src: string;
@@ -26,12 +26,12 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
   const [showControls, setShowControls] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isMuted, setIsMuted] = useState(muted);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -51,103 +51,68 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     }
   }, [isPlaying]);
 
-  // Improved event handlers with better error handling
+  // Event handlers
   const handleVideoEvents = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
     
     const handleLoadedMetadata = () => {
-      try {
-        setDuration(video.duration || 0);
-        setIsLoading(false);
-        setError(null);
-      } catch (err) {
-        console.error('Error handling loadedmetadata:', err);
-      }
+      setDuration(video.duration || 0);
+      setIsLoading(false);
+      setError(null);
     };
     
     const handleTimeUpdate = () => {
-      try {
-        setCurrentTime(video.currentTime || 0);
-      } catch (err) {
-        console.error('Error handling timeupdate:', err);
-      }
+      setCurrentTime(video.currentTime || 0);
     };
     
     const handlePlay = () => {
-      try {
-        setIsPlaying(true);
-        setIsBuffering(false);
-        setError(null);
-        resetControlsTimeout();
-      } catch (err) {
-        console.error('Error handling play:', err);
-      }
+      setIsPlaying(true);
+      setIsBuffering(false);
+      setError(null);
+      resetControlsTimeout();
     };
     
     const handlePause = () => {
-      try {
-        setIsPlaying(false);
-        setShowControls(true);
-        if (controlsTimeoutRef.current) {
-          clearTimeout(controlsTimeoutRef.current);
-        }
-      } catch (err) {
-        console.error('Error handling pause:', err);
+      setIsPlaying(false);
+      setShowControls(true);
+      if (controlsTimeoutRef.current) {
+        clearTimeout(controlsTimeoutRef.current);
       }
     };
     
     const handleWaiting = () => {
-      try {
-        setIsBuffering(true);
-      } catch (err) {
-        console.error('Error handling waiting:', err);
-      }
+      setIsBuffering(true);
     };
     
     const handleCanPlay = () => {
-      try {
-        setIsBuffering(false);
-        setError(null);
-      } catch (err) {
-        console.error('Error handling canplay:', err);
-      }
+      setIsBuffering(false);
+      setError(null);
     };
     
-    const handleError = (e: Event) => {
-      console.error('Video error:', e);
+    const handleError = () => {
       setError('Video failed to load');
       setIsLoading(false);
       setIsBuffering(false);
     };
 
-    // Add all event listeners with error handling
-    try {
-      video.addEventListener('loadedmetadata', handleLoadedMetadata);
-      video.addEventListener('timeupdate', handleTimeUpdate);
-      video.addEventListener('play', handlePlay);
-      video.addEventListener('pause', handlePause);
-      video.addEventListener('waiting', handleWaiting);
-      video.addEventListener('canplay', handleCanPlay);
-      video.addEventListener('error', handleError);
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
+    video.addEventListener('timeupdate', handleTimeUpdate);
+    video.addEventListener('play', handlePlay);
+    video.addEventListener('pause', handlePause);
+    video.addEventListener('waiting', handleWaiting);
+    video.addEventListener('canplay', handleCanPlay);
+    video.addEventListener('error', handleError);
 
-      return () => {
-        try {
-          video.removeEventListener('loadedmetadata', handleLoadedMetadata);
-          video.removeEventListener('timeupdate', handleTimeUpdate);
-          video.removeEventListener('play', handlePlay);
-          video.removeEventListener('pause', handlePause);
-          video.removeEventListener('waiting', handleWaiting);
-          video.removeEventListener('canplay', handleCanPlay);
-          video.removeEventListener('error', handleError);
-        } catch (err) {
-          console.error('Error removing event listeners:', err);
-        }
-      };
-    } catch (err) {
-      console.error('Error adding event listeners:', err);
-      return () => {};
-    }
+    return () => {
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      video.removeEventListener('timeupdate', handleTimeUpdate);
+      video.removeEventListener('play', handlePlay);
+      video.removeEventListener('pause', handlePause);
+      video.removeEventListener('waiting', handleWaiting);
+      video.removeEventListener('canplay', handleCanPlay);
+      video.removeEventListener('error', handleError);
+    };
   }, [resetControlsTimeout]);
 
   useEffect(() => {
@@ -179,146 +144,42 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     }
   }, [isPlaying]);
 
-  const handleSeek = useCallback((time: number) => {
+  const toggleMute = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    try {
-      const seekTime = Math.max(0, Math.min(time, video.duration || 0));
-      video.currentTime = seekTime;
-      setCurrentTime(seekTime);
-    } catch (err) {
-      console.error('Seek error:', err);
-    }
-  }, []);
+    const newMuted = !isMuted;
+    video.muted = newMuted;
+    setIsMuted(newMuted);
+  }, [isMuted]);
 
-  const handleVolumeChangeWrapper = useCallback((newVolume: number) => {
+  const handleSeek = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || !duration) return;
 
-    try {
-      const clampedVolume = Math.max(0, Math.min(1, newVolume));
-      video.volume = clampedVolume;
-      setVolume(clampedVolume);
-    } catch (err) {
-      console.error('Volume change error:', err);
-    }
-  }, []);
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const seekTime = (clickX / rect.width) * duration;
+    
+    video.currentTime = seekTime;
+    setCurrentTime(seekTime);
+  }, [duration]);
 
-  const handleToggleMute = useCallback(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    try {
-      video.muted = !video.muted;
-      setVolume(video.muted ? 0 : video.volume);
-    } catch (err) {
-      console.error('Mute toggle error:', err);
-    }
-  }, []);
-
-  const toggleFullscreen = useCallback(async () => {
-    try {
-      if (!document.fullscreenElement) {
-        await videoRef.current?.requestFullscreen();
-        setIsFullscreen(true);
-      } else {
-        await document.exitFullscreen();
-        setIsFullscreen(false);
-      }
-    } catch (err) {
-      console.error('Fullscreen error:', err);
-    }
-  }, []);
+  const formatTime = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
 
   const handleMouseMove = useCallback(() => {
-    try {
-      resetControlsTimeout();
-    } catch (err) {
-      console.error('Mouse move error:', err);
-    }
+    resetControlsTimeout();
   }, [resetControlsTimeout]);
 
   const handleClick = useCallback((e: React.MouseEvent) => {
-    try {
-      e.stopPropagation();
-      resetControlsTimeout();
-    } catch (err) {
-      console.error('Click error:', err);
-    }
-  }, [resetControlsTimeout]);
-
-  // Prevent touch events from bubbling to parent card
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    try {
-      e.stopPropagation();
-    } catch (err) {
-      console.error('Touch start error:', err);
-    }
-  }, []);
-
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    try {
-      e.stopPropagation();
-    } catch (err) {
-      console.error('Touch move error:', err);
-    }
-  }, []);
-
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    try {
-      e.stopPropagation();
-    } catch (err) {
-      console.error('Touch end error:', err);
-    }
-  }, []);
-
-  const memoizedVideoControls = useMemo(() => {
-    if (!controls) return null;
-    
-    try {
-      return (
-        <VideoControls
-          isPlaying={isPlaying}
-          isBuffering={isBuffering}
-          isLoading={isLoading}
-          isFullscreen={isFullscreen}
-          currentTime={currentTime}
-          duration={duration}
-          volume={volume}
-          isMuted={videoRef.current?.muted || volume === 0}
-          showControls={showControls}
-          showPoster={!isPlaying && currentTime === 0}
-          videoError={error}
-          onPlay={togglePlay}
-          onPlayPause={togglePlay}
-          onSeek={handleSeek}
-          onVolumeChange={handleVolumeChangeWrapper}
-          onMuteToggle={handleToggleMute}
-          onFullscreen={toggleFullscreen}
-        />
-      );
-    } catch (err) {
-      console.error('Error creating video controls:', err);
-      return null;
-    }
-  }, [
-    controls,
-    isPlaying,
-    isBuffering,
-    isLoading,
-    isFullscreen,
-    currentTime,
-    duration,
-    volume,
-    showControls,
-    error,
-    togglePlay,
-    handleSeek,
-    handleVolumeChangeWrapper,
-    handleToggleMute,
-    toggleFullscreen
-  ]);
+    e.stopPropagation();
+    togglePlay();
+    resetControlsTimeout();
+  }, [togglePlay, resetControlsTimeout]);
 
   if (!src || typeof src !== 'string' || src.trim() === '') {
     return (
@@ -332,12 +193,9 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
 
   return (
     <div 
-      className={`relative rounded-lg overflow-hidden video-controls ${className}`}
+      className={`relative rounded-lg overflow-hidden bg-black ${className}`}
       onMouseMove={handleMouseMove}
       onClick={handleClick}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
     >
       <video
         ref={videoRef}
@@ -348,13 +206,94 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
         loop={loop}
         muted={muted}
         playsInline={playsInline}
-        className="w-full h-full object-cover rounded-lg"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+        className="w-full h-full object-cover"
         preload="metadata"
       />
-      {memoizedVideoControls}
+
+      {/* Play/Pause Button Overlay */}
+      {!isPlaying && !isBuffering && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+          <div className="bg-black/60 rounded-full p-4 hover:bg-black/80 transition-colors">
+            <Play className="w-12 h-12 text-white ml-1" />
+          </div>
+        </div>
+      )}
+
+      {/* Loading/Buffering State */}
+      {(isLoading || isBuffering) && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+          <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+          <div className="text-white text-center">
+            <div className="text-sm">{error}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile-style Controls */}
+      {controls && showControls && (
+        <div className="absolute inset-0 pointer-events-none">
+          {/* Top Controls */}
+          <div className="absolute top-4 right-4 flex items-center space-x-2 pointer-events-auto">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleMute();
+              }}
+              className="bg-black/60 hover:bg-black/80 text-white p-2 rounded-full transition-colors"
+            >
+              {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                // Fullscreen logic would go here
+              }}
+              className="bg-black/60 hover:bg-black/80 text-white p-2 rounded-full transition-colors"
+            >
+              <Maximize2 className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Bottom Controls */}
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 pointer-events-auto">
+            {/* Progress Bar */}
+            <div 
+              className="w-full h-1 bg-white/30 rounded-full mb-2 cursor-pointer"
+              onClick={handleSeek}
+            >
+              <div 
+                className="h-full bg-white rounded-full transition-all duration-200"
+                style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
+              />
+            </div>
+
+            {/* Time Display */}
+            <div className="flex items-center justify-between text-white text-sm">
+              <span>{formatTime(currentTime)}</span>
+              <span>{formatTime(duration)}</span>
+            </div>
+          </div>
+
+          {/* Center Play/Pause Button */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-auto">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                togglePlay();
+              }}
+              className="bg-black/60 hover:bg-black/80 text-white p-3 rounded-full transition-colors"
+            >
+              {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-1" />}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
