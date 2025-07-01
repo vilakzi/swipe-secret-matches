@@ -1,7 +1,6 @@
 
 import * as React from 'react';
 import { useState, useMemo } from 'react';
-import AdminTileCarousel from './AdminTileCarousel';
 import { useAuth } from '@/contexts/AuthContext';
 import { useContentFeed } from '@/hooks/useContentFeed';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -35,29 +34,19 @@ const FeedContent = ({
   const [sortOption, setSortOption] = useState<SortOption>('newest');
   const [filterOption, setFilterOption] = useState<FilterOption>('all');
   const [locationOption, setLocationOption] = useState<LocationOption>('all');
-  const { contentFeedItems, handleContentLike, handleContentShare } = useContentFeed();
+  const { contentFeedItems } = useContentFeed();
   const { user } = useAuth();
   const { role } = useUserRole();
 
   const adminRoles = ["admin", "superadmin"];
 
-  // Create wrapper functions to match expected signatures
-  const handleContentLikeWrapper = async (contentId: string, profileId: string) => {
-    handleContentLike(contentId, profileId);
-  };
-
-  const handleContentShareWrapper = async (contentId: string) => {
-    handleContentShare(contentId);
-  };
-
-  // Optimized feed processing with memoization
+  // Optimized feed processing with memoization - INTEGRATE admin content directly
   const processedFeedData = useMemo(() => {
-    console.log('🚀 Processing feed data with optimization');
+    console.log('🚀 Processing feed data - integrating admin content smoothly');
     
     // Enrich feed items with role/joinDate for easier checks
     const enrichedFeedItems = feedItems.map(item => ({
       ...item,
-      isAdminCard: false,
       profile: {
         ...item.profile,
         role: item.profile.role || item.profile.userType,
@@ -65,13 +54,12 @@ const FeedContent = ({
       }
     }));
 
-    // Convert content feed items to FeedItem type compatible format with location filtering
+    // Convert content feed items to FeedItem type compatible format
     const contentAsRegularFeed = contentFeedItems.filter(
       c => !!c && !!c.id && isValidMedia(c.postImage)
     ).map(item => ({
       ...item,
       isContent: true,
-      isAdminCard: true,
       // Add location metadata for filtering
       locationMetadata: {
         target_locations: item.category === 'soweto' ? ['soweto'] :
@@ -84,25 +72,25 @@ const FeedContent = ({
         ...item.profile,
         userType: item.profile.userType as "user" | "service_provider" | "admin" | "superadmin"
       }
-    } as FeedItem & { isContent: true; isAdminCard: true; locationMetadata: any }));
+    } as FeedItem & { isContent: true; locationMetadata: any }));
 
-    // Admin carousel: posts from admin/superadmin, and published content feed
-    const adminFeed = [
-      ...contentAsRegularFeed,
-      ...enrichedFeedItems.filter(item =>
-        adminRoles.includes(String(item.profile.role).toLowerCase()) &&
-        ((item.type === 'post' && isValidMedia(item.postImage)) ||
-          (item.type === 'profile' && isProfileImageChanged(item.profile.image)))
-      ).map(item => ({
-        ...item,
-        isAdminCard: true
-      }))
-    ];
+    // Admin posts from database
+    const adminPosts = enrichedFeedItems.filter(item =>
+      adminRoles.includes(String(item.profile.role).toLowerCase()) &&
+      ((item.type === 'post' && isValidMedia(item.postImage)) ||
+        (item.type === 'profile' && isProfileImageChanged(item.profile.image)))
+    );
 
-    // All feed items combined for normal display
+    // ALL feed items combined for smooth display - NO SEPARATE CAROUSEL
     const allFeedItems = [
-      ...contentAsRegularFeed,
+      ...contentAsRegularFeed, // Admin content feed
+      ...adminPosts, // Admin posts from database
       ...enrichedFeedItems.filter(item => {
+        // Skip admin posts since we already included them above
+        if (adminRoles.includes(String(item.profile.role).toLowerCase())) {
+          return false;
+        }
+        
         const hasMedia = (item.profile.posts && item.profile.posts.some(isValidMedia)) || 
                         (item.type === 'post' && isValidMedia(item.postImage));
         const imgChanged = isProfileImageChanged(item.profile.image);
@@ -117,7 +105,7 @@ const FeedContent = ({
       }))
     ];
 
-    return { adminFeed, allFeedItems };
+    return { allFeedItems };
   }, [feedItems, contentFeedItems, adminRoles]);
 
   // Enhanced location filtering with admin content support
@@ -187,27 +175,22 @@ const FeedContent = ({
         case 'welcome':
           return items.filter(item => item.isWelcome);
         case 'admin':
-          return items.filter(item => item.isAdminCard || item.isContent);
+          return items.filter(item => item.isContent || adminRoles.includes(String(item.profile.role).toLowerCase()));
         case 'all':
         default:
           return items;
       }
     };
-  }, [filterOption]);
+  }, [filterOption, adminRoles]);
 
   // Apply all filters with performance optimization
   const processedFeedItems = useMemo(() => {
-    console.log('🚀 Applying filters with optimization');
+    console.log('🚀 Applying filters with smooth integration');
     return sortFeedItems(filterFeedItems(filterByLocation(processedFeedData.allFeedItems)));
   }, [processedFeedData.allFeedItems, filterByLocation, filterFeedItems, sortFeedItems]);
 
-  const processedAdminFeed = useMemo(() => {
-    return filterByLocation(processedFeedData.adminFeed);
-  }, [processedFeedData.adminFeed, filterByLocation]);
-
-  console.log('🚀 Feed processing complete:', {
+  console.log('🚀 Smooth feed processing complete:', {
     total: processedFeedItems.length,
-    admin: processedAdminFeed.length,
     location: locationOption,
     filter: filterOption,
     sort: sortOption
@@ -223,20 +206,6 @@ const FeedContent = ({
         onFilterChange={setFilterOption}
         onLocationChange={setLocationOption}
       />
-      
-      {processedAdminFeed.length > 0 && filterOption !== 'posts' && filterOption !== 'profiles' && (
-        <AdminTileCarousel
-          adminFeed={processedAdminFeed}
-          likedItems={likedItems}
-          isSubscribed={isSubscribed}
-          onLike={onLike}
-          onContact={onContact}
-          onContentLike={handleContentLikeWrapper}
-          onContentShare={handleContentShareWrapper}
-          tilesToShow={2}
-          rotationIntervalMs={5000}
-        />
-      )}
       
       <NormalFeedList
         userFeed={processedFeedItems}
