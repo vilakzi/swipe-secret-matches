@@ -1,163 +1,219 @@
 
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Heart, Share, Play, Clock } from 'lucide-react';
-import OptimizedImage from '@/components/ui/OptimizedImage';
-import ImageModal from '@/components/ui/ImageModal';
-import { useImageModal } from '@/hooks/useImageModal';
-import { useState } from 'react';
+import React, { memo, useState, useCallback } from 'react';
+import { Card } from "@/components/ui/card";
+import { Heart, MessageCircle, Share2, ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { useImageModal } from "@/hooks/useImageModal";
+import ImageModal from "@/components/ui/ImageModal";
+import PostVideoPlayer from "./PostVideoPlayer";
+import { isVideo } from "@/utils/feed/mediaUtils";
+import { FeedItem, Profile } from './types/feedTypes';
 
 interface ContentPromoterCardProps {
-  id: string;
-  contentUrl: string;
-  contentType: 'image' | 'video';
-  colorName: string;
-  fileName?: string;
-  timestamp?: number;
-  onLike: (itemId: string) => void;
+  item: FeedItem;
   likedItems: Set<string>;
+  isSubscribed: boolean;
+  onLike: (itemId: string, profileId: string) => void;
+  onContact: (profile: Profile) => void;
+  onContentLike?: (contentId: string, profileId: string) => Promise<void>;
+  onContentShare?: (contentId: string) => Promise<void>;
+  showAdminBadge?: boolean;
 }
 
-const ContentPromoterCard = ({ 
-  id, 
-  contentUrl, 
-  contentType, 
-  colorName, 
-  fileName,
-  timestamp,
-  onLike, 
-  likedItems 
-}: ContentPromoterCardProps) => {
+const ContentPromoterCard = memo<ContentPromoterCardProps>(({
+  item,
+  likedItems,
+  isSubscribed,
+  onLike,
+  onContact,
+  onContentLike,
+  onContentShare,
+  showAdminBadge = false,
+}) => {
+  const navigate = useNavigate();
   const { isOpen, imageSrc, imageAlt, openModal, closeModal } = useImageModal();
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [showComments, setShowComments] = useState(false);
 
-  const handleLike = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onLike(id);
-  };
+  // Safety checks
+  if (!item?.id || !item?.profile) {
+    console.warn('ContentPromoterCard: Invalid item data', item);
+    return null;
+  }
 
-  const handleContentClick = (e: React.MouseEvent) => {
+  const isLiked = likedItems.has(item.id);
+  const isVideoPost = item.postImage && isVideo(item.postImage);
+
+  const handleProfileClick = useCallback(() => {
+    navigate(`/profile/${item.profile.id}`);
+  }, [item.profile.id, navigate]);
+
+  const handleLike = useCallback(async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (contentType === 'image') {
-      openModal(contentUrl, 'Content Promoter Post');
+    if (onContentLike && item.isContent) {
+      await onContentLike(item.id, item.profile.id);
+    } else {
+      onLike(item.id, item.profile.id);
     }
-  };
+  }, [item.id, item.profile.id, item.isContent, onContentLike, onLike]);
 
-  const formatTimeAgo = (timestamp: number) => {
-    const now = Date.now();
-    const diff = now - timestamp;
-    const minutes = Math.floor(diff / 60000);
-    
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes}m ago`;
-    
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-    
-    const days = Math.floor(hours / 24);
-    return `${days}d ago`;
-  };
+  const handleShare = useCallback(async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onContentShare) {
+      await onContentShare(item.id);
+    }
+  }, [item.id, onContentShare]);
 
-  const isVideo = contentType === 'video';
+  const handleContact = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onContact(item.profile);
+  }, [item.profile, onContact]);
+
+  const handleAvatarClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    openModal(item.profile.image, `${item.profile.name}'s profile photo`);
+  }, [item.profile.image, item.profile.name, openModal]);
+
+  const handlePostImageClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isVideoPost) {
+      openModal(item.postImage || "", `${item.profile.name}'s post`);
+    }
+  }, [item.postImage, item.profile.name, isVideoPost, openModal]);
 
   return (
     <>
-      <Card className="bg-gray-800 border-gray-700 mb-4 transition-all duration-300 hover:shadow-lg">
+      <Card className="bg-gray-800 border-gray-700 mb-4 touch-target">
         {/* Header */}
-        <div className="p-4 flex items-center justify-between">
+        <div className="flex items-center justify-between p-4">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-sm">CP</span>
-            </div>
-            <div>
+            <img
+              src={item.profile.image}
+              alt={`${item.profile.name}'s avatar`}
+              className="w-10 h-10 rounded-full object-cover cursor-pointer"
+              onClick={handleAvatarClick}
+              loading="lazy"
+            />
+            <div className="flex-1">
               <div className="flex items-center space-x-2">
-                <h4 className="font-semibold text-white text-sm">
-                  Content Promoter
-                </h4>
-                <div 
-                  className="px-2 py-1 rounded-full text-xs font-bold text-white shadow-lg"
-                  style={{ backgroundColor: colorName }}
+                <h3 
+                  className="font-semibold text-white cursor-pointer hover:text-purple-400 transition-colors"
+                  onClick={handleProfileClick}
                 >
-                  {colorName}
-                </div>
+                  {item.profile.name}
+                </h3>
               </div>
-              <div className="flex items-center space-x-2">
-                <p className="text-gray-400 text-xs">Automated Content</p>
-                {timestamp && (
-                  <>
-                    <span className="text-gray-500">•</span>
-                    <div className="flex items-center space-x-1">
-                      <Clock className="w-3 h-3 text-gray-400" />
-                      <span className="text-gray-400 text-xs">{formatTimeAgo(timestamp)}</span>
-                    </div>
-                  </>
-                )}
-              </div>
+              {item.createdAt && (
+                <p className="text-xs text-gray-400">
+                  {new Date(item.createdAt).toLocaleDateString()}
+                </p>
+              )}
             </div>
           </div>
         </div>
 
         {/* Content */}
-        <div className="relative">
-          {isVideo ? (
-            <div className="relative">
-              <video
-                src={contentUrl}
-                className="w-full h-72 object-cover cursor-pointer max-h-96 rounded-sm"
-                controls
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
-              >
-                Your browser does not support the video tag.
-              </video>
-              {!isPlaying && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <Play className="w-12 h-12 text-white opacity-80 drop-shadow-lg" />
-                </div>
-              )}
+        {item.type === 'post' && item.postImage && (
+          <div className="relative">
+            {isVideoPost ? (
+              <PostVideoPlayer
+                src={item.postImage}
+                className="w-full rounded-lg"
+              />
+            ) : (
+              <img
+                src={item.postImage}
+                alt={`Post from ${item.profile.name}`}
+                className="w-full h-64 object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                onClick={handlePostImageClick}
+                loading="lazy"
+              />
+            )}
+          </div>
+        )}
+
+        {/* Profile content */}
+        {item.type === 'profile' && (
+          <div className="p-4">
+            <div className="text-center">
+              <img
+                src={item.profile.image}
+                alt={`${item.profile.name}'s profile`}
+                className="w-full h-48 object-cover rounded-lg cursor-pointer"
+                onClick={handleAvatarClick}
+                loading="lazy"
+              />
+              <div className="mt-4">
+                <h3 className="text-lg font-semibold text-white">{item.profile.name}</h3>
+                <p className="text-sm text-gray-400">Age: {item.profile.age}</p>
+                <p className="text-sm text-gray-400">{item.profile.location}</p>
+                {item.profile.bio && (
+                  <p className="text-sm text-gray-300 mt-2">{item.profile.bio}</p>
+                )}
+              </div>
             </div>
-          ) : (
-            <OptimizedImage
-              src={contentUrl}
-              alt="Content Promoter Post"
-              className="w-full h-72 object-cover cursor-pointer hover:opacity-95 transition-opacity max-h-96 rounded-sm"
-              onClick={handleContentClick}
-              expandable
-            />
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Actions */}
-        <div className="p-4">
-          <div className="flex items-center justify-between mb-3">
+        <div className="p-4 space-y-3">
+          <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Button
                 variant="ghost"
                 size="sm"
-                className={`p-0 transition-colors ${likedItems.has(id) ? 'text-red-500' : 'text-white hover:text-red-400'}`}
                 onClick={handleLike}
+                className={`${isLiked ? 'text-red-500' : 'text-gray-400'} hover:text-red-500 transition-colors`}
               >
-                <Heart className={`w-6 h-6 ${likedItems.has(id) ? 'fill-current' : ''}`} />
+                <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
               </Button>
+              
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-white p-0 hover:text-blue-400 transition-colors"
+                onClick={() => setShowComments(!showComments)}
+                className="text-gray-400 hover:text-white transition-colors"
               >
-                <Share className="w-6 h-6" />
+                <MessageCircle className="w-5 h-5" />
               </Button>
+              
+              {onContentShare && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleShare}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <Share2 className="w-5 h-5" />
+                </Button>
+              )}
             </div>
+
+            {isSubscribed && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleContact}
+                className="text-white border-purple-500 hover:bg-purple-500/20"
+              >
+                <ExternalLink className="w-4 h-4 mr-1" />
+                Contact
+              </Button>
+            )}
           </div>
 
-          <div className="text-white">
-            <span className="font-semibold">Content Promoter</span>
-            <p className="text-gray-300 text-sm mt-1">
-              {fileName ? `${fileName} - ` : ''}Premium content from our collection
-            </p>
-          </div>
+          {/* Caption */}
+          {item.caption && (
+            <div className="text-sm text-gray-300">
+              <span className="font-medium text-white cursor-pointer" onClick={handleProfileClick}>
+                {item.profile.name}
+              </span>{' '}
+              {item.caption}
+            </div>
+          )}
         </div>
       </Card>
-
+      
       <ImageModal
         isOpen={isOpen}
         onClose={closeModal}
@@ -166,6 +222,7 @@ const ContentPromoterCard = ({
       />
     </>
   );
-};
+});
 
+ContentPromoterCard.displayName = 'ContentPromoterCard';
 export default ContentPromoterCard;
