@@ -2,6 +2,7 @@
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Video } from "lucide-react";
 import VerificationBadges from "@/components/VerificationBadges";
 
 interface Profile {
@@ -31,6 +32,7 @@ interface PostCardHeaderProps {
   isUserOnline: (profileId: string) => boolean;
   onProfileClick: () => void;
   onAvatarClick: (e: React.MouseEvent) => void;
+  isVideoPost?: boolean;
   children?: React.ReactNode;
 }
 
@@ -40,6 +42,7 @@ const PostCardHeader = ({
   isUserOnline,
   onProfileClick,
   onAvatarClick,
+  isVideoPost = false,
   children,
 }: PostCardHeaderProps) => {
   return (
@@ -67,6 +70,12 @@ const PostCardHeader = ({
               >
                 {profile.name}
               </h3>
+              {isVideoPost && (
+                <Video 
+                  className="w-4 h-4 text-gray-400" 
+                  aria-label="Video post"
+                />
+              )}
               {profile.verifications && (
                 <VerificationBadges verifications={profile.verifications} />
               )}

@@ -11,6 +11,7 @@ import PostCardCaption from "./PostCardCaption";
 import PostComments from "./PostComments";
 import PostCardDeleteMenu from "./PostCardDeleteMenu";
 import PostCardContent from "./PostCardContent";
+import { isVideo } from "@/utils/feed/mediaUtils";
 import PostCardEngagement from "./PostCardEngagement";
 
 interface Profile {
@@ -105,6 +106,9 @@ const PostCard = memo<PostCardProps>(({
     setShowComments(prev => !prev);
   }, []);
 
+  // Check if this is a video post
+  const isVideoPost = item.type === 'post' && item.postImage && isVideo(item.postImage);
+
   return (
     <>
       <PostCardEngagement itemId={item.id} engagementTracker={engagementTracker}>
@@ -119,6 +123,7 @@ const PostCard = memo<PostCardProps>(({
             isUserOnline={isUserOnline}
             onProfileClick={handleProfileClick}
             onAvatarClick={handleAvatarClick}
+            isVideoPost={isVideoPost}
           >
             <PostCardDeleteMenu
               postId={item.id}
