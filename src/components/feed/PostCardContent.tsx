@@ -9,15 +9,17 @@ import { isVideo } from "@/utils/feed/mediaUtils";
 interface PostCardContentProps {
   postImage?: string;
   profileName: string;
-  onPostImageClick: (e: React.MouseEvent) => void;
+  onPostImageClick?: (e: React.MouseEvent) => void;
   onProfileClick: () => void;
+  className?: string;
 }
 
 const PostCardContent = ({ 
   postImage, 
   profileName, 
   onPostImageClick, 
-  onProfileClick 
+  onProfileClick,
+  className = ''
 }: PostCardContentProps) => {
   const { isOpen, videoSrc, videoPoster, openModal, closeModal } = useVideoModal();
   
@@ -33,12 +35,13 @@ const PostCardContent = ({
 
   return (
     <>
-      <div className="relative">
+      <div className={`relative ${className}`}>
         {isVideoPost ? (
           <PostVideoPlayer
             src={postImage}
-            className="w-full rounded-lg"
+            className="w-full h-full"
             onClick={handleVideoClick}
+            onExpand={handleVideoClick}
           />
         ) : (
           <OptimizedImage

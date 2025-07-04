@@ -100,7 +100,34 @@ const Feed = () => {
         },
         (payload) => {
           console.log('New post received:', payload);
-          fetchFeed(); // Refresh the feed when new posts are added
+          // Add new posts to the existing feed without full refresh
+          setFeedItems(prevItems => {
+            const newPost = payload.new;
+            if (!newPost || !newPost.provider_id) return prevItems;
+
+            // Create new feed item
+            const newFeedItem = {
+              id: newPost.id,
+              type: 'post' as const,
+              profile: prevItems.find(item => item.profile.id === newPost.provider_id)?.profile || {
+                id: newPost.provider_id,
+                name: 'Loading...',
+                age: 0,
+                image: '/placeholder.svg',
+                bio: '',
+                whatsapp: '',
+                location: '',
+                userType: 'user',
+                isRealAccount: true
+              },
+              postImage: newPost.content_url,
+              caption: newPost.caption,
+              createdAt: newPost.created_at
+            };
+
+            // Add to beginning of feed
+            return [newFeedItem, ...prevItems];
+          });
         }
       )
       .subscribe();

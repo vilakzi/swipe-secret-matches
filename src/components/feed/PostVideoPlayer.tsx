@@ -1,21 +1,52 @@
 
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import ImprovedVideoPlayer from './video/ImprovedVideoPlayer';
 import { isVideo } from '@/utils/feed/mediaUtils';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 interface PostVideoPlayerProps {
   src: string;
   poster?: string;
   className?: string;
   onClick?: () => void;
+  onExpand?: () => void;
 }
 
 const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({ 
   src, 
   poster, 
   className = '', 
-  onClick 
+  onClick,
+  onExpand
 }) => {
+  const [isInView, setIsInView] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const videoRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInView(entry.isIntersecting);
+      },
+      {
+        threshold: 0.5,
+      }
+    );
+
+    if (videoRef.current) {
+      observer.observe(videoRef.current);
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  const handleExpand = () => {
+    setIsExpanded(true);
+    onExpand?.();
+  };
+
   if (!src || src.trim() === '' || !isVideo(src)) {
     return (
       <div className={`bg-gray-800 flex items-center justify-center h-96 ${className} rounded-lg`}>
@@ -28,24 +59,42 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({
   }
 
   return (
-    <div 
-      className={`relative cursor-pointer ${className}`}
-      onClick={onClick}
-    >
-      <ImprovedVideoPlayer
-        src={src}
-        poster={poster}
-        className="w-full h-96 md:h-[450px] object-cover rounded-lg"
-        autoPlay={false}
-        controls={false}
-        loop={true}
-        muted={true}
-        playsInline={true}
-      />
-      
-      {/* Click overlay for expansion */}
-      <div className="absolute inset-0 bg-transparent hover:bg-black/10 transition-colors rounded-lg" />
-    </div>
+    <>
+      <div 
+        ref={videoRef}
+        className={`relative cursor-pointer ${className}`}
+        onClick={onClick}
+      >
+        <ImprovedVideoPlayer
+          src={src}
+          poster={poster}
+          className="w-full h-96 md:h-[450px] object-cover rounded-lg"
+          autoPlay={false}
+          controls={true}
+          loop={true}
+          muted={true}
+          playsInline={true}
+          inView={isInView}
+          expanded={isExpanded}
+          onExpand={handleExpand}
+        />
+      </div>
+
+      <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
+        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black">
+          <ImprovedVideoPlayer
+            src={src}
+            poster={poster}
+            className="w-full aspect-video"
+            autoPlay={true}
+            controls={true}
+            loop={true}
+            muted={false}
+            playsInline={true}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

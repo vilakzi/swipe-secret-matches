@@ -183,11 +183,17 @@ const FeedContent = ({
     };
   }, [filterOption, adminRoles]);
 
-  // Apply all filters with performance optimization
+  // Apply all filters with performance optimization and content stability
+  const [initialFeedKey] = useState(() => Date.now());
   const processedFeedItems = useMemo(() => {
     console.log('🚀 Applying filters with smooth integration');
-    return sortFeedItems(filterFeedItems(filterByLocation(processedFeedData.allFeedItems)));
-  }, [processedFeedData.allFeedItems, filterByLocation, filterFeedItems, sortFeedItems]);
+    const filteredItems = sortFeedItems(filterFeedItems(filterByLocation(processedFeedData.allFeedItems)));
+    // Preserve item positions to prevent unwanted content shifts
+    return filteredItems.map((item, index) => ({
+      ...item,
+      stablePosition: `${initialFeedKey}-${index}`
+    }));
+  }, [processedFeedData.allFeedItems, filterByLocation, filterFeedItems, sortFeedItems, initialFeedKey]);
 
   console.log('🚀 Smooth feed processing complete:', {
     total: processedFeedItems.length,

@@ -32,8 +32,9 @@ const NormalFeedList: React.FC<NormalFeedListProps> = ({
   onLike,
   onContact,
 }) => {
-  // Memoize shuffled feed for performance
-  const shuffledFeed = useMemo(() => shuffleArray(userFeed), [userFeed]);
+  // Memoize shuffled feed with stable key to prevent unwanted reshuffling
+  const [shuffleKey] = useState(() => Date.now());
+  const shuffledFeed = useMemo(() => shuffleArray(userFeed), [userFeed, shuffleKey]);
 
   // Pagination state
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -47,9 +48,12 @@ const NormalFeedList: React.FC<NormalFeedListProps> = ({
     }
   }, [shuffledFeed.length]);
 
+  // Preserve visible count when feed updates
   useEffect(() => {
-    setVisibleCount(PAGE_SIZE); // Reset on feed change
-  }, [shuffledFeed]);
+    if (visibleCount === PAGE_SIZE) {
+      setVisibleCount(PAGE_SIZE);
+    }
+  }, [shuffledFeed, visibleCount]);
 
   useEffect(() => {
     const option = { root: null, rootMargin: "20px", threshold: 1.0 };

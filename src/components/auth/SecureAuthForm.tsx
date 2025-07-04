@@ -7,6 +7,7 @@ import { Eye, EyeOff, Loader2, Shield } from 'lucide-react';
 import { useSecureAuth } from '@/hooks/useSecureAuth';
 import { validateEmailSecurity } from '@/utils/enhancedEmailValidation';
 import { sanitizeInput, validatePhoneNumber } from '@/utils/inputSanitization';
+import PasswordStrength from '@/components/ui/password-strength';
 
 interface SecureAuthFormProps {
   isLogin: boolean;
@@ -143,6 +144,11 @@ const SecureAuthForm: React.FC<SecureAuthFormProps> = ({ isLogin, onToggle }) =>
         </div>
         {errors.password && (
           <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+        )}
+        {!isLogin && formData.password && (
+          <div className="mt-2">
+            <PasswordStrength password={formData.password} />
+          </div>
         )}
       </div>
 
