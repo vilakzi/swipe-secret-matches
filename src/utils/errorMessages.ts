@@ -28,9 +28,14 @@ export const getAuthErrorMessage = (error: any): string => {
       return 'Please enter a valid email address.';
     }
     if (message.includes('rate limit')) {
-      return 'Too many attempts. Please wait a few minutes before trying again.';
+      return 'Email rate limit exceeded. Please wait 15-30 minutes before trying to sign up again, or try signing in if you already have an account.';
     }
     return 'There was an issue with your email address. Please try again.';
+  }
+  
+  // Handle the specific "over_email_send_rate_limit" error
+  if (message.includes('over_email_send_rate_limit') || error?.code === 'over_email_send_rate_limit') {
+    return 'Too many signup attempts. Please wait 15-30 minutes before trying again, or sign in if you already have an account.';
   }
   
   if (message.includes('network') || message.includes('fetch')) {
