@@ -68,7 +68,7 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({
         <ImprovedVideoPlayer
           src={src}
           poster={poster}
-          className="w-full h-96 md:h-[450px] object-cover rounded-lg"
+          className="w-full h-full object-cover rounded-lg"
           autoPlay={false}
           controls={true}
           loop={true}

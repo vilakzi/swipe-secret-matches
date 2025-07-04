@@ -19,7 +19,10 @@ interface FeedContentProps {
   onLike: (itemId: string, profileId: string) => void;
   onContact: (profile: Profile) => void;
   onRefresh?: () => void;
-  engagementTracker?: any;
+  engagementTracker?: {
+    trackEngagement: (itemId: string, engagementType: 'view' | 'like' | 'contact') => void;
+    getEngagementStats: (itemId: string) => { views: number; likes: number; contacts: number };
+  };
 }
 
 const FeedContent = ({
@@ -45,7 +48,7 @@ const FeedContent = ({
     console.log('🚀 Processing feed data - integrating admin content smoothly');
     
     // Enrich feed items with role/joinDate for easier checks
-    const enrichedFeedItems = feedItems.map(item => ({
+    const enrichedFeedItems = feedItems.filter(item => item && item.profile).map(item => ({
       ...item,
       profile: {
         ...item.profile,
@@ -55,8 +58,8 @@ const FeedContent = ({
     }));
 
     // Convert content feed items to FeedItem type compatible format
-    const contentAsRegularFeed = contentFeedItems.filter(
-      c => !!c && !!c.id && isValidMedia(c.postImage)
+    const contentAsRegularFeed = contentFeedItems.filter(item => 
+      item && item.id && item.profile && isValidMedia(item.postImage)
     ).map(item => ({
       ...item,
       isContent: true,
@@ -183,17 +186,16 @@ const FeedContent = ({
     };
   }, [filterOption, adminRoles]);
 
-  // Apply all filters with performance optimization and content stability
-  const [initialFeedKey] = useState(() => Date.now());
+  // Apply all filters with strict data validation
   const processedFeedItems = useMemo(() => {
-    console.log('🚀 Applying filters with smooth integration');
-    const filteredItems = sortFeedItems(filterFeedItems(filterByLocation(processedFeedData.allFeedItems)));
-    // Preserve item positions to prevent unwanted content shifts
-    return filteredItems.map((item, index) => ({
-      ...item,
-      stablePosition: `${initialFeedKey}-${index}`
-    }));
-  }, [processedFeedData.allFeedItems, filterByLocation, filterFeedItems, sortFeedItems, initialFeedKey]);
+    console.log('🚀 Applying filters with data validation');
+    const validItems = processedFeedData.allFeedItems.filter(item => {
+      return item && item.id && item.profile && 
+        (item.type === 'post' ? isValidMedia(item.postImage) : true) &&
+        (item.type === 'profile' ? item.profile.id : true);
+    });
+    return sortFeedItems(filterFeedItems(filterByLocation(validItems)));
+  }, [processedFeedData.allFeedItems, filterByLocation, filterFeedItems, sortFeedItems]);
 
   console.log('🚀 Smooth feed processing complete:', {
     total: processedFeedItems.length,
@@ -213,13 +215,20 @@ const FeedContent = ({
         onLocationChange={setLocationOption}
       />
       
-      <NormalFeedList
-        userFeed={processedFeedItems}
-        likedItems={likedItems}
-        isSubscribed={isSubscribed}
-        onLike={onLike}
-        onContact={onContact}
-      />
+      {processedFeedItems.length === 0 ? (
+        <div className="flex flex-col items-center justify-center min-h-[200px] text-gray-500">
+          <p className="text-lg mb-2">No posts found</p>
+          <p className="text-sm">Try adjusting your filters or check back later for new content</p>
+        </div>
+      ) : (
+        <NormalFeedList
+          userFeed={processedFeedItems}
+          likedItems={likedItems}
+          isSubscribed={isSubscribed}
+          onLike={onLike}
+          onContact={onContact}
+        />
+      )}
     </div>
   );
 };

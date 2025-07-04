@@ -248,8 +248,8 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
         autoPlay={autoPlay}
         controls={false}
         loop={loop}
-        muted={muted}
         playsInline={playsInline}
+        muted={isMuted}
         className="w-full h-full object-cover cursor-pointer"
         preload="metadata"
       />

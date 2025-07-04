@@ -35,11 +35,11 @@ const PostCardContent = ({
 
   return (
     <>
-      <div className={`relative ${className}`}>
+      <div className={`relative min-h-[450px] ${className}`}>
         {isVideoPost ? (
           <PostVideoPlayer
             src={postImage}
-            className="w-full h-full"
+            className="w-full h-full absolute inset-0"
             onClick={handleVideoClick}
             onExpand={handleVideoClick}
           />

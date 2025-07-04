@@ -32,9 +32,8 @@ const NormalFeedList: React.FC<NormalFeedListProps> = ({
   onLike,
   onContact,
 }) => {
-  // Memoize shuffled feed with stable key to prevent unwanted reshuffling
-  const [shuffleKey] = useState(() => Date.now());
-  const shuffledFeed = useMemo(() => shuffleArray(userFeed), [userFeed, shuffleKey]);
+  // Use original feed order for stability
+  const feedItems = useMemo(() => userFeed, [userFeed]);
 
   // Pagination state
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -46,7 +45,7 @@ const NormalFeedList: React.FC<NormalFeedListProps> = ({
     if (target.isIntersecting) {
       setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, shuffledFeed.length));
     }
-  }, [shuffledFeed.length]);
+  }, [feedItems.length]);
 
   // Preserve visible count when feed updates
   useEffect(() => {
@@ -64,17 +63,17 @@ const NormalFeedList: React.FC<NormalFeedListProps> = ({
     };
   }, [handleObserver]);
 
-  if (shuffledFeed.length === 0) {
+  if (!Array.isArray(feedItems) || feedItems.length === 0) {
     return (
       <div className="text-center py-8" aria-live="polite">
-        <p className="text-gray-400">No profiles found.</p>
+        <p className="text-gray-400">No content available at the moment.</p>
       </div>
     );
   }
 
   return (
     <>
-      {shuffledFeed.slice(0, visibleCount).map((item: any) => {
+      {feedItems.slice(0, visibleCount).map((item) => {
         if (item.isWelcome) {
           return (
             <WelcomeCard
@@ -83,7 +82,7 @@ const NormalFeedList: React.FC<NormalFeedListProps> = ({
             />
           );
         }
-        if (item.type === "post" && isValidMedia(item.postImage)) {
+        if (item.type === "post" && item.postImage && isValidMedia(item.postImage)) {
           return (
             <FeedPostCard
               key={item.id}
@@ -110,7 +109,7 @@ const NormalFeedList: React.FC<NormalFeedListProps> = ({
         return null;
       })}
       {/* Loader for infinite scroll */}
-      {visibleCount < shuffledFeed.length && (
+      {visibleCount < feedItems.length && (
         <div ref={loaderRef} className="py-8 text-center text-gray-400">
           Loading more...
         </div>

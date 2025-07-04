@@ -140,8 +140,8 @@ const PostCard = memo<PostCardProps>(({
           {/* Post content */}
           {item.type === 'post' && item.postImage && (
             <div className={cn(
-              "relative",
-              isVideoPost && "aspect-[9/16] sm:aspect-video"
+              "relative w-full",
+              isVideoPost ? "h-[450px] sm:h-[550px]" : "h-auto"
             )}>
               <PostCardContent
                 postImage={item.postImage}
