@@ -7,7 +7,12 @@ export const sanitizeInput = (input: string): string => {
     .trim()
     .replace(/[<>]/g, '') // Remove potential HTML tags
     .replace(/javascript:/gi, '') // Remove javascript: protocols
+    .replace(/data:/gi, '') // Remove data: protocols
+    .replace(/vbscript:/gi, '') // Remove vbscript: protocols
     .replace(/on\w+=/gi, '') // Remove event handlers
+    .replace(/style\s*=/gi, '') // Remove style attributes
+    .replace(/src\s*=/gi, '') // Remove src attributes
+    .replace(/href\s*=/gi, '') // Remove href attributes
     .slice(0, 1000); // Limit length to prevent DoS
 };
 

@@ -72,7 +72,7 @@ export const validateAndSanitizeInput = (
   };
 };
 
-export const validateFileUpload = (file: File): ValidationResult => {
+export const validateFileUpload = async (file: File): Promise<ValidationResult> => {
   // Check file size (10MB limit)
   const maxSize = 10 * 1024 * 1024;
   if (file.size > maxSize) {
@@ -88,8 +88,9 @@ export const validateFileUpload = (file: File): ValidationResult => {
     'image/png',
     'image/gif',
     'image/webp',
-    'application/pdf',
-    'text/plain'
+    'video/mp4',
+    'video/webm',
+    'video/quicktime'
   ];
 
   if (!allowedTypes.includes(file.type)) {
@@ -97,6 +98,32 @@ export const validateFileUpload = (file: File): ValidationResult => {
       isValid: false,
       error: 'File type not allowed'
     };
+  }
+
+  // Magic number validation for enhanced security
+  const buffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  
+  const magicNumbers = {
+    'image/jpeg': [[0xFF, 0xD8, 0xFF]],
+    'image/png': [[0x89, 0x50, 0x4E, 0x47]],
+    'image/gif': [[0x47, 0x49, 0x46, 0x38]],
+    'image/webp': [[0x52, 0x49, 0x46, 0x46]], // RIFF
+    'video/mp4': [[0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70], [0x00, 0x00, 0x00, 0x20, 0x66, 0x74, 0x79, 0x70]]
+  };
+
+  const expectedMagic = magicNumbers[file.type as keyof typeof magicNumbers];
+  if (expectedMagic) {
+    const isValidMagic = expectedMagic.some(magic => 
+      magic.every((byte, index) => bytes[index] === byte)
+    );
+    
+    if (!isValidMagic) {
+      return {
+        isValid: false,
+        error: 'File content does not match file type'
+      };
+    }
   }
 
   // Check filename for suspicious patterns
@@ -107,7 +134,10 @@ export const validateFileUpload = (file: File): ValidationResult => {
     /\.scr$/i,
     /\.php$/i,
     /\.jsp$/i,
-    /\.asp$/i
+    /\.asp$/i,
+    /\.js$/i,
+    /\.html$/i,
+    /\.htm$/i
   ];
 
   if (suspiciousPatterns.some(pattern => pattern.test(file.name))) {

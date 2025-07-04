@@ -30,10 +30,9 @@ const SecurePostCard: React.FC<SecurePostCardProps> = ({ content, author, classN
       <div className="mb-2">
         <span className="font-semibold text-gray-800">{sanitizedAuthor}</span>
       </div>
-      <div 
-        className="text-gray-700"
-        dangerouslySetInnerHTML={{ __html: sanitizedContent }}
-      />
+      <div className="text-gray-700">
+        {sanitizedContent}
+      </div>
     </div>
   );
 };
