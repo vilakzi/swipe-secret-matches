@@ -1,6 +1,7 @@
 
 import React, { useMemo, useState, useRef, useCallback, useEffect } from 'react';
 import { Play, Pause, Volume2, VolumeX, Maximize2 } from 'lucide-react';
+import { useVideoAutoPlay } from '@/hooks/useVideoAutoPlay';
 
 interface ImprovedVideoPlayerProps {
   src: string;
@@ -11,6 +12,9 @@ interface ImprovedVideoPlayerProps {
   loop?: boolean;
   muted?: boolean;
   playsInline?: boolean;
+  enableAutoPlayOnScroll?: boolean;
+  onPlay?: () => void;
+  onPause?: () => void;
 }
 
 const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
@@ -22,6 +26,9 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   loop = false,
   muted = false,
   playsInline = true,
+  enableAutoPlayOnScroll = false,
+  onPlay,
+  onPause,
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
@@ -35,6 +42,12 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Auto-play on scroll
+  useVideoAutoPlay(videoRef, { 
+    threshold: 0.6,
+    rootMargin: '-10% 0px'
+  });
 
   // Auto-hide controls when playing
   const resetControlsTimeout = useCallback(() => {
@@ -71,6 +84,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
       setIsBuffering(false);
       setError(null);
       resetControlsTimeout();
+      onPlay?.();
     };
     
     const handlePause = () => {
@@ -79,6 +93,7 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
       if (controlsTimeoutRef.current) {
         clearTimeout(controlsTimeoutRef.current);
       }
+      onPause?.();
     };
     
     const handleWaiting = () => {

@@ -41,6 +41,7 @@ const PostVideoPlayer: React.FC<PostVideoPlayerProps> = ({
         loop={true}
         muted={true}
         playsInline={true}
+        enableAutoPlayOnScroll={true}
       />
       
       {/* Click overlay for expansion */}
