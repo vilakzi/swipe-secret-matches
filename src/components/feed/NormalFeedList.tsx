@@ -32,8 +32,8 @@ const NormalFeedList: React.FC<NormalFeedListProps> = ({
   onLike,
   onContact,
 }) => {
-  // Use original feed order for stability
-  const feedItems = useMemo(() => userFeed, [userFeed]);
+  // Memoize shuffled feed for performance
+  const shuffledFeed = useMemo(() => shuffleArray(userFeed), [userFeed]);
 
   // Pagination state
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -45,14 +45,11 @@ const NormalFeedList: React.FC<NormalFeedListProps> = ({
     if (target.isIntersecting) {
       setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, shuffledFeed.length));
     }
-  }, [feedItems.length]);
+  }, [shuffledFeed.length]);
 
-  // Preserve visible count when feed updates
   useEffect(() => {
-    if (visibleCount === PAGE_SIZE) {
-      setVisibleCount(PAGE_SIZE);
-    }
-  }, [shuffledFeed, visibleCount]);
+    setVisibleCount(PAGE_SIZE); // Reset on feed change
+  }, [shuffledFeed]);
 
   useEffect(() => {
     const option = { root: null, rootMargin: "20px", threshold: 1.0 };
@@ -63,17 +60,17 @@ const NormalFeedList: React.FC<NormalFeedListProps> = ({
     };
   }, [handleObserver]);
 
-  if (!Array.isArray(feedItems) || feedItems.length === 0) {
+  if (shuffledFeed.length === 0) {
     return (
       <div className="text-center py-8" aria-live="polite">
-        <p className="text-gray-400">No content available at the moment.</p>
+        <p className="text-gray-400">No profiles found.</p>
       </div>
     );
   }
 
   return (
     <>
-      {feedItems.slice(0, visibleCount).map((item) => {
+      {shuffledFeed.slice(0, visibleCount).map((item: any) => {
         if (item.isWelcome) {
           return (
             <WelcomeCard
@@ -82,7 +79,7 @@ const NormalFeedList: React.FC<NormalFeedListProps> = ({
             />
           );
         }
-        if (item.type === "post" && item.postImage && isValidMedia(item.postImage)) {
+        if (item.type === "post" && isValidMedia(item.postImage)) {
           return (
             <FeedPostCard
               key={item.id}
@@ -109,7 +106,7 @@ const NormalFeedList: React.FC<NormalFeedListProps> = ({
         return null;
       })}
       {/* Loader for infinite scroll */}
-      {visibleCount < feedItems.length && (
+      {visibleCount < shuffledFeed.length && (
         <div ref={loaderRef} className="py-8 text-center text-gray-400">
           Loading more...
         </div>

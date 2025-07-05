@@ -1,5 +1,5 @@
 
-import React, { memo, useState, useCallback, useRef } from 'react';
+import React, { memo, useState, useCallback } from 'react';
 import { Card } from "@/components/ui/card";
 import { usePresence } from "@/hooks/usePresence";
 import { useNavigate } from "react-router-dom";
@@ -13,7 +13,6 @@ import PostCardDeleteMenu from "./PostCardDeleteMenu";
 import PostCardContent from "./PostCardContent";
 import { isVideo } from "@/utils/feed/mediaUtils";
 import PostCardEngagement from "./PostCardEngagement";
-import { cn } from "@/lib/utils";
 
 interface Profile {
   id: string;
@@ -114,11 +113,7 @@ const PostCard = memo<PostCardProps>(({
     <>
       <PostCardEngagement itemId={item.id} engagementTracker={engagementTracker}>
         <Card 
-          className={cn(
-            "bg-gray-800 border-gray-700 mb-4 touch-target",
-            "w-full max-w-2xl mx-auto",
-            isVideoPost && "overflow-hidden"
-          )}
+          className="bg-gray-800 border-gray-700 mb-4 touch-target" 
           tabIndex={0} 
           aria-label={`${item.type === 'post' ? 'Post' : 'Profile'} from ${item.profile.name}`}
         >
@@ -139,20 +134,12 @@ const PostCard = memo<PostCardProps>(({
           
           {/* Post content */}
           {item.type === 'post' && item.postImage && (
-            <div className={cn(
-              "relative w-full",
-              isVideoPost ? "h-[450px] sm:h-[550px]" : "h-auto"
-            )}>
-              <PostCardContent
-                postImage={item.postImage}
-                profileName={item.profile.name}
-                onPostImageClick={isVideoPost ? undefined : handlePostImageClick}
-                onProfileClick={handleProfileClick}
-                className={cn(
-                  isVideoPost && "absolute inset-0"
-                )}
-              />
-            </div>
+            <PostCardContent
+              postImage={item.postImage}
+              profileName={item.profile.name}
+              onPostImageClick={handlePostImageClick}
+              onProfileClick={handleProfileClick}
+            />
           )}
 
           {/* Profile content */}

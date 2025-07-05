@@ -11,9 +11,6 @@ interface ImprovedVideoPlayerProps {
   loop?: boolean;
   muted?: boolean;
   playsInline?: boolean;
-  inView?: boolean;
-  expanded?: boolean;
-  onExpand?: () => void;
 }
 
 const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
@@ -25,9 +22,6 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
   loop = false,
   muted = false,
   playsInline = true,
-  inView = false,
-  expanded = false,
-  onExpand,
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
@@ -133,18 +127,6 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
     return cleanup;
   }, [handleVideoEvents]);
 
-  // Auto-play when in view
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    if (inView && !isPlaying) {
-      video.play().catch(() => {});
-    } else if (!inView && isPlaying) {
-      video.pause();
-    }
-  }, [inView, isPlaying]);
-
   useEffect(() => {
     return () => {
       if (controlsTimeoutRef.current) {
@@ -248,8 +230,8 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
         autoPlay={autoPlay}
         controls={false}
         loop={loop}
+        muted={muted}
         playsInline={playsInline}
-        muted={isMuted}
         className="w-full h-full object-cover cursor-pointer"
         preload="metadata"
       />
@@ -275,15 +257,6 @@ const ImprovedVideoPlayer: React.FC<ImprovedVideoPlayerProps> = ({
         <div className={`absolute inset-0 pointer-events-none transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'} z-20`}>
           {/* Top Controls */}
           <div className="absolute top-4 right-4 flex items-center space-x-2 pointer-events-auto">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onExpand?.();
-              }}
-              className="bg-black/60 hover:bg-black/80 text-white p-2 rounded-full transition-colors"
-            >
-              <Maximize2 className="w-4 h-4" />
-            </button>
             <button
               onClick={(e) => {
                 e.stopPropagation();
