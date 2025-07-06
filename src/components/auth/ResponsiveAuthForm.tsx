@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Eye, EyeOff, Heart } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { toast } from '@/hooks/use-toast';
+import { useErrorHandler } from '@/hooks/useErrorHandler';
+import { useClientRateLimit } from '@/hooks/useClientRateLimit';
 
 const ResponsiveAuthForm = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -18,32 +19,42 @@ const ResponsiveAuthForm = () => {
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
+  const { handleError, handleSuccess } = useErrorHandler();
+  const { 
+    isRateLimited, 
+    remainingTime, 
+    checkRateLimit, 
+    recordAttempt 
+  } = useClientRateLimit();
 
   const validateForm = () => {
     if (!email || !email.includes('@')) {
-      toast({
-        title: "Invalid email",
-        description: "Please enter a valid email address",
-        variant: "destructive"
-      });
+      handleError(
+        new Error('Invalid email'), 
+        'auth', 
+        undefined, 
+        'Please enter a valid email address'
+      );
       return false;
     }
 
     if (!password || password.length < 6) {
-      toast({
-        title: "Invalid password",
-        description: "Password must be at least 6 characters long",
-        variant: "destructive"
-      });
+      handleError(
+        new Error('Invalid password'), 
+        'auth', 
+        undefined, 
+        'Password must be at least 6 characters long'
+      );
       return false;
     }
 
     if (!isLogin && (!displayName || displayName.trim().length < 2)) {
-      toast({
-        title: "Invalid name",
-        description: "Display name must be at least 2 characters long",
-        variant: "destructive"
-      });
+      handleError(
+        new Error('Invalid name'), 
+        'auth', 
+        undefined, 
+        'Display name must be at least 2 characters long'
+      );
       return false;
     }
 
@@ -55,38 +66,55 @@ const ResponsiveAuthForm = () => {
     
     if (!validateForm()) return;
 
+    // Check client-side rate limiting
+    const operation = isLogin ? 'login' : 'signup';
+    if (!checkRateLimit(operation, email)) {
+      handleError(
+        new Error('Rate limit exceeded'), 
+        'auth', 
+        undefined, 
+        `Too many ${operation} attempts. Please wait ${Math.ceil(remainingTime / 60)} minutes before trying again.`
+      );
+      return;
+    }
+
     setLoading(true);
     
     try {
       if (isLogin) {
         console.log('Attempting login with:', email);
         await signIn(email, password);
-        toast({
-          title: "Welcome back!",
-          description: "Successfully signed in"
-        });
+        handleSuccess("Welcome back!", "Signed In");
         console.log('Login successful, navigating to home');
         navigate('/');
       } else {
         console.log('Attempting signup with:', email, displayName);
         await signUp(email, password, displayName.trim(), 'user');
-        toast({
-          title: "Account created!",
-          description: "Welcome to the platform"
-        });
+        handleSuccess("Account created! Please check your email for verification.", "Account Created");
         console.log('Signup successful, navigating to home');
         navigate('/');
       }
     } catch (error: any) {
       console.error('Auth error:', error);
-      toast({
-        title: "Authentication failed",
-        description: error.message || "Please check your credentials and try again",
-        variant: "destructive"
-      });
+      recordAttempt(operation, email);
+      handleError(error, 'auth');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Show rate limit warning if user is approaching limit
+  const showRateLimitWarning = () => {
+    if (isRateLimited && remainingTime > 0) {
+      return (
+        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-md p-3 mb-4">
+          <p className="text-yellow-400 text-sm text-center">
+            Rate limit active. Please wait {Math.ceil(remainingTime / 60)} minutes before trying again.
+          </p>
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
@@ -109,6 +137,9 @@ const ResponsiveAuthForm = () => {
           </CardHeader>
           
           <CardContent className="space-y-6">
+            {/* Rate Limit Warning */}
+            {showRateLimitWarning()}
+
             {/* Toggle Buttons */}
             <div className="flex bg-gray-800/50 rounded-lg p-1">
               <button
@@ -148,7 +179,7 @@ const ResponsiveAuthForm = () => {
                     onChange={(e) => setDisplayName(e.target.value)}
                     className="bg-gray-800/50 border-gray-600 text-white mt-2 focus:border-purple-500 focus:ring-purple-500/20"
                     placeholder="Enter your name"
-                    disabled={loading}
+                    disabled={loading || isRateLimited}
                     required={!isLogin}
                   />
                 </div>
@@ -165,7 +196,7 @@ const ResponsiveAuthForm = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   className="bg-gray-800/50 border-gray-600 text-white mt-2 focus:border-purple-500 focus:ring-purple-500/20"
                   placeholder="Enter your email"
-                  disabled={loading}
+                  disabled={loading || isRateLimited}
                   required
                 />
               </div>
@@ -182,14 +213,14 @@ const ResponsiveAuthForm = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     className="bg-gray-800/50 border-gray-600 text-white pr-12 focus:border-purple-500 focus:ring-purple-500/20"
                     placeholder="Enter your password"
-                    disabled={loading}
+                    disabled={loading || isRateLimited}
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-                    disabled={loading}
+                    disabled={loading || isRateLimited}
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -203,7 +234,7 @@ const ResponsiveAuthForm = () => {
 
               <Button
                 type="submit"
-                disabled={loading}
+                disabled={loading || isRateLimited}
                 className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 py-3 mt-6 font-medium transition-all duration-200"
               >
                 {loading ? (
@@ -211,6 +242,8 @@ const ResponsiveAuthForm = () => {
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                     {isLogin ? 'Signing in...' : 'Creating account...'}
                   </div>
+                ) : isRateLimited ? (
+                  `Wait ${Math.ceil(remainingTime / 60)}m`
                 ) : (
                   isLogin ? 'Sign In' : 'Create Account'
                 )}
