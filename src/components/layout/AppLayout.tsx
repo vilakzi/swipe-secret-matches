@@ -1,6 +1,7 @@
 
 import React from 'react';
 import BottomNavigation from '../navigation/BottomNavigation';
+import PWAInstallBanner from '../pwa/PWAInstallBanner';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -14,6 +15,7 @@ const AppLayout = ({ children, showBottomNav = true }: AppLayoutProps) => {
         {children}
       </main>
       {showBottomNav && <BottomNavigation />}
+      <PWAInstallBanner />
     </div>
   );
 };
