@@ -2,24 +2,26 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { RotateCcw, X } from 'lucide-react';
+import { useUserActivity } from '@/hooks/useUserActivity';
 
 interface RefreshManagerProps {
   onRefresh: () => void;
   autoRefreshInterval?: number;
   className?: string;
+  respectUserActivity?: boolean;
 }
 
 const RefreshManager: React.FC<RefreshManagerProps> = ({
   onRefresh,
-  autoRefreshInterval = 300000, // 5 minutes default
-  className = ''
+  autoRefreshInterval = 600000, // 10 minutes default (increased from 5 minutes)
+  className = '',
+  respectUserActivity = true
 }) => {
   const [showRefreshPrompt, setShowRefreshPrompt] = useState(false);
   const [timeUntilRefresh, setTimeUntilRefresh] = useState(autoRefreshInterval);
-  const [isUserViewing, setIsUserViewing] = useState(true);
+  const { shouldAllowAutoRefresh, isUserActive, isScrolling, isViewingVideo } = useUserActivity();
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
     let countdownInterval: NodeJS.Timeout;
 
     const startCountdown = () => {
@@ -28,7 +30,15 @@ const RefreshManager: React.FC<RefreshManagerProps> = ({
       countdownInterval = setInterval(() => {
         setTimeUntilRefresh(prev => {
           if (prev <= 1000) {
-            setShowRefreshPrompt(true);
+            // Only show prompt if we should respect user activity and they're not active
+            // OR if we don't respect user activity at all
+            if (!respectUserActivity || shouldAllowAutoRefresh) {
+              setShowRefreshPrompt(true);
+            } else {
+              // Reset countdown if user is active and we respect their activity
+              console.log('🔄 Auto-refresh delayed - user is active');
+              return autoRefreshInterval;
+            }
             clearInterval(countdownInterval);
             return 0;
           }
@@ -37,28 +47,12 @@ const RefreshManager: React.FC<RefreshManagerProps> = ({
       }, 1000);
     };
 
-    // Start the initial countdown
     startCountdown();
 
-    // Check for user activity
-    const handleUserActivity = () => {
-      setIsUserViewing(true);
-    };
-
-    // Detect if user is actively viewing (scroll, click, touch)
-    const events = ['scroll', 'click', 'touchstart', 'mousemove'];
-    events.forEach(event => {
-      window.addEventListener(event, handleUserActivity, { passive: true });
-    });
-
     return () => {
-      if (interval) clearInterval(interval);
       if (countdownInterval) clearInterval(countdownInterval);
-      events.forEach(event => {
-        window.removeEventListener(event, handleUserActivity);
-      });
     };
-  }, [autoRefreshInterval]);
+  }, [autoRefreshInterval, respectUserActivity, shouldAllowAutoRefresh]);
 
   const handleRefreshNow = () => {
     setShowRefreshPrompt(false);
@@ -78,10 +72,20 @@ const RefreshManager: React.FC<RefreshManagerProps> = ({
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  // Show activity status in development
+  const showActivityStatus = process.env.NODE_ENV === 'development';
+
   if (!showRefreshPrompt) {
     return (
       <div className={`fixed bottom-20 right-4 text-xs text-gray-500 ${className}`}>
-        Next refresh: {formatTime(timeUntilRefresh)}
+        <div>Next refresh: {formatTime(timeUntilRefresh)}</div>
+        {showActivityStatus && (
+          <div className="text-xs mt-1">
+            Active: {isUserActive ? '✓' : '✗'} | 
+            Scrolling: {isScrolling ? '✓' : '✗'} | 
+            Video: {isViewingVideo ? '✓' : '✗'}
+          </div>
+        )}
       </div>
     );
   }

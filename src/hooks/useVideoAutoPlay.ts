@@ -1,8 +1,11 @@
+
 import { useEffect, useRef, useCallback } from 'react';
 
 interface UseVideoAutoPlayOptions {
   threshold?: number;
   rootMargin?: string;
+  onVideoStart?: () => void;
+  onVideoStop?: () => void;
 }
 
 export const useVideoAutoPlay = (
@@ -11,7 +14,9 @@ export const useVideoAutoPlay = (
 ) => {
   const {
     threshold = 0.5,
-    rootMargin = '0px'
+    rootMargin = '0px',
+    onVideoStart,
+    onVideoStop
   } = options;
   
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -38,11 +43,17 @@ export const useVideoAutoPlay = (
       video.muted = true; // Auto-play requires muted
       video.play().catch(console.error);
       
+      // Notify that video viewing started
+      onVideoStart?.();
+      
     } else if (!entry.isIntersecting && isInViewRef.current) {
       isInViewRef.current = false;
       video.pause();
+      
+      // Notify that video viewing stopped
+      onVideoStop?.();
     }
-  }, [videoRef]);
+  }, [videoRef, onVideoStart, onVideoStop]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -59,8 +70,10 @@ export const useVideoAutoPlay = (
       if (observerRef.current) {
         observerRef.current.disconnect();
       }
+      // Clean up video viewing state
+      onVideoStop?.();
     };
-  }, [handleIntersection, threshold, rootMargin]);
+  }, [handleIntersection, threshold, rootMargin, onVideoStop]);
 
   return { isInView: isInViewRef.current };
 };
