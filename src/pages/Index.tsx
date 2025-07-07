@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
 import { Button } from '@/components/ui/button';
 import { Heart, User, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -12,22 +12,22 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { useInactivityTracker } from '@/hooks/useInactivityTracker';
 import { toast } from '@/hooks/use-toast';
 import { useError } from "@/components/common/ErrorTaskBar";
-
+import EnhancedProfileBrowser from '@/components/browse/EnhancedProfileBrowser';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 
 const Index = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut } = useEnhancedAuth();
   const { isUserOnline } = usePresence();
   const { role, isServiceProvider, loading: roleLoading } = useUserRole();
   const navigate = useNavigate();
   const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
   const [refreshKey, setRefreshKey] = useState(0);
+  const [currentView, setCurrentView] = useState<'browse' | 'feed'>('browse');
 
   const { addError } = useError();
   const { logError } = usePerformanceMonitor('IndexPage');
 
-  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL LOGIC
   // Auto-logout after 2 minutes of inactivity
   useInactivityTracker({
     timeoutMinutes: 2,
@@ -100,7 +100,6 @@ const Index = () => {
     });
   }, [user, addError]);
 
-  // NOW WE CAN HAVE CONDITIONAL RENDERING AFTER ALL HOOKS
   // Show loading state
   if (roleLoading) {
     return (
@@ -139,7 +138,9 @@ const Index = () => {
               <Heart className="w-8 h-8 text-pink-500" />
               <div>
                 <h1 className="text-2xl font-bold text-white">Connect</h1>
-                <p className="text-xs text-gray-400">Real-time feed</p>
+                <p className="text-xs text-gray-400">
+                  {currentView === 'browse' ? 'Smart matching' : 'Real-time feed'}
+                </p>
               </div>
             </div>
             
@@ -166,26 +167,65 @@ const Index = () => {
               )}
             </div>
           </div>
-        </header>
-
-        <ErrorBoundary 
-          fallback={
-            <div className="text-center p-8">
-              <p className="text-white">Feed temporarily unavailable</p>
-              <Button onClick={() => window.location.reload()} className="mt-4">
-                Refresh Page
+          
+          {/* View Toggle */}
+          <div className="flex justify-center pb-4">
+            <div className="bg-gray-800/50 rounded-full p-1 flex">
+              <Button
+                variant={currentView === 'browse' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setCurrentView('browse')}
+                className={`rounded-full px-6 ${
+                  currentView === 'browse' 
+                    ? 'bg-pink-500 text-white' 
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Browse
+              </Button>
+              <Button
+                variant={currentView === 'feed' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setCurrentView('feed')}
+                className={`rounded-full px-6 ${
+                  currentView === 'feed' 
+                    ? 'bg-pink-500 text-white' 
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Feed
               </Button>
             </div>
-          }
-        >
-          <InstagramFeed
-            onLike={handleLike}
-            onContact={handleContact}
-            onRefresh={handleRefresh}
-            likedItems={likedItems}
-            key={refreshKey}
-          />
-        </ErrorBoundary>
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <div className="pt-32 pb-20">
+          <ErrorBoundary 
+            fallback={
+              <div className="text-center p-8">
+                <p className="text-white">Content temporarily unavailable</p>
+                <Button onClick={() => window.location.reload()} className="mt-4">
+                  Refresh Page
+                </Button>
+              </div>
+            }
+          >
+            {currentView === 'browse' ? (
+              <div className="max-w-md mx-auto p-4">
+                <EnhancedProfileBrowser />
+              </div>
+            ) : (
+              <InstagramFeed
+                onLike={handleLike}
+                onContact={handleContact}
+                onRefresh={handleRefresh}
+                likedItems={likedItems}
+                key={refreshKey}
+              />
+            )}
+          </ErrorBoundary>
+        </div>
       </div>
     </ErrorBoundary>
   );
