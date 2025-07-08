@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
 interface ProfileCompletionStatus {
@@ -10,7 +10,7 @@ interface ProfileCompletionStatus {
 }
 
 export const useProfileCompletion = () => {
-  const { user } = useAuth();
+  const { user } = useEnhancedAuth();
   const [status, setStatus] = useState<ProfileCompletionStatus>({
     isComplete: false,
     missingFields: [],

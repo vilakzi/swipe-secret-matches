@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
@@ -13,7 +13,7 @@ interface UserPreferences {
 }
 
 export const useUserPreferences = () => {
-  const { user } = useAuth();
+  const { user } = useEnhancedAuth();
   const [preferences, setPreferences] = useState<UserPreferences>({
     min_age: 18,
     max_age: 50,

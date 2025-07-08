@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { toast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
 import { generateFileName, getFileExtension, validateFileSize } from './uploadUtils';
 import { uploadFileToStorage } from './fileUploadService';
 import { createPostRecord } from './postCreationService';
@@ -11,7 +11,7 @@ type PromotionType = 'free_2h' | 'paid_8h' | 'paid_12h';
 type LocationOption = 'all' | 'soweto' | 'jhb-central' | 'pta';
 
 export const usePostUpload = () => {
-  const { user } = useAuth();
+  const { user } = useEnhancedAuth();
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState<string | null>(null);

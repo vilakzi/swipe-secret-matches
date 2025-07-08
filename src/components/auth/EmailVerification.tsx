@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Mail, CheckCircle } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
 
 interface EmailVerificationProps {
   email: string;
@@ -11,7 +11,7 @@ interface EmailVerificationProps {
 }
 
 const EmailVerification = ({ email, onResend }: EmailVerificationProps) => {
-  const { signOut } = useAuth();
+  const { signOut } = useEnhancedAuth();
 
   return (
     <Card className="w-full max-w-md mx-auto bg-black/20 backdrop-blur-md border-gray-700">

@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Eye, EyeOff, AlertCircle } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 import ErrorFallback from '@/components/common/ErrorFallback';
 
@@ -24,7 +24,7 @@ const AuthFormWithErrorHandling: React.FC<AuthFormWithErrorHandlingProps> = ({
   const [hasError, setHasError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp } = useEnhancedAuth();
   const { handleError, handleSuccess } = useErrorHandler();
 
   const handleSubmit = async (e: React.FormEvent) => {

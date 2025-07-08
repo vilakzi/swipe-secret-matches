@@ -1,12 +1,12 @@
 
-import { useAuth } from '@/contexts/AuthContext';
+import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
 import { useUserRole } from "@/hooks/useUserRole";
 import { getMaxUploadSize } from "@/utils/getMaxUploadSize";
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useFileUpload = (onRefresh?: () => void) => {
-  const { user } = useAuth();
+  const { user } = useEnhancedAuth();
   const { role } = useUserRole();
   const maxSize = getMaxUploadSize(role);
 

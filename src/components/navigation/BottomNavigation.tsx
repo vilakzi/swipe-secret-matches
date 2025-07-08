@@ -1,13 +1,13 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Heart, MessageCircle, User, Compass, Settings, Briefcase, Shield } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 
 const BottomNavigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user } = useEnhancedAuth();
   const { isServiceProvider, isAdmin } = useUserRole();
 
   if (!user) return null;

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Camera, X, Upload, ArrowUp, ArrowDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
 import { toast } from '@/hooks/use-toast';
 import { useUserRole } from "@/hooks/useUserRole";
 import { getMaxUploadSize } from "@/utils/getMaxUploadSize";
@@ -13,7 +13,7 @@ interface PhotoUploadStepProps {
 }
 
 const PhotoUploadStep = ({ profileData, updateProfileData }: PhotoUploadStepProps) => {
-  const { user } = useAuth();
+  const { user } = useEnhancedAuth();
   const { role } = useUserRole();
   const maxSize = getMaxUploadSize(role);
   const [uploading, setUploading] = useState(false);

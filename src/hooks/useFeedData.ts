@@ -1,6 +1,6 @@
 
 import { useState, useMemo, useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
 import { useRealProfiles } from './useRealProfiles';
 import { useNewJoiners } from './useNewJoiners';
 import { useFilteredFeedData } from './useFilteredFeedData';
@@ -13,7 +13,7 @@ import { FeedItem } from '@/components/feed/types/feedTypes';
 export type { FeedItem };
 
 export const useFeedData = (itemsPerPage: number = 8) => {
-  const { user } = useAuth() || {};
+  const { user } = useEnhancedAuth() || {};
   const [shuffleKey, setShuffleKey] = useState(0);
 
   console.log("📱 useFeedData - user:", user?.id || 'no user');

@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
 // Cache for user roles to prevent repeated API calls
@@ -8,7 +8,7 @@ const roleCache = new Map<string, { role: string; timestamp: number }>();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export const useUserRole = () => {
-  const { user } = useAuth();
+  const { user } = useEnhancedAuth();
   const [role, setRole] = useState<string>('user');
   const [loading, setLoading] = useState(true);
 

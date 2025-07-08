@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Eye, EyeOff, Heart } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { useClientRateLimit } from '@/hooks/useClientRateLimit';
@@ -17,7 +17,7 @@ const ResponsiveAuthForm = () => {
   const [displayName, setDisplayName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp } = useEnhancedAuth();
   const navigate = useNavigate();
   const { handleError, handleSuccess } = useErrorHandler();
   const { 

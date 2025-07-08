@@ -1,12 +1,12 @@
 
 import { useMemo } from 'react';
 import { useUserRole } from './useUserRole';
-import { useAuth } from '@/contexts/AuthContext';
+import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
 import { Profile } from '@/components/feed/types/feedTypes';
 
 export const useProfileFiltering = (allProfiles: Profile[]) => {
   const { role, isAdmin, isServiceProvider, isUser } = useUserRole();
-  const { user } = useAuth();
+  const { user } = useEnhancedAuth();
 
   const filteredProfiles = useMemo(() => {
     console.log('Profile filtering - role:', role, 'user:', user?.id);

@@ -1,6 +1,6 @@
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
 import { useRealProfiles } from './useRealProfiles';
 import { useNewJoiners } from './useNewJoiners';
 import { usePostFetching } from './feed/usePostFetching';
@@ -9,7 +9,7 @@ import { useEngagementTracking } from './feed/useEngagementTracking';
 import { useRealTimeFeed } from './useRealTimeFeed';
 
 export const useSimplifiedFeedEngine = () => {
-  const { user } = useAuth();
+  const { user } = useEnhancedAuth();
   const [shuffleKey, setShuffleKey] = useState(Date.now());
   const [displayedItems, setDisplayedItems] = useState([]);
   const [hasMoreItems, setHasMoreItems] = useState(false);
