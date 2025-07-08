@@ -21,7 +21,6 @@ import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import ServiceProviderRoute from "./components/ServiceProviderRoute";
-import ModernAuthForm from "./components/auth/ModernAuthForm";
 
 const queryClient = new QueryClient();
 
@@ -39,7 +38,7 @@ const AppRoutes = () => {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/auth" element={user ? <Navigate to="/" /> : <ModernAuthForm />} />
+      <Route path="/auth" element={user ? <Navigate to="/" /> : <Auth />} />
       
       {/* Protected Routes */}
       <Route path="/" element={
