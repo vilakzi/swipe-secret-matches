@@ -1,12 +1,12 @@
 
 import React from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import ProfileSetupWizard from '@/components/onboarding/ProfileSetupWizard';
 
 const Onboarding = () => {
-  const { user } = useAuth();
+  const { user } = useEnhancedAuth();
   const navigate = useNavigate();
 
   if (!user) {

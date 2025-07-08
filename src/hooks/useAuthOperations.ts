@@ -1,6 +1,6 @@
 
 import { useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useErrorHandler } from './useErrorHandler';
@@ -16,7 +16,7 @@ interface AuthFormData {
 }
 
 export const useAuthOperations = () => {
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp } = useEnhancedAuth();
   const navigate = useNavigate();
   const { handleError, handleSuccess } = useErrorHandler();
 
@@ -38,7 +38,7 @@ export const useAuthOperations = () => {
 
   const performSignUp = useCallback(async (formData: AuthFormData) => {
     await executeWithRetry(async () => {
-      await signUp(formData.email, formData.password, formData.displayName, formData.userType, formData.isAdmin);
+      await signUp(formData.email, formData.password, formData.displayName, formData.userType);
 
       // Update profile with additional info
       try {

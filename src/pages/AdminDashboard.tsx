@@ -1,12 +1,12 @@
 
 import React from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import AdminDashboard from '@/components/admin/AdminDashboard';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 const AdminDashboardPage = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useEnhancedAuth();
   const { role, loading: roleLoading } = useUserRole();
 
   if (authLoading || roleLoading) {

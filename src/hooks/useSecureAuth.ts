@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { rateLimit } from '@/utils/securityValidation';
 import { validateEmailSecurity } from '@/utils/enhancedEmailValidation';
@@ -8,7 +8,7 @@ import { sanitizeInput, validatePhoneNumber } from '@/utils/inputSanitization';
 
 export const useSecureAuth = () => {
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp } = useEnhancedAuth();
   const { handleError, handleSuccess } = useErrorHandler();
 
   const secureSignIn = useCallback(async (email: string, password: string) => {

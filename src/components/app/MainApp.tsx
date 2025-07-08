@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
@@ -10,7 +11,7 @@ import AgeVerificationBanner from "@/components/AgeVerificationBanner";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 import ErrorFallback from "@/components/common/ErrorFallback";
 import { useSessionManager } from "@/hooks/useSessionManager";
-import { useAuth } from "@/contexts/AuthContext";
+import { useEnhancedAuth } from "@/contexts/EnhancedAuthContext";
 import Auth from "@/pages/Auth";
 
 // Lazy load heavy components to improve mobile performance
@@ -43,7 +44,7 @@ const MainApp = () => {
   
   // Safely use auth context with error handling
   try {
-    const authContext = useAuth();
+    const authContext = useEnhancedAuth();
     user = authContext.user;
     loading = authContext.loading;
   } catch (error) {
