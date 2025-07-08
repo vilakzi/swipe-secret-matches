@@ -1,98 +1,51 @@
-import { useState, useCallback, useRef } from 'react';
-import { FeedItem } from '@/components/feed/types/feedTypes';
+
+import { useState, useCallback } from 'react';
 
 interface QueuedContent {
-  items: FeedItem[];
+  id: string;
+  type: 'new_post' | 'new_profile' | 'update';
+  data: any;
   timestamp: number;
-  type: 'new_post' | 'profile_update' | 'new_profile';
 }
 
-interface UseContentQueueOptions {
-  maxQueueSize?: number;
-  batchDelay?: number;
-}
-
-export const useContentQueue = (options: UseContentQueueOptions = {}) => {
-  const { maxQueueSize = 50, batchDelay = 2000 } = options;
-  
-  const [queuedContent, setQueuedContent] = useState<QueuedContent[]>([]);
-  const [queueCount, setQueueCount] = useState(0);
+export const useContentQueue = () => {
+  const [queue, setQueue] = useState<QueuedContent[]>([]);
   const [showQueueIndicator, setShowQueueIndicator] = useState(false);
-  
-  const batchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const addToQueue = useCallback((items: FeedItem[], type: QueuedContent['type'] = 'new_post') => {
-    const newQueueItem: QueuedContent = {
-      items,
-      timestamp: Date.now(),
-      type
-    };
+  const addToQueue = useCallback((items: any[], type: QueuedContent['type']) => {
+    const queuedItems = items.map(item => ({
+      id: item.id || `${type}-${Date.now()}-${Math.random()}`,
+      type,
+      data: item,
+      timestamp: Date.now()
+    }));
 
-    setQueuedContent(prev => {
-      const updated = [...prev, newQueueItem];
-      // Keep only the most recent items if queue gets too large
-      if (updated.length > maxQueueSize) {
-        return updated.slice(-maxQueueSize);
-      }
-      return updated;
-    });
-
-    setQueueCount(prev => prev + items.length);
+    setQueue(prev => [...queuedItems, ...prev]);
     setShowQueueIndicator(true);
-
-    // Clear existing batch timeout
-    if (batchTimeoutRef.current) {
-      clearTimeout(batchTimeoutRef.current);
-    }
-
-    // Batch multiple rapid updates
-    batchTimeoutRef.current = setTimeout(() => {
-      console.log(`📬 Content queued: ${items.length} new items`);
-    }, batchDelay);
-  }, [maxQueueSize, batchDelay]);
-
-  const consumeQueue = useCallback(() => {
-    const allQueuedItems = queuedContent.flatMap(q => q.items);
     
-    // Clear the queue
-    setQueuedContent([]);
-    setQueueCount(0);
-    setShowQueueIndicator(false);
-    
-    console.log(`📬 Consuming queue: ${allQueuedItems.length} items`);
-    return allQueuedItems;
-  }, [queuedContent]);
-
-  const clearQueue = useCallback(() => {
-    setQueuedContent([]);
-    setQueueCount(0);
-    setShowQueueIndicator(false);
-    
-    if (batchTimeoutRef.current) {
-      clearTimeout(batchTimeoutRef.current);
-    }
+    console.log(`📋 Added ${queuedItems.length} items to content queue`);
   }, []);
 
-  const getQueueSummary = useCallback(() => {
-    const summary = queuedContent.reduce((acc, item) => {
-      acc[item.type] = (acc[item.type] || 0) + item.items.length;
-      return acc;
-    }, {} as Record<string, number>);
+  const consumeQueue = useCallback(() => {
+    const items = [...queue];
+    setQueue([]);
+    setShowQueueIndicator(false);
+    
+    console.log(`📋 Consuming ${items.length} items from queue`);
+    return items;
+  }, [queue]);
 
-    return {
-      total: queueCount,
-      byType: summary,
-      hasContent: queueCount > 0
-    };
-  }, [queuedContent, queueCount]);
+  const clearQueue = useCallback(() => {
+    setQueue([]);
+    setShowQueueIndicator(false);
+  }, []);
 
   return {
-    queueCount,
+    queue,
+    queueCount: queue.length,
     showQueueIndicator,
     addToQueue,
     consumeQueue,
-    clearQueue,
-    getQueueSummary,
-    hasQueuedContent: queueCount > 0
+    clearQueue
   };
 };

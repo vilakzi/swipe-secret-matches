@@ -1,58 +1,45 @@
 
 import { useState, useEffect } from 'react';
+import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface UserPresence {
   user_id: string;
   online_at: string;
-  status: 'online' | 'offline';
+  status: 'online' | 'away' | 'offline';
 }
 
 export const usePresence = () => {
-  const { user } = useAuth();
+  const { user } = useEnhancedAuth();
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
-  const [channel, setChannel] = useState<any>(null);
 
   useEffect(() => {
     if (!user) return;
 
-    const presenceChannel = supabase.channel('online-users');
+    const channel = supabase.channel('presence', {
+      config: {
+        presence: {
+          key: user.id,
+        },
+      },
+    });
 
-    presenceChannel
+    channel
       .on('presence', { event: 'sync' }, () => {
-        const state = presenceChannel.presenceState();
-        const users = new Set<string>();
-        
-        Object.values(state).forEach((presences: any) => {
-          presences.forEach((presence: UserPresence) => {
-            if (presence.status === 'online') {
-              users.add(presence.user_id);
-            }
-          });
-        });
-        
-        setOnlineUsers(users);
+        const state = channel.presenceState();
+        const userIds = new Set(Object.keys(state));
+        setOnlineUsers(userIds);
+        console.log('👥 Online users:', userIds.size);
       })
-      .on('presence', { event: 'join' }, ({ newPresences }: any) => {
-        newPresences.forEach((presence: UserPresence) => {
-          if (presence.status === 'online') {
-            setOnlineUsers(prev => new Set(prev).add(presence.user_id));
-          }
-        });
+      .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+        console.log('👋 User joined:', key);
       })
-      .on('presence', { event: 'leave' }, ({ leftPresences }: any) => {
-        leftPresences.forEach((presence: UserPresence) => {
-          setOnlineUsers(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(presence.user_id);
-            return newSet;
-          });
-        });
+      .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+        console.log('👋 User left:', key);
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
-          await presenceChannel.track({
+          await channel.track({
             user_id: user.id,
             online_at: new Date().toISOString(),
             status: 'online'
@@ -60,45 +47,22 @@ export const usePresence = () => {
         }
       });
 
-    setChannel(presenceChannel);
-
-    // Clean up on unmount or when user changes
     return () => {
-      if (presenceChannel) {
-        presenceChannel.untrack();
-        supabase.removeChannel(presenceChannel);
-      }
+      supabase.removeChannel(channel);
     };
   }, [user]);
 
-  // Handle page visibility changes
-  useEffect(() => {
-    if (!channel || !user) return;
+  const isUserOnline = (userId: string) => {
+    return onlineUsers.has(userId);
+  };
 
-    const handleVisibilityChange = async () => {
-      if (document.hidden) {
-        await channel.track({
-          user_id: user.id,
-          online_at: new Date().toISOString(),
-          status: 'offline'
-        });
-      } else {
-        await channel.track({
-          user_id: user.id,
-          online_at: new Date().toISOString(),
-          status: 'online'
-        });
-      }
-    };
+  const getOnlineCount = () => {
+    return onlineUsers.size;
+  };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [channel, user]);
-
-  const isUserOnline = (userId: string) => onlineUsers.has(userId);
-
-  return { isUserOnline, onlineUsers };
+  return {
+    onlineUsers,
+    isUserOnline,
+    getOnlineCount
+  };
 };
