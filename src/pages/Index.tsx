@@ -1,233 +1,183 @@
-
-import { useState, useCallback } from 'react';
-import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
-import { Button } from '@/components/ui/button';
-import { Heart, User, Settings } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import OnlineStatus from '@/components/OnlineStatus';
-import InstagramFeed from '@/components/InstagramFeed';
-import ProfileCompletionPrompt from '@/components/onboarding/ProfileCompletionPrompt';
-import { usePresence } from '@/hooks/usePresence';
-import { useUserRole } from '@/hooks/useUserRole';
-import { useInactivityTracker } from '@/hooks/useInactivityTracker';
-import { toast } from '@/hooks/use-toast';
-import { useError } from "@/components/common/ErrorTaskBar";
+import React, { useState, useCallback, useMemo } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useRealProfiles } from '@/hooks/useRealProfiles';
+import { useEnhancedMatching } from '@/hooks/useEnhancedMatching';
+import { useMobileOptimization } from '@/hooks/useMobileOptimization';
+import { useOfflineStorage } from '@/hooks/useOfflineStorage';
+import Feedpage from '@/components/feed/Feedpage';
+import MobileOptimizedFeed from '@/components/mobile/MobileOptimizedFeed';
 import EnhancedProfileBrowser from '@/components/browse/EnhancedProfileBrowser';
-import ErrorBoundary from '@/components/common/ErrorBoundary';
-import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
+
+interface Profile {
+  id: string;
+  name: string;
+  age: number;
+  image: string;
+  bio: string;
+  whatsapp: string;
+  location: string;
+  gender?: "male" | "female";
+  liked?: boolean;
+  posts?: string[];
+  isRealAccount?: boolean;
+  userType?: string;
+  role?: string;
+}
 
 const Index = () => {
-  const { user, signOut } = useEnhancedAuth();
-  const { isUserOnline } = usePresence();
-  const { role, isServiceProvider, loading: roleLoading } = useUserRole();
-  const navigate = useNavigate();
-  const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [currentView, setCurrentView] = useState<'browse' | 'feed'>('browse');
+  const isMobile = useIsMobile();
+  const { profiles, loading, error, refetch } = useRealProfiles();
+  const { 
+    handleLike,
+    handleSuperLike,
+    handleSwipe,
+    likedProfiles,
+    isSubscribed,
+    engagementTracker 
+  } = useEnhancedMatching();
 
-  const { addError } = useError();
-  const { logError } = usePerformanceMonitor('IndexPage');
-
-  // Auto-logout after 2 minutes of inactivity
-  useInactivityTracker({
-    timeoutMinutes: 2,
-    onInactive: useCallback(() => {
-      toast({
-        title: "Session expired",
-        description: "You've been logged out due to inactivity",
-        variant: "destructive"
-      });
-      signOut();
-    }, [signOut])
+  const {
+    config: mobileConfig,
+    shouldUseAnimation,
+    shouldOptimizeImages,
+  } = useMobileOptimization({
+    enablePullToRefresh: true,
+    enableSwipeGestures: true,
+    enableHapticFeedback: true,
+    optimizeImages: true,
   });
 
-  // Error handler for the error boundary
-  const handleError = useCallback((error: Error) => {
-    logError(error);
-    addError(`Application error: ${error.message}`);
-  }, [logError, addError]);
+  // Offline storage for critical data
+  const {
+    data: cachedProfiles,
+    saveOffline,
+    isOnline,
+  } = useOfflineStorage<any[]>({
+    key: 'profiles_cache',
+    initialData: [],
+    syncOnOnline: true,
+  });
 
-  const handleDashboard = useCallback(() => {
-    navigate('/dashboard');
-  }, [navigate]);
+  const [viewMode, setViewMode] = useState<'feed' | 'browse'>('feed');
 
-  const handleLike = useCallback((itemId: string, profileId: string) => {
-    if (!user) {
-      addError("You must be logged in to like profiles.");
-      return;
+  // Use cached profiles if offline and no fresh data
+  const displayProfiles = useMemo(() => {
+    if (!isOnline && cachedProfiles.length > 0 && profiles.length === 0) {
+      return cachedProfiles;
     }
-    
-    setLikedItems(prev => {
-      const newLiked = new Set(prev);
-      if (newLiked.has(itemId)) {
-        newLiked.delete(itemId);
-      } else {
-        newLiked.add(itemId);
-      }
-      return newLiked;
-    });
+    return profiles;
+  }, [profiles, cachedProfiles, isOnline]);
 
-    toast({
-      title: likedItems.has(itemId) ? "Like removed" : "Profile liked!",
-      description: likedItems.has(itemId) ? "You unliked this profile." : "Your like has been sent!",
-    });
-  }, [user, addError, likedItems]);
+  // Cache profiles when online
+  React.useEffect(() => {
+    if (profiles.length > 0 && isOnline) {
+      saveOffline(profiles);
+    }
+  }, [profiles, saveOffline, isOnline]);
 
   const handleContact = useCallback((profile: any) => {
-    if (!user) {
-      addError("You must be logged in to contact profiles.");
-      return;
-    }
-    
     if (profile.whatsapp) {
-      window.open(`https://wa.me/${profile.whatsapp.replace(/[^0-9]/g, '')}`, '_blank');
-    } else {
-      addError("WhatsApp contact not available for this profile.");
+      const message = encodeURIComponent(`Hi ${profile.name}! I found your profile on Connect and would love to chat.`);
+      const whatsappUrl = `https://wa.me/${profile.whatsapp.replace(/\D/g, '')}?text=${message}`;
+      window.open(whatsappUrl, '_blank');
     }
-  }, [user, addError]);
+  }, []);
 
-  const handleRefresh = useCallback(() => {
-    if (!user) {
-      addError("You must be logged in to refresh the feed.");
-      return;
+  const handleRefresh = useCallback(async () => {
+    try {
+      await refetch();
+    } catch (error) {
+      console.error('Refresh failed:', error);
     }
-    
-    console.log('🚀 Triggering feed refresh');
-    setRefreshKey(prev => prev + 1);
-    toast({
-      title: "Feed refreshed!",
-      description: "Latest content loaded",
-    });
-  }, [user, addError]);
+  }, [refetch]);
 
-  // Show loading state
-  if (roleLoading) {
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center">
         <div className="text-center p-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-white">Loading...</h2>
+          <h2 className="text-xl font-semibold text-white">Loading profiles...</h2>
+          <p className="text-gray-400 mt-2">
+            {!isOnline && "You're offline - showing cached content"}
+          </p>
         </div>
       </div>
     );
   }
 
-  // Check if user is logged in
-  if (!user) {
+  if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center">
         <div className="text-center p-8">
-          <h2 className="text-2xl font-bold text-white mb-4">Please log in</h2>
-          <Button
-            onClick={() => navigate('/auth')}
-            className="bg-purple-600 hover:bg-purple-700"
+          <h2 className="text-xl font-semibold text-red-400">Error Loading Profiles</h2>
+          <p className="text-gray-400 mt-2 mb-4">{error}</p>
+          <button
+            onClick={handleRefresh}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg transition-colors"
           >
-            Go to Login
-          </Button>
+            Try Again
+          </button>
         </div>
       </div>
     );
   }
 
-  return (
-    <ErrorBoundary onError={handleError}>
-      <div className="min-h-screen">
-        <header className="fixed top-0 left-0 right-0 z-40 bg-black/80 backdrop-blur-md border-b border-gray-700">
-          <div className="p-4 flex justify-between items-center max-w-md mx-auto">
-            <div className="flex items-center space-x-3">
-              <Heart className="w-8 h-8 text-pink-500" />
-              <div>
-                <h1 className="text-2xl font-bold text-white">Connect</h1>
-                <p className="text-xs text-gray-400">
-                  {currentView === 'browse' ? 'Smart matching' : 'Real-time feed'}
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <div className="flex items-center space-x-2 bg-black/20 backdrop-blur-md rounded-full px-3 py-2 border border-gray-700">
-                <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
-                  <User className="w-4 h-4 text-white" />
-                </div>
-                <OnlineStatus 
-                  isOnline={isUserOnline(user.id)} 
-                  size="sm"
-                />
-              </div>
-              
-              {isServiceProvider && (
-                <Button
-                  onClick={handleDashboard}
-                  variant="ghost"
-                  size="sm"
-                  className="text-white hover:bg-white/10"
-                >
-                  <Settings className="w-4 h-4" />
-                </Button>
-              )}
-            </div>
-          </div>
-          
-          {/* View Toggle */}
-          <div className="flex justify-center pb-4">
-            <div className="bg-gray-800/50 rounded-full p-1 flex">
-              <Button
-                variant={currentView === 'browse' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setCurrentView('browse')}
-                className={`rounded-full px-6 ${
-                  currentView === 'browse' 
-                    ? 'bg-pink-500 text-white' 
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                Browse
-              </Button>
-              <Button
-                variant={currentView === 'feed' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setCurrentView('feed')}
-                className={`rounded-full px-6 ${
-                  currentView === 'feed' 
-                    ? 'bg-pink-500 text-white' 
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                Feed
-              </Button>
-            </div>
-          </div>
-        </header>
+  // Mobile-optimized interface
+  if (isMobile && mobileConfig.enableSwipeGestures) {
+    return (
+      <MobileOptimizedFeed
+        profiles={displayProfiles}
+        onLike={handleLike}
+        onContact={handleContact}
+        onRefresh={handleRefresh}
+        likedItems={likedProfiles}
+        isSubscribed={isSubscribed}
+        engagementTracker={engagementTracker}
+      />
+    );
+  }
 
-        {/* Main Content */}
-        <div className="pt-32 pb-20">
-          <ErrorBoundary 
-            fallback={
-              <div className="text-center p-8">
-                <p className="text-white">Content temporarily unavailable</p>
-                <Button onClick={() => window.location.reload()} className="mt-4">
-                  Refresh Page
-                </Button>
-              </div>
-            }
+  // Desktop or mobile feed mode
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900">
+      {/* View Mode Toggle */}
+      <div className="sticky top-0 z-10 bg-gray-800/80 backdrop-blur-sm border-b border-gray-700 p-4">
+        <div className="flex items-center justify-center space-x-4">
+          <button
+            onClick={() => setViewMode('feed')}
+            className={`px-4 py-2 rounded-lg transition-colors ${
+              viewMode === 'feed'
+                ? 'bg-purple-600 text-white'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            }`}
           >
-            {currentView === 'browse' ? (
-              <div className="max-w-md mx-auto p-4">
-                <EnhancedProfileBrowser />
-              </div>
-            ) : (
-              <InstagramFeed
-                onLike={handleLike}
-                onContact={handleContact}
-                onRefresh={handleRefresh}
-                likedItems={likedItems}
-                key={refreshKey}
-              />
-            )}
-          </ErrorBoundary>
+            Feed
+          </button>
+          <button
+            onClick={() => setViewMode('browse')}
+            className={`px-4 py-2 rounded-lg transition-colors ${
+              viewMode === 'browse'
+                ? 'bg-purple-600 text-white'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            }`}
+          >
+            Browse
+          </button>
         </div>
+        
+        {!isOnline && (
+          <div className="text-center mt-2">
+            <span className="text-yellow-400 text-sm">⚠ Offline Mode</span>
+          </div>
+        )}
       </div>
-    </ErrorBoundary>
+
+      {viewMode === 'feed' ? (
+        <Feedpage />
+      ) : (
+        <EnhancedProfileBrowser />
+      )}
+    </div>
   );
 };
 
