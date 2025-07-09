@@ -1,14 +1,16 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
-import SimpleFeed from '@/components/feed/SimpleFeed';
+import WorkingFeed from '@/components/feed/WorkingFeed';
+import { Button } from '@/components/ui/button';
+import { LogOut, Settings, Users } from 'lucide-react';
 
 const Index = () => {
   const isMobile = useIsMobile();
-  const { user, loading } = useEnhancedAuth();
+  const { user, loading, signOut } = useEnhancedAuth();
   const [viewMode, setViewMode] = useState<'feed' | 'browse'>('feed');
 
   console.log('Index component rendering - user:', user?.id, 'loading:', loading);
@@ -38,39 +40,58 @@ const Index = () => {
     );
   }
 
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
+  };
+
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900">
-        {/* View Mode Toggle */}
-        <div className="sticky top-0 z-10 bg-gray-800/80 backdrop-blur-sm border-b border-gray-700 p-4">
-          <div className="flex items-center justify-center space-x-4">
-            <button
-              onClick={() => setViewMode('feed')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                viewMode === 'feed'
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
-            >
-              Feed
-            </button>
-            <button
-              onClick={() => setViewMode('browse')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                viewMode === 'browse'
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
-            >
-              Browse
-            </button>
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-gray-800/80 backdrop-blur-sm border-b border-gray-700">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <h1 className="text-xl font-bold text-white">ConnectsBuddy</h1>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    size="sm"
+                    onClick={() => setViewMode('feed')}
+                    variant={viewMode === 'feed' ? 'default' : 'ghost'}
+                  >
+                    <Users className="w-4 h-4 mr-1" />
+                    Feed
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => setViewMode('browse')}
+                    variant={viewMode === 'browse' ? 'default' : 'ghost'}
+                  >
+                    Browse
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-400">
+                  {user.email}
+                </span>
+                <Button size="sm" variant="ghost" onClick={handleSignOut}>
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Content Area */}
         <div className="container mx-auto px-4 py-8">
           {viewMode === 'feed' ? (
-            <SimpleFeed />
+            <WorkingFeed />
           ) : (
             <div className="text-center">
               <h2 className="text-2xl font-bold text-white mb-4">Browse Mode</h2>

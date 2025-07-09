@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -63,7 +64,9 @@ export const EnhancedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         } catch (error) {
           console.error('Error in auth state change handler:', error);
         } finally {
-          setLoading(false);
+          if (mounted) {
+            setLoading(false);
+          }
         }
       }
     );
@@ -126,6 +129,11 @@ export const EnhancedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
         if (profileError) {
           console.error('Error creating profile:', profileError);
+          toast({
+            title: "Profile Setup",
+            description: "There was an issue setting up your profile. Please try refreshing the page.",
+            variant: "destructive",
+          });
         }
       }
     } catch (error) {
