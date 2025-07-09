@@ -5,7 +5,7 @@ import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
 import { Profile } from '@/components/feed/types/feedTypes';
 
 export const useProfileFiltering = (allProfiles: Profile[]) => {
-  const { role, isAdmin, isServiceProvider, isUser } = useUserRole();
+  const { role, isAdmin, isServiceProvider } = useUserRole();
   const { user } = useEnhancedAuth();
 
   const filteredProfiles = useMemo(() => {
@@ -19,7 +19,7 @@ export const useProfileFiltering = (allProfiles: Profile[]) => {
     }
 
     // Users see only service provider profiles
-    if (isUser) {
+    if (role === 'user') {
       const serviceProviders = allProfiles.filter(profile => profile.userType === 'service_provider');
       console.log('Regular user - showing service providers only:', serviceProviders.length);
       return serviceProviders;
@@ -38,12 +38,12 @@ export const useProfileFiltering = (allProfiles: Profile[]) => {
     // Default: return empty array for safety
     console.log('No valid role - returning empty array');
     return [];
-  }, [allProfiles, role, isAdmin, isServiceProvider, isUser, user?.id]);
+  }, [allProfiles, role, isAdmin, isServiceProvider, user?.id]);
 
   return {
     filteredProfiles,
     canSeeAllProfiles: isAdmin,
-    canSeeProviders: isUser || isAdmin,
+    canSeeProviders: role === 'user' || isAdmin,
     canSeeUsers: isServiceProvider || isAdmin,
     canSeeOwnPosts: isServiceProvider
   };

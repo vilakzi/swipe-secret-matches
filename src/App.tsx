@@ -21,6 +21,7 @@ import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import ServiceProviderRoute from "./components/ServiceProviderRoute";
+import ErrorBoundary from "./components/common/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
@@ -105,23 +106,25 @@ const AppRoutes = () => {
 
 const App = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <ErrorProvider>
-          <EnhancedAuthProvider>
-            <SecureApiProvider>
-              <BrowserRouter>
-                <div className="min-h-screen bg-background font-sans antialiased">
-                  <AppRoutes />
-                </div>
-                <Toaster />
-                <Sonner />
-              </BrowserRouter>
-            </SecureApiProvider>
-          </EnhancedAuthProvider>
-        </ErrorProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <TooltipProvider>
+            <ErrorProvider>
+              <EnhancedAuthProvider>
+                <SecureApiProvider>
+                  <div className="min-h-screen bg-background font-sans antialiased">
+                    <AppRoutes />
+                  </div>
+                  <Toaster />
+                  <Sonner />
+                </SecureApiProvider>
+              </EnhancedAuthProvider>
+            </ErrorProvider>
+          </TooltipProvider>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 
