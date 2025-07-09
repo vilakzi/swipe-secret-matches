@@ -2,7 +2,7 @@ import React from 'react';
 import { QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { EnhancedAuthProvider } from "@/contexts/EnhancedAuthContext";
 import { SecureApiProvider } from "@/components/security/SecureApiWrapper";
 import { ErrorProvider } from "@/components/common/ErrorTaskBar";
 import { queryClient } from "@/config/queryClient";
@@ -17,11 +17,11 @@ const RootProviders = ({ children }: RootProvidersProps) => {
       <TooltipProvider>
         <ErrorProvider>
           <BrowserRouter>
-            <AuthProvider>
+            <EnhancedAuthProvider>
               <SecureApiProvider>
                 {children}
               </SecureApiProvider>
-            </AuthProvider>
+            </EnhancedAuthProvider>
           </BrowserRouter>
         </ErrorProvider>
       </TooltipProvider>
