@@ -24,7 +24,10 @@ export const useOptimizedProfiles = () => {
   const { role } = useUserRole();
 
   const fetchProfiles = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     
     try {
       setLoading(true);
@@ -35,15 +38,17 @@ export const useOptimizedProfiles = () => {
         .select('*')
         .eq('is_blocked', false)
         .order('created_at', { ascending: false })
-        .limit(50); // Limit for performance
+        .limit(50);
 
       if (fetchError) {
+        console.error('Fetch error:', fetchError);
         setError(fetchError.message);
         return;
       }
 
       setProfiles(data || []);
     } catch (err) {
+      console.error('Unexpected error:', err);
       setError('Failed to load profiles');
     } finally {
       setLoading(false);
@@ -54,8 +59,10 @@ export const useOptimizedProfiles = () => {
     if (!profiles.length) return [];
     
     return profiles.filter(profile => {
+      // Don't show own profile
       if (profile.id === user?.id) return false;
       
+      // Role-based filtering
       if (role === 'admin') return true;
       if (role === 'user') return profile.user_type === 'service_provider';
       if (role === 'service_provider') return profile.user_type === 'user';

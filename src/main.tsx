@@ -1,7 +1,14 @@
+
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+
+// Mobile viewport optimization
+const viewport = document.querySelector('meta[name=viewport]');
+if (viewport) {
+  viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
+}
 
 // Register service worker for PWA
 if ('serviceWorker' in navigator) {
@@ -41,12 +48,6 @@ if ('requestIdleCallback' in window) {
   });
 }
 
-// Mobile viewport optimization
-const viewport = document.querySelector('meta[name=viewport]');
-if (viewport) {
-  viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
-}
-
 // Prevent zoom on input focus (mobile)
 document.addEventListener('touchstart', (e) => {
   if (e.touches.length > 1) {
@@ -63,8 +64,11 @@ document.addEventListener('touchend', (e) => {
   lastTouchEnd = now;
 }, false);
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-)
+const rootElement = document.getElementById('root');
+if (rootElement) {
+  ReactDOM.createRoot(rootElement).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
+  );
+}

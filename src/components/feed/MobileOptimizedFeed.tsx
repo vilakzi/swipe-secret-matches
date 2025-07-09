@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Wifi, WifiOff } from 'lucide-react';
 import { useOptimizedProfiles } from '@/hooks/useOptimizedProfiles';
@@ -15,9 +15,9 @@ const MobileOptimizedFeed = () => {
   const { role } = useUserRole();
   const isMobile = useIsMobile();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isOnline, setIsOnline] = useState(true);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
       toast({ title: "Back online", description: "Connection restored" });
@@ -28,13 +28,18 @@ const MobileOptimizedFeed = () => {
       toast({ title: "Offline", description: "Check your connection", variant: "destructive" });
     };
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
+    // Check if navigator is available (client-side)
+    if (typeof window !== 'undefined' && navigator) {
+      setIsOnline(navigator.onLine);
+      
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
+      
+      return () => {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+      };
+    }
   }, []);
 
   const handleRefresh = async () => {
@@ -44,9 +49,14 @@ const MobileOptimizedFeed = () => {
     }
     
     setIsRefreshing(true);
-    await refetch();
-    setIsRefreshing(false);
-    toast({ title: "Refreshed", description: "Feed updated successfully" });
+    try {
+      await refetch();
+      toast({ title: "Refreshed", description: "Feed updated successfully" });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to refresh feed", variant: "destructive" });
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const handleLike = async (profileId: string) => {
