@@ -1,122 +1,98 @@
-
 import React from 'react';
-import { Card } from "@/components/ui/card";
-import { useSafeRealProfiles } from '@/hooks/useSafeRealProfiles';
+import { useOptimizedProfiles } from '@/hooks/useOptimizedProfiles';
 import { useUserRole } from '@/hooks/useUserRole';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
-import ErrorBoundary from '@/components/common/ErrorBoundary';
-
-const SimpleFeedCard = ({ profile }: { profile: any }) => {
-  return (
-    <Card className="bg-gray-800 border-gray-700 mb-4 p-4">
-      <div className="flex items-start space-x-4">
-        <img
-          src={profile.image}
-          alt={`${profile.name}'s profile`}
-          className="w-16 h-16 rounded-full object-cover"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = '/placeholder.svg';
-          }}
-        />
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold text-white">{profile.name}</h3>
-          <p className="text-sm text-gray-400">Age: {profile.age} • {profile.location}</p>
-          <p className="text-sm text-gray-400">Type: {profile.userType}</p>
-          {profile.bio && (
-            <p className="text-sm text-gray-300 mt-2">{profile.bio}</p>
-          )}
-        </div>
-      </div>
-    </Card>
-  );
-};
+import EnhancedFeedCard from './EnhancedFeedCard';
+import FeedStats from './FeedStats';
+import { toast } from '@/hooks/use-toast';
 
 const SimpleFeed = () => {
-  const { realProfiles, loading, error, refetch } = useSafeRealProfiles();
-  const { role, loading: roleLoading } = useUserRole();
+  const { profiles, loading, error, refetch, totalCount } = useOptimizedProfiles();
+  const { role } = useUserRole();
 
-  console.log('SimpleFeed rendering:', { 
-    profilesCount: realProfiles.length, 
-    loading, 
-    error, 
-    userRole: role 
-  });
+  const handleLike = async (profileId: string) => {
+    toast({ title: "Profile liked!", description: "Your like has been recorded" });
+  };
 
-  if (loading || roleLoading) {
+  const handleContact = async (profile: any) => {
+    if (profile.whatsapp) {
+      window.open(`https://wa.me/${profile.whatsapp}`, '_blank');
+    } else {
+      toast({
+        title: "Contact Info",
+        description: "No contact information available",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (loading) {
     return (
-      <div className="flex justify-center py-8">
-        <LoadingSpinner size="md" text="Loading profiles..." />
+      <div className="flex justify-center py-12">
+        <LoadingSpinner size="lg" text="Loading your feed..." />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center py-8">
-        <div className="bg-red-900/20 border border-red-700 rounded-lg p-4 max-w-md mx-auto">
-          <h3 className="text-red-400 font-semibold mb-2">Error Loading Profiles</h3>
-          <p className="text-red-300 text-sm mb-4">{error}</p>
-          <button
-            onClick={refetch}
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-colors"
-          >
-            Try Again
-          </button>
+      <div className="text-center py-12">
+        <div className="bg-red-900/20 border border-red-700 rounded-lg p-6 max-w-md mx-auto">
+          <h3 className="text-red-400 font-semibold mb-2">Error Loading Feed</h3>
+          <p className="text-red-300 text-sm">{error}</p>
         </div>
       </div>
     );
   }
 
-  if (realProfiles.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <div className="bg-gray-800 rounded-lg p-6">
-          <h3 className="text-white font-semibold mb-2">No Profiles Found</h3>
-          <p className="text-gray-400 mb-4">There are no profiles in your database yet.</p>
-          <button
-            onClick={refetch}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded transition-colors"
-          >
-            Refresh
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Apply role-based filtering
-  const filteredProfiles = realProfiles.filter(profile => {
-    if (role === 'admin') return true; // Admins see all
-    if (role === 'user') return profile.userType === 'service_provider'; // Users see service providers
-    if (role === 'service_provider') return profile.userType === 'user'; // Service providers see users
-    return true;
-  });
+  const serviceProviders = profiles.filter(p => p.user_type === 'service_provider').length;
+  const newJoiners = profiles.filter(p => 
+    new Date(p.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+  ).length;
 
   return (
-    <ErrorBoundary>
-      <div className="max-w-2xl mx-auto">
-        <div className="mb-6 text-center">
-          <h2 className="text-xl font-bold text-white mb-2">Your Feed</h2>
-          <p className="text-gray-400 text-sm">
-            Showing {filteredProfiles.length} profiles 
-            {role && ` (viewing as ${role})`}
-          </p>
-        </div>
-        
-        {filteredProfiles.map((profile) => (
-          <SimpleFeedCard key={profile.id} profile={profile} />
-        ))}
-        
-        <div className="text-center py-4">
-          <button
-            onClick={refetch}
-            className="text-purple-400 hover:text-purple-300 text-sm"
-          >
-            Refresh Feed
-          </button>
-        </div>
+    <div className="max-w-4xl mx-auto space-y-6 px-4">
+      {/* Feed Stats */}
+      <FeedStats 
+        totalProfiles={totalCount}
+        serviceProviders={serviceProviders}
+        newJoiners={newJoiners}
+        userRole={role}
+      />
+
+      {/* Feed Header */}
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-bold text-white mb-2">
+          {role === 'user' ? 'Service Providers' : role === 'service_provider' ? 'Users' : 'All Profiles'}
+        </h2>
+        <p className="text-gray-400 text-sm">
+          Showing {profiles.length} profiles {role && `(viewing as ${role})`}
+        </p>
       </div>
-    </ErrorBoundary>
+
+      {/* Profiles Feed */}
+      {profiles.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="bg-gray-800 rounded-lg p-8 max-w-md mx-auto">
+            <h3 className="text-white font-semibold mb-2">No Profiles Found</h3>
+            <p className="text-gray-400 mb-6">
+              No {role === 'user' ? 'service providers' : 'users'} found.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {profiles.map((profile) => (
+            <EnhancedFeedCard
+              key={profile.id}
+              profile={profile}
+              onLike={handleLike}
+              onContact={handleContact}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 };
 

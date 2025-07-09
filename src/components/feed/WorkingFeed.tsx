@@ -1,13 +1,8 @@
-
 import React from 'react';
-import { useIsMobile } from '@/hooks/use-mobile';
-import MobileOptimizedFeed from './MobileOptimizedFeed';
+import SimpleFeed from './SimpleFeed';
 
 const WorkingFeed = () => {
-  const isMobile = useIsMobile();
-  
-  // Use mobile-optimized feed for better performance
-  return <MobileOptimizedFeed />;
+  return <SimpleFeed />;
 };
 
 export default WorkingFeed;
