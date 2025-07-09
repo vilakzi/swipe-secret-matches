@@ -5,12 +5,11 @@ import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import WorkingFeed from '@/components/feed/WorkingFeed';
-import { Button } from '@/components/ui/button';
-import { LogOut, Settings, Users } from 'lucide-react';
+import AppHeader from '@/components/common/AppHeader';
 
 const Index = () => {
   const isMobile = useIsMobile();
-  const { user, loading, signOut } = useEnhancedAuth();
+  const { user, loading } = useEnhancedAuth();
   const [viewMode, setViewMode] = useState<'feed' | 'browse'>('feed');
 
   console.log('Index component rendering - user:', user?.id, 'loading:', loading);
@@ -18,7 +17,7 @@ const Index = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center">
-        <LoadingSpinner size="lg" text="Loading your app..." />
+        <LoadingSpinner size="lg" text="Loading ConnectsBuddy..." />
       </div>
     );
   }
@@ -26,76 +25,50 @@ const Index = () => {
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center">
-        <div className="text-center p-8">
-          <h1 className="text-3xl font-bold text-white mb-4">Welcome to ConnectsBuddy</h1>
-          <p className="text-gray-300 mb-6">Please sign in to continue</p>
-          <a 
-            href="/auth" 
-            className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition-colors"
-          >
-            Sign In
-          </a>
+        <div className="text-center p-8 max-w-md mx-auto">
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-4">
+              Welcome to ConnectsBuddy
+            </h1>
+            <p className="text-gray-300 text-lg mb-2">Connect. Discover. Engage.</p>
+            <p className="text-gray-400 text-sm">Please sign in to start connecting with others</p>
+          </div>
+          
+          <div className="space-y-4">
+            <a 
+              href="/auth" 
+              className="block w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold px-8 py-4 rounded-lg transition-all duration-200 transform hover:scale-105"
+            >
+              Get Started
+            </a>
+            <p className="text-gray-500 text-xs">
+              Join thousands of users connecting on ConnectsBuddy
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error('Sign out error:', error);
-    }
-  };
-
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-gray-800/80 backdrop-blur-sm border-b border-gray-700">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <h1 className="text-xl font-bold text-white">ConnectsBuddy</h1>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    size="sm"
-                    onClick={() => setViewMode('feed')}
-                    variant={viewMode === 'feed' ? 'default' : 'ghost'}
-                  >
-                    <Users className="w-4 h-4 mr-1" />
-                    Feed
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => setViewMode('browse')}
-                    variant={viewMode === 'browse' ? 'default' : 'ghost'}
-                  >
-                    Browse
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-400">
-                  {user.email}
-                </span>
-                <Button size="sm" variant="ghost" onClick={handleSignOut}>
-                  <LogOut className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <AppHeader viewMode={viewMode} onViewModeChange={setViewMode} />
 
         {/* Content Area */}
         <div className="container mx-auto px-4 py-8">
           {viewMode === 'feed' ? (
             <WorkingFeed />
           ) : (
-            <div className="text-center">
-              <h2 className="text-2xl font-bold text-white mb-4">Browse Mode</h2>
-              <p className="text-gray-300">Browse functionality coming soon...</p>
+            <div className="text-center py-12">
+              <div className="bg-gray-800 rounded-lg p-8 max-w-md mx-auto">
+                <h2 className="text-2xl font-bold text-white mb-4">Browse Mode</h2>
+                <p className="text-gray-300 mb-6">Advanced browse functionality coming soon...</p>
+                <p className="text-gray-400 text-sm">
+                  This feature will allow you to filter and search profiles with advanced criteria.
+                </p>
+              </div>
             </div>
           )}
         </div>
