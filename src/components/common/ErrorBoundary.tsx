@@ -2,7 +2,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { AlertCircle, RefreshCw, Home } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
@@ -13,6 +13,7 @@ interface Props {
 interface State {
   hasError: boolean;
   error?: Error;
+  errorInfo?: ErrorInfo;
 }
 
 class ErrorBoundary extends Component<Props, State> {
@@ -28,6 +29,8 @@ class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
     
+    this.setState({ errorInfo });
+    
     // Call the onError callback if provided
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
@@ -35,7 +38,11 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   handleRetry = () => {
-    this.setState({ hasError: false, error: undefined });
+    this.setState({ hasError: false, error: undefined, errorInfo: undefined });
+  };
+
+  handleGoHome = () => {
+    window.location.href = '/';
   };
 
   render() {
@@ -45,29 +52,54 @@ class ErrorBoundary extends Component<Props, State> {
         return this.props.fallback;
       }
 
-      // Default error UI
+      // Default error UI with better styling and actions
       return (
-        <Card className="w-full max-w-md mx-auto bg-red-50 border-red-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-700">
-              <AlertCircle className="w-5 h-5" />
-              Something went wrong
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-red-600 text-sm">
-              {this.state.error?.message || 'An unexpected error occurred'}
-            </p>
-            <Button 
-              onClick={this.handleRetry}
-              className="w-full"
-              variant="outline"
-            >
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Try Again
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md bg-gray-800 border-gray-700">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-red-400">
+                <AlertCircle className="w-5 h-5" />
+                Something went wrong
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-gray-900 p-3 rounded text-sm">
+                <p className="text-red-300 font-medium mb-2">Error Details:</p>
+                <p className="text-gray-300 text-xs break-words">
+                  {this.state.error?.message || 'An unexpected error occurred'}
+                </p>
+              </div>
+              
+              <div className="flex flex-col gap-2">
+                <Button 
+                  onClick={this.handleRetry}
+                  className="w-full bg-purple-600 hover:bg-purple-700"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Try Again
+                </Button>
+                
+                <Button 
+                  onClick={this.handleGoHome}
+                  variant="outline"
+                  className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"
+                >
+                  <Home className="w-4 h-4 mr-2" />
+                  Go Home
+                </Button>
+              </div>
+              
+              <details className="text-xs text-gray-500">
+                <summary className="cursor-pointer hover:text-gray-400">
+                  Technical Details (for developers)
+                </summary>
+                <pre className="mt-2 p-2 bg-gray-900 rounded overflow-auto text-xs">
+                  {this.state.errorInfo?.componentStack}
+                </pre>
+              </details>
+            </CardContent>
+          </Card>
+        </div>
       );
     }
 

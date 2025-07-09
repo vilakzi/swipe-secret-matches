@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -37,33 +36,39 @@ export const EnhancedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   useEffect(() => {
     let mounted = true;
 
-    // Set up auth state listener
+    // Set up auth state listener with error handling
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
 
-        console.log('Enhanced Auth state changed:', event, session?.user?.email || 'signed out');
-        
-        if (session) {
-          setSession(session);
-          setUser(session.user);
+        try {
+          console.log('Enhanced Auth state changed:', event, session?.user?.email || 'signed out');
           
-          // Handle new user profile creation
-          if (event === 'SIGNED_IN' && session.user) {
-            setTimeout(() => {
-              handleUserProfile(session.user);
-            }, 0);
+          if (session) {
+            setSession(session);
+            setUser(session.user);
+            
+            // Handle new user profile creation
+            if (event === 'SIGNED_IN' && session.user) {
+              setTimeout(() => {
+                handleUserProfile(session.user).catch(error => {
+                  console.error('Error handling user profile:', error);
+                });
+              }, 0);
+            }
+          } else {
+            setSession(null);
+            setUser(null);
           }
-        } else {
-          setSession(null);
-          setUser(null);
+        } catch (error) {
+          console.error('Error in auth state change handler:', error);
+        } finally {
+          setLoading(false);
         }
-        
-        setLoading(false);
       }
     );
 
-    // Get initial session
+    // Get initial session with error handling
     const getInitialSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
