@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { Loader2 } from 'lucide-react';
 
 interface LoadingSpinnerProps {
@@ -21,16 +22,12 @@ const LoadingSpinner = ({ size = 'md', text, className = '' }: LoadingSpinnerPro
   };
 
   return (
-    <div
-      className={`flex flex-col items-center justify-center space-y-2 ${className}`}
-      role="status"
-      aria-live="polite"
-    >
-      <Loader2 className={`animate-spin text-purple-500 ${sizeClasses[size]}`} aria-label="Loading" />
+    <div className={`flex items-center justify-center space-x-2 ${className}`}>
+      <Loader2 className={`${sizeClasses[size]} animate-spin text-purple-400`} />
       {text && (
-        <p className={`text-gray-400 ${textSizeClasses[size]}`}>
+        <span className={`text-gray-300 ${textSizeClasses[size]}`}>
           {text}
-        </p>
+        </span>
       )}
     </div>
   );
