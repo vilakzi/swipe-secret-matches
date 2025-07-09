@@ -1,6 +1,5 @@
-
+import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { EnhancedAuthProvider, useEnhancedAuth } from "@/contexts/EnhancedAuthContext";
@@ -44,11 +43,10 @@ const App = () => {
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <EnhancedAuthProvider>
-            <div className="min-h-screen bg-background font-sans antialiased">
+            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 font-sans antialiased">
               <AppRoutes />
             </div>
             <Toaster />
-            <Sonner />
           </EnhancedAuthProvider>
         </BrowserRouter>
       </QueryClientProvider>
