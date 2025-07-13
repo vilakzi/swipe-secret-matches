@@ -77,7 +77,7 @@ export function getMediaType(url?: string): 'image' | 'video' | 'unknown' {
 
 export function extractVideoId(url: string): string | null {
   // YouTube
-  const youtubeMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+  const youtubeMatch = url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
   if (youtubeMatch) return youtubeMatch[1];
   
   // Vimeo

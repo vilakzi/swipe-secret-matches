@@ -43,24 +43,46 @@ const FeedContent = ({
 
   const adminRoles = ["admin", "superadmin"];
 
-  // Optimized feed processing with memoization - INTEGRATE admin content directly
+  // Optimized feed processing with strict validation
   const processedFeedData = useMemo(() => {
-    console.log('🚀 Processing feed data - integrating admin content smoothly');
+    console.log('🚀 Processing feed data with validation');
     
-    // Enrich feed items with role/joinDate for easier checks
-    const enrichedFeedItems = feedItems.filter(item => item && item.profile).map(item => ({
-      ...item,
-      profile: {
-        ...item.profile,
-        role: item.profile.role || item.profile.userType,
-        joinDate: item.profile.joinDate
-      }
-    }));
+    // Enrich and validate feed items
+    const enrichedFeedItems = feedItems
+      .filter(item => {
+        if (!item || !item.id || !item.profile || !item.profile.id) {
+          console.warn('Invalid feed item structure:', item);
+          return false;
+        }
+        if (item.type === 'post' && (!item.postImage || !isValidMedia(item.postImage))) {
+          console.warn('Invalid post media:', item.id);
+          return false;
+        }
+        return true;
+      })
+      .map(item => ({
+        ...item,
+        profile: {
+          ...item.profile,
+          role: item.profile.role || item.profile.userType,
+          joinDate: item.profile.joinDate
+        }
+      }));
 
-    // Convert content feed items to FeedItem type compatible format
-    const contentAsRegularFeed = contentFeedItems.filter(item => 
-      item && item.id && item.profile && isValidMedia(item.postImage)
-    ).map(item => ({
+    // Convert and validate content feed items
+    const contentAsRegularFeed = contentFeedItems
+      .filter(item => {
+        if (!item || !item.id || !item.profile || !item.profile.id) {
+          console.warn('Invalid content feed item:', item);
+          return false;
+        }
+        if (!isValidMedia(item.postImage)) {
+          console.warn('Invalid content media:', item.id);
+          return false;
+        }
+        return true;
+      })
+      .map(item => ({
       ...item,
       isContent: true,
       // Add location metadata for filtering
@@ -75,7 +97,13 @@ const FeedContent = ({
         ...item.profile,
         userType: item.profile.userType as "user" | "service_provider" | "admin" | "superadmin"
       }
-    } as FeedItem & { isContent: true; locationMetadata: any }));
+    } as FeedItem & { 
+      isContent: true; 
+      locationMetadata: {
+        target_locations: string[];
+        location_specific: boolean;
+      }
+    }));
 
     // Admin posts from database
     const adminPosts = enrichedFeedItems.filter(item =>
@@ -113,18 +141,18 @@ const FeedContent = ({
 
   // Enhanced location filtering with admin content support
   const filterByLocation = useMemo(() => {
-    return (items: any[]) => {
+    return (items: FeedItem[]): FeedItem[] => {
       if (locationOption === 'all') return items;
       
       return items.filter(item => {
         // Check if item has location metadata from upload (for admin content)
-        if (item.locationMetadata?.target_locations) {
-          return item.locationMetadata.target_locations.includes(locationOption) ||
-                 item.locationMetadata.target_locations.includes('all');
+        if ('locationMetadata' in item && typeof item.locationMetadata === 'object' && item.locationMetadata !== null && 'target_locations' in item.locationMetadata) {
+          return (item.locationMetadata.target_locations as string[]).includes(locationOption) ||
+                 (item.locationMetadata.target_locations as string[]).includes('all');
         }
         
         // Check admin content category-based location
-        if (item.isContent && item.category) {
+        if ('isContent' in item && 'category' in item) {
           return item.category === locationOption || item.category === 'all';
         }
         
@@ -216,9 +244,23 @@ const FeedContent = ({
       />
       
       {processedFeedItems.length === 0 ? (
-        <div className="flex flex-col items-center justify-center min-h-[200px] text-gray-500">
-          <p className="text-lg mb-2">No posts found</p>
-          <p className="text-sm">Try adjusting your filters or check back later for new content</p>
+        <div className="flex flex-col items-center justify-center min-h-[400px] p-4 text-center">
+          <div className="rounded-full bg-muted p-3 mb-4">
+            <Inbox className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <h3 className="font-semibold mb-2">No Posts Found</h3>
+          <p className="text-muted-foreground text-sm">
+            Try adjusting your filters or check back later for new content
+          </p>
+          {onRefresh && (
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={onRefresh}
+            >
+              Refresh Feed
+            </Button>
+          )}
         </div>
       ) : (
         <NormalFeedList

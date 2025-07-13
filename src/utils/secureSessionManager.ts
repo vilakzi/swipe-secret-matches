@@ -1,5 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/components/ui/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 export class SecureSessionManager {
   private static instance: SecureSessionManager;
@@ -16,14 +18,34 @@ export class SecureSessionManager {
 
   public async validateSession(): Promise<boolean> {
     try {
+      // Check network connectivity first
+      if (!navigator.onLine) {
+        toast({
+          title: 'Network Error',
+          description: 'Please check your internet connection',
+          variant: 'destructive',
+        });
+        return false;
+      }
+
       const { data: { session }, error } = await supabase.auth.getSession();
       
       if (error) {
         console.error('Session validation error:', error);
+        toast({
+          title: 'Authentication Error',
+          description: 'Your session could not be validated. Please try logging in again.',
+          variant: 'destructive',
+        });
         return false;
       }
 
       if (!session) {
+        toast({
+          title: 'Session Expired',
+          description: 'Your session has expired. Please log in again.',
+          variant: 'destructive',
+        });
         return false;
       }
 
@@ -40,6 +62,11 @@ export class SecureSessionManager {
       return true;
     } catch (error) {
       console.error('Session validation failed:', error);
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred. Please try again.',
+        variant: 'destructive',
+      });
       return false;
     }
   }
@@ -72,8 +99,21 @@ export class SecureSessionManager {
     console.log('Handling session error - signing out');
     try {
       await supabase.auth.signOut();
+      toast({
+        title: 'Signed Out',
+        description: 'You have been signed out due to a session error. Please sign in again.',
+        variant: 'destructive',
+      });
+
+      // Redirect to auth page
+      window.location.href = '/auth';
     } catch (error) {
       console.error('Error during cleanup signout:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to sign out properly. Please refresh the page.',
+        variant: 'destructive',
+      });
     }
     
     // Clear any sensitive data from localStorage

@@ -33,7 +33,10 @@ const NormalFeedList: React.FC<NormalFeedListProps> = ({
   onContact,
 }) => {
   // Use original feed order for stability
-  const feedItems = useMemo(() => userFeed, [userFeed]);
+  const feedItems = useMemo(() => userFeed.filter(item => 
+    item && item.id && item.profile && 
+    (item.type === 'post' ? item.postImage && isValidMedia(item.postImage) : true)
+  ), [userFeed]);
 
   // Pagination state
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -43,7 +46,7 @@ const NormalFeedList: React.FC<NormalFeedListProps> = ({
   const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
     const target = entries[0];
     if (target.isIntersecting) {
-      setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, shuffledFeed.length));
+      setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, feedItems.length));
     }
   }, [feedItems.length]);
 
@@ -52,7 +55,7 @@ const NormalFeedList: React.FC<NormalFeedListProps> = ({
     if (visibleCount === PAGE_SIZE) {
       setVisibleCount(PAGE_SIZE);
     }
-  }, [shuffledFeed, visibleCount]);
+  }, [feedItems, visibleCount]);
 
   useEffect(() => {
     const option = { root: null, rootMargin: "20px", threshold: 1.0 };

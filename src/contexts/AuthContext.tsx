@@ -134,7 +134,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     try {
-      console.log('SignIn called with:', email);
+      console.log('SignIn attempt initiated');
+      
+      // Add rate limiting check
+      const lastAttempt = localStorage.getItem('lastSignInAttempt');
+      const now = Date.now();
+      if (lastAttempt && now - parseInt(lastAttempt) < 2000) { // 2 seconds delay
+        throw new Error('Please wait before trying again');
+      }
+      localStorage.setItem('lastSignInAttempt', now.toString());
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -142,12 +151,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) {
         console.error('SignIn error:', error);
+        toast({
+          title: 'Sign In Failed',
+          description: error.message,
+          variant: 'destructive',
+        });
         throw error;
       }
       
-      console.log('SignIn successful:', data.user?.email);
+      if (!data.session) {
+        throw new Error('No session created after sign in');
+      }
+
+      // Store session refresh token securely
+      localStorage.setItem('sb-refresh-token', data.session.refresh_token);
+      
+      console.log('SignIn successful');
+      toast({
+        title: 'Welcome back!',
+        description: 'Successfully signed in',
+      });
     } catch (error: any) {
       console.error('Sign in error:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'An unexpected error occurred',
+        variant: 'destructive',
+      });
       throw error;
     }
   };

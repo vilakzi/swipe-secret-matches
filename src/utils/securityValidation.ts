@@ -1,6 +1,6 @@
 
 // Security validation utilities
-export const validateUserInput = (input: any): boolean => {
+export const validateUserInput = (input: unknown): boolean => {
   if (typeof input !== 'string') return false;
   
   // Check for common injection patterns

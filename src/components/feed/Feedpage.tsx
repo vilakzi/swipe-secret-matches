@@ -1,25 +1,51 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import PostUploadForm from '@/components/dashboard/PostUploadForm';
 import FeedContent from '@/components/feed/FeedContent';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from './types/feedTypes';
 
 const Feed = () => {
-  const [feedItems, setFeedItems] = useState<any[]>([]);
+  const [feedItems, setFeedItems] = useState<{
+    id: string;
+    type: 'post';
+    profile: Profile;
+    postImage: string;
+    caption?: string;
+    isAdminCard?: boolean;
+    createdAt: string;
+  }[]>([]);
   const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
+  const handleLike = async (itemId: string, profileId: string) => {
+    setLikedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+      } else {
+        newSet.add(itemId);
+      }
+      return newSet;
+    });
+  };
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch posts from the posts table and transform them into feed items
+  // Fetch posts from the posts table and transform them into feed items with enhanced error handling
   const fetchFeed = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      console.log('Fetching real posts from database...');
-      // Get posts with profile information
-      const { data: posts, error: postsError } = await supabase
+      console.log('Fetching posts from database...');
+      
+      // Check network connectivity
+      if (!navigator.onLine) {
+        throw new Error('No internet connection. Please check your network.');
+      }
+
+      // Get posts with profile information with pagination
+      const POSTS_PER_PAGE = 10;
+      const { data: posts, error: postsError, count } = await supabase
         .from('posts')
         .select(`
           *,
@@ -36,34 +62,41 @@ const Feed = () => {
             created_at,
             verifications
           )
-        `)
-        .order('created_at', { ascending: false });
+        `, { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(0, POSTS_PER_PAGE - 1);
 
       if (postsError) {
         console.error('Error fetching posts:', postsError);
-        setError('Failed to load posts. Please try again.');
-        return;
+        throw new Error(`Failed to load feed: ${postsError.message}`);
       }
 
       if (!posts) {
-        console.error('No posts data received');
-        setError('Failed to load feed data');
-        return;
+        throw new Error('No data received from server');
       }
 
+      // Show empty state message if no posts
       if (posts.length === 0) {
         console.log('No posts found');
         setFeedItems([]);
         return;
       }
 
-      console.log('Raw posts from database:', posts);
+      // Log success metrics
+      console.log(`Successfully loaded ${posts.length} posts out of ${count} total posts`);
 
-      // Transform posts into feed items
+      console.log(`Processing ${posts.length} posts from database...`);
+
+      // Transform posts into feed items with validation
       const transformedFeedItems = posts.map(post => {
         const profile = post.profiles;
-        if (!profile || !post.content_url) {
-          console.warn('Invalid post or profile data:', { post, profile });
+        if (!profile || !profile.id || !post.content_url) {
+          console.warn('Invalid post or profile data:', { 
+            postId: post.id,
+            hasProfile: !!profile,
+            hasProfileId: profile?.id,
+            hasContentUrl: !!post.content_url
+          });
           return null;
         }
 
@@ -93,13 +126,18 @@ const Feed = () => {
           } as Profile,
           postImage: post.content_url,
           caption: post.caption,
-          isAdminCard: ['admin', 'superadmin'].includes(profile.role),
+          isAdminCard: ['admin', 'superadmin'].includes(profile.role || ''),
           createdAt: post.created_at
         };
       }).filter(Boolean) || [];
 
       console.log('Transformed feed items:', transformedFeedItems);
-      setFeedItems(transformedFeedItems);
+      setFeedItems(transformedFeedItems.filter((item): item is NonNullable<typeof item> => 
+        item !== null && 
+        typeof item.createdAt === 'string' &&
+        item.createdAt !== null &&
+        (item.caption === undefined || typeof item.caption === 'string')
+      ));
     } catch (error) {
       console.error('Error in fetchFeed:', error);
       setError('An unexpected error occurred. Please try again.');
@@ -173,7 +211,37 @@ const Feed = () => {
             };
 
             // Update feed items
-            setFeedItems(prevItems => [newFeedItem, ...prevItems]);
+            setFeedItems((prevItems): typeof prevItems => {
+              const typedNewFeedItem = {
+                ...newFeedItem,
+                id: String(newFeedItem.id),
+                type: 'post' as const,
+                profile: {
+                  ...newFeedItem.profile,
+                  role: newFeedItem.profile.role || undefined
+                }
+              };
+              return [{
+                ...typedNewFeedItem,
+                profile: {
+                  ...typedNewFeedItem.profile,
+                  verifications: typeof typedNewFeedItem.profile.verifications === 'object' ? {
+                    phoneVerified: false,
+                    emailVerified: true, 
+                    photoVerified: false,
+                    locationVerified: false,
+                    premiumUser: false,
+                    ...typedNewFeedItem.profile.verifications
+                  } : {
+                    phoneVerified: false,
+                    emailVerified: true,
+                    photoVerified: false,
+                    locationVerified: false,
+                    premiumUser: false
+                  }
+                }
+              }, ...prevItems];
+            });
           } catch (error) {
             console.error('Error processing new post:', error);
           }
@@ -187,7 +255,13 @@ const Feed = () => {
   }, []);
 
   // Add new post to feed instantly (for optimistic updates from PostUploadForm)
-  const handleAddPostToFeed = (newPost: any) => {
+  const handleAddPostToFeed = (newPost: {
+    id: string;
+    content_url: string;
+    caption?: string;
+    created_at: string;
+    provider_id: string;
+  }) => {
     console.log('Adding post to feed:', newPost);
     fetchFeed(); // Refresh to get the latest data
   };
