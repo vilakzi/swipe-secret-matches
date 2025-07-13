@@ -1,3 +1,4 @@
+
 import React from 'react';
 import './VideoControls.css';
 
@@ -29,7 +30,7 @@ const VideoControls: React.FC<VideoControlsProps> = ({
 }) => {
   return (
     <div className="video-card">
-      <video className={`video-player ${isFullscreen ? 'expanded' : ''}`} controls>
+      <video className={`video-player ${onFullscreen() ? 'expanded' : ''}`} controls>
         {/* Video source and other attributes */}
       </video>
       <div className="controls">
