@@ -1,9 +1,9 @@
 
 import React from 'react';
-import SimpleAuthForm from '@/components/auth/SimpleAuthForm';
+import GoogleAuthForm from '@/components/auth/GoogleAuthForm';
 
 const Auth = () => {
-  return <SimpleAuthForm />;
+  return <GoogleAuthForm />;
 };
 
 export default Auth;

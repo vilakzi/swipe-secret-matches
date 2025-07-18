@@ -7,10 +7,10 @@ import Auth from './pages/Auth';
 import Index from './pages/Index';
 import ErrorBoundary from './components/common/ErrorBoundary';
 
-console.log('🚀 App.tsx loaded with authentication bypassed at:', new Date().toISOString());
+console.log('🚀 App.tsx loaded with Google OAuth authentication at:', new Date().toISOString());
 
 function App() {
-  console.log('🔄 App component rendering with auth bypassed');
+  console.log('🔄 App component rendering with Google OAuth');
   
   // Initialize session management
   useSessionManager();

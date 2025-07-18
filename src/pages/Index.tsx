@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
+import { Navigate } from 'react-router-dom';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import WorkingFeed from '@/components/feed/WorkingFeed';
@@ -11,17 +12,23 @@ import AppHeader from '@/components/common/AppHeader';
 
 const Index = () => {
   const isMobile = useIsMobile();
-  const { user, loading } = useEnhancedAuth();
+  const { user, isLoading } = useEnhancedAuth();
   const [viewMode, setViewMode] = useState<'feed' | 'browse'>('feed');
 
-  console.log('Index component rendering - user:', user?.id, 'loading:', loading);
+  console.log('Index component rendering - user:', user?.id, 'loading:', isLoading);
 
-  if (loading) {
+  // Show loading spinner while checking authentication
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center">
         <LoadingSpinner size="lg" text="Loading ConnectsBuddy..." />
       </div>
     );
+  }
+
+  // Redirect to auth if not authenticated
+  if (!user) {
+    return <Navigate to="/auth" replace />;
   }
 
   return (

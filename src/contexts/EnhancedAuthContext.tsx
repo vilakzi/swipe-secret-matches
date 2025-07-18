@@ -10,8 +10,7 @@ interface AuthContextType {
   session: Session | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, displayName: string, userType: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   loading: boolean; // Add this for compatibility
 }
@@ -23,80 +22,76 @@ interface EnhancedAuthProviderProps {
 // Create context with default value
 const EnhancedAuthContext = createContext<AuthContextType | null>(null);
 
-// Provider component with authentication bypass
+// Provider component with real Google OAuth
 export const EnhancedAuthProvider: React.FC<EnhancedAuthProviderProps> = ({ children }) => {
   const [user, setUser] = React.useState<User | null>(null);
   const [session, setSession] = React.useState<Session | null>(null);
-  const [isLoading, setIsLoading] = React.useState<boolean>(false); // Set to false to bypass loading
+  const [isLoading, setIsLoading] = React.useState<boolean>(true);
 
-  // Mock user for bypass mode
-  const mockUser = React.useMemo(() => ({
-    id: 'mock-user-id',
-    email: 'demo@example.com',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    aud: 'authenticated',
-    role: 'authenticated',
-    email_confirmed_at: new Date().toISOString(),
-    phone: null,
-    confirmed_at: new Date().toISOString(),
-    last_sign_in_at: new Date().toISOString(),
-    app_metadata: {},
-    user_metadata: {
-      display_name: 'Demo User'
-    },
-    identities: [],
-    factors: []
-  } as User), []);
-
-  // Initialize with mock authentication for bypass
+  // Initialize authentication state
   React.useEffect(() => {
-    console.log('Enhanced Auth: BYPASS MODE - Setting mock user');
-    setUser(mockUser);
-    setSession({
-      access_token: 'mock-token',
-      refresh_token: 'mock-refresh',
-      expires_in: 3600,
-      expires_at: Date.now() + 3600000,
-      token_type: 'bearer',
-      user: mockUser
-    } as Session);
-    setIsLoading(false);
-  }, [mockUser]);
+    console.log('Enhanced Auth: Initializing real authentication');
 
-  const signIn = React.useCallback(async (email: string, password: string) => {
-    console.log('Enhanced Auth: BYPASS MODE - Mock sign in');
-    // In bypass mode, just set the mock user
-    setUser(mockUser);
-    setSession({
-      access_token: 'mock-token',
-      refresh_token: 'mock-refresh',
-      expires_in: 3600,
-      expires_at: Date.now() + 3600000,
-      token_type: 'bearer',
-      user: mockUser
-    } as Session);
-  }, [mockUser]);
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
+        setSession(session);
+        setUser(session?.user ?? null);
+        setIsLoading(false);
+      }
+    );
 
-  const signUp = React.useCallback(async (email: string, password: string, displayName: string, userType: string) => {
-    console.log('Enhanced Auth: BYPASS MODE - Mock sign up');
-    // In bypass mode, just set the mock user
-    setUser(mockUser);
-    setSession({
-      access_token: 'mock-token',
-      refresh_token: 'mock-refresh',
-      expires_in: 3600,
-      expires_at: Date.now() + 3600000,
-      token_type: 'bearer',
-      user: mockUser
-    } as Session);
-  }, [mockUser]);
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', session?.user?.email);
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signInWithGoogle = React.useCallback(async () => {
+    console.log('Enhanced Auth: Starting Google sign in');
+    setIsLoading(true);
+    
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`
+        }
+      });
+      
+      if (error) {
+        console.error('Google sign in error:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('Sign in failed:', error);
+      setIsLoading(false);
+      throw error;
+    }
+  }, []);
 
   const signOut = React.useCallback(async () => {
-    console.log('Enhanced Auth: BYPASS MODE - Mock sign out');
-    // In bypass mode, just clear the mock user
-    setUser(null);
-    setSession(null);
+    console.log('Enhanced Auth: Signing out');
+    setIsLoading(true);
+    
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Sign out error:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('Sign out failed:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
   const contextValue = React.useMemo(() => ({
@@ -105,10 +100,9 @@ export const EnhancedAuthProvider: React.FC<EnhancedAuthProviderProps> = ({ chil
     isLoading,
     loading: isLoading, // Add this for compatibility
     isAuthenticated: !!user,
-    signIn,
-    signUp,
+    signInWithGoogle,
     signOut,
-  }), [user, session, isLoading, signIn, signUp, signOut]);
+  }), [user, session, isLoading, signInWithGoogle, signOut]);
 
   return (
     <EnhancedAuthContext.Provider value={contextValue}>
