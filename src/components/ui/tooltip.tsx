@@ -1,5 +1,5 @@
 
-import * as React from "react"
+import React, { forwardRef } from "react"
 import { cn } from "@/lib/utils"
 
 // Simple non-hook components to prevent React hook violations
@@ -11,7 +11,7 @@ const Tooltip = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>
 }
 
-const TooltipTrigger = React.forwardRef<
+const TooltipTrigger = forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & {
     asChild?: boolean
@@ -28,7 +28,7 @@ const TooltipTrigger = React.forwardRef<
 })
 TooltipTrigger.displayName = "TooltipTrigger"
 
-const TooltipContent = React.forwardRef<
+const TooltipContent = forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & {
     sideOffset?: number
