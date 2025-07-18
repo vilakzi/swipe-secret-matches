@@ -25,7 +25,8 @@ export default defineConfig(({ mode }) => ({
     exclude: [
       '@radix-ui/react-tooltip', 
       '@radix-ui/react-toast',
-      'sonner' // Also exclude sonner as it might use tooltips
+      'sonner',
+      'next-themes'
     ],
     force: true, 
   },
@@ -34,10 +35,10 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     rollupOptions: {
-      external: ['@radix-ui/react-tooltip', '@radix-ui/react-toast', 'sonner']
+      external: ['@radix-ui/react-tooltip', '@radix-ui/react-toast', 'sonner', 'next-themes']
     },
   },
-  // NUCLEAR CACHE CLEARING
+  // ULTIMATE CACHE CLEARING - forces complete rebuild
   clearScreen: false,
-  cacheDir: '.vite-nuclear-clean-' + Date.now() + '-' + Math.random().toString(36),
+  cacheDir: '.vite-ultimate-clean-' + Date.now() + '-' + Math.random() + '-force',
 }));
