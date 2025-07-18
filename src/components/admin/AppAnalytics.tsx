@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
@@ -81,7 +82,7 @@ const AppAnalytics = () => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* User Growth Chart */}
+        {/* User Growth Chart - NO TOOLTIP */}
         <Card className="bg-black/20 backdrop-blur-md border-gray-700">
           <CardHeader>
             <CardTitle className="text-white">User Growth</CardTitle>
@@ -96,14 +97,6 @@ const AppAnalytics = () => {
                   fontSize={12}
                 />
                 <YAxis stroke="#9CA3AF" fontSize={12} />
-                {/* Temporarily disable Tooltip to fix React hook error */}
-                {/* <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1F2937', 
-                    border: '1px solid #374151',
-                    borderRadius: '8px'
-                  }}
-                /> */}
                 <Line 
                   type="monotone" 
                   dataKey="total_users" 
@@ -123,7 +116,7 @@ const AppAnalytics = () => {
           </CardContent>
         </Card>
 
-        {/* Subscribers Chart */}
+        {/* Subscribers Chart - NO TOOLTIP */}
         <Card className="bg-black/20 backdrop-blur-md border-gray-700">
           <CardHeader>
             <CardTitle className="text-white">Subscribers</CardTitle>
@@ -138,14 +131,6 @@ const AppAnalytics = () => {
                   fontSize={12}
                 />
                 <YAxis stroke="#9CA3AF" fontSize={12} />
-                {/* Temporarily disable Tooltip to fix React hook error */}
-                {/* <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1F2937', 
-                    border: '1px solid #374151',
-                    borderRadius: '8px'
-                  }}
-                /> */}
                 <Bar 
                   dataKey="total_subscribers" 
                   fill="#8B5CF6"
@@ -156,7 +141,7 @@ const AppAnalytics = () => {
           </CardContent>
         </Card>
 
-        {/* Content Activity Chart */}
+        {/* Content Activity Chart - NO TOOLTIP */}
         <Card className="bg-black/20 backdrop-blur-md border-gray-700">
           <CardHeader>
             <CardTitle className="text-white">Content Activity</CardTitle>
@@ -171,14 +156,6 @@ const AppAnalytics = () => {
                   fontSize={12}
                 />
                 <YAxis stroke="#9CA3AF" fontSize={12} />
-                {/* Temporarily disable Tooltip to fix React hook error */}
-                {/* <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1F2937', 
-                    border: '1px solid #374151',
-                    borderRadius: '8px'
-                  }}
-                /> */}
                 <Bar 
                   dataKey="total_posts" 
                   fill="#F59E0B"
@@ -189,7 +166,7 @@ const AppAnalytics = () => {
           </CardContent>
         </Card>
 
-        {/* Engagement Trends Chart */}
+        {/* Engagement Trends Chart - NO TOOLTIP */}
         <Card className="bg-black/20 backdrop-blur-md border-gray-700">
           <CardHeader>
             <CardTitle className="text-white">Engagement Trends</CardTitle>
@@ -204,14 +181,6 @@ const AppAnalytics = () => {
                   fontSize={12}
                 />
                 <YAxis stroke="#9CA3AF" fontSize={12} />
-                {/* Temporarily disable Tooltip to fix React hook error */}
-                {/* <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1F2937', 
-                    border: '1px solid #374151',
-                    borderRadius: '8px'
-                  }}
-                /> */}
                 <Line 
                   type="monotone" 
                   dataKey="active_users_7d" 

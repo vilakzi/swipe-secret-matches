@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -6,7 +7,6 @@ import ErrorBoundary from "@/components/common/ErrorBoundary";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
-import DebugInfo from "@/components/common/DebugInfo";
 import { EnhancedAuthProvider, useEnhancedAuth } from "@/contexts/EnhancedAuthContext";
 
 console.log('🚀 App.tsx loaded at:', new Date().toISOString());
@@ -22,6 +22,8 @@ const queryClient = new QueryClient({
 
 const AppContent = () => {
   const { user, loading, authError } = useEnhancedAuth();
+
+  console.log('🔍 AppContent render - user:', !!user, 'loading:', loading, 'authError:', authError);
 
   if (loading) {
     return (
@@ -64,7 +66,6 @@ const App = () => {
         <QueryClientProvider client={queryClient}>
           <EnhancedAuthProvider>
             <AppContent />
-            <DebugInfo />
             <Toaster />
           </EnhancedAuthProvider>
         </QueryClientProvider>

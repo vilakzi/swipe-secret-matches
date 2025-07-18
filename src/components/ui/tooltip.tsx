@@ -1,48 +1,19 @@
-import React from "react"
-import { cn } from "@/lib/utils"
 
-// Minimal tooltip components without any hooks to prevent React violations
-const TooltipProvider = ({ children }: { children: React.ReactNode }) => {
-  return <div>{children}</div>
-}
+// Completely disabled tooltip components to fix React hook violation
+// All tooltip functionality has been removed
 
-const Tooltip = ({ children }: { children: React.ReactNode }) => {
-  return <div>{children}</div>
-}
+export const TooltipProvider = ({ children }: { children: React.ReactNode }) => {
+  return <>{children}</>;
+};
 
-const TooltipTrigger = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & {
-    asChild?: boolean
-  }
->(({ children, asChild, ...props }, ref) => {
-  if (asChild && React.isValidElement(children)) {
-    return React.cloneElement(children, { ref, ...props })
-  }
-  return (
-    <div ref={ref} {...props}>
-      {children}
-    </div>
-  )
-})
-TooltipTrigger.displayName = "TooltipTrigger"
+export const Tooltip = ({ children }: { children: React.ReactNode }) => {
+  return <>{children}</>;
+};
 
-const TooltipContent = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & {
-    sideOffset?: number
-  }
->(({ className, sideOffset = 4, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md",
-      className
-    )}
-    style={{ marginTop: sideOffset }}
-    {...props}
-  />
-))
-TooltipContent.displayName = "TooltipContent"
+export const TooltipTrigger = ({ children }: { children: React.ReactNode }) => {
+  return <>{children}</>;
+};
 
-export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+export const TooltipContent = ({ children }: { children: React.ReactNode }) => {
+  return null; // Completely disabled
+};

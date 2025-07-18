@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -32,4 +33,6 @@ export default defineConfig(({ mode }) => ({
       external: ['@radix-ui/react-tooltip'], // Ensure it's not bundled
     },
   },
+  // Clear all caches
+  clearScreen: false,
 }));
