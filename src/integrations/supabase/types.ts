@@ -24,7 +24,7 @@ export type Database = {
           category: Database["public"]["Enums"]["content_category"] | null
           content_hash: string | null
           content_type: string
-          created_at: string | null
+          created_at: string
           description: string | null
           file_size: number | null
           file_url: string
@@ -41,12 +41,12 @@ export type Database = {
           rejection_reason: string | null
           scheduled_at: string | null
           share_count: number | null
-          status: string | null
+          status: string
           thumbnail_url: string | null
           title: string
-          updated_at: string | null
+          updated_at: string
           view_count: number | null
-          visibility: string | null
+          visibility: string
         }
         Insert: {
           admin_id: string
@@ -57,7 +57,7 @@ export type Database = {
           category?: Database["public"]["Enums"]["content_category"] | null
           content_hash?: string | null
           content_type: string
-          created_at?: string | null
+          created_at?: string
           description?: string | null
           file_size?: number | null
           file_url: string
@@ -74,12 +74,12 @@ export type Database = {
           rejection_reason?: string | null
           scheduled_at?: string | null
           share_count?: number | null
-          status?: string | null
+          status?: string
           thumbnail_url?: string | null
           title: string
-          updated_at?: string | null
+          updated_at?: string
           view_count?: number | null
-          visibility?: string | null
+          visibility?: string
         }
         Update: {
           admin_id?: string
@@ -90,7 +90,7 @@ export type Database = {
           category?: Database["public"]["Enums"]["content_category"] | null
           content_hash?: string | null
           content_type?: string
-          created_at?: string | null
+          created_at?: string
           description?: string | null
           file_size?: number | null
           file_url?: string
@@ -107,12 +107,12 @@ export type Database = {
           rejection_reason?: string | null
           scheduled_at?: string | null
           share_count?: number | null
-          status?: string | null
+          status?: string
           thumbnail_url?: string | null
           title?: string
-          updated_at?: string | null
+          updated_at?: string
           view_count?: number | null
-          visibility?: string | null
+          visibility?: string
         }
         Relationships: []
       }
@@ -184,12 +184,12 @@ export type Database = {
           id: string
           metadata: Json | null
           metric_type: string
-          timestamp: string | null
+          timestamp: string
           total_posts: number | null
           total_subscribers: number | null
           total_users: number | null
           user_id: string | null
-          value: number | null
+          value: number
         }
         Insert: {
           active_users_7d?: number | null
@@ -198,12 +198,12 @@ export type Database = {
           id?: string
           metadata?: Json | null
           metric_type: string
-          timestamp?: string | null
+          timestamp?: string
           total_posts?: number | null
           total_subscribers?: number | null
           total_users?: number | null
           user_id?: string | null
-          value?: number | null
+          value?: number
         }
         Update: {
           active_users_7d?: number | null
@@ -212,12 +212,12 @@ export type Database = {
           id?: string
           metadata?: Json | null
           metric_type?: string
-          timestamp?: string | null
+          timestamp?: string
           total_posts?: number | null
           total_subscribers?: number | null
           total_users?: number | null
           user_id?: string | null
-          value?: number | null
+          value?: number
         }
         Relationships: [
           {
@@ -233,7 +233,7 @@ export type Database = {
         Row: {
           action: string
           content_id: string
-          created_at: string | null
+          created_at: string
           id: string
           notes: string | null
           reviewer_id: string
@@ -241,7 +241,7 @@ export type Database = {
         Insert: {
           action: string
           content_id: string
-          created_at?: string | null
+          created_at?: string
           id?: string
           notes?: string | null
           reviewer_id: string
@@ -249,7 +249,7 @@ export type Database = {
         Update: {
           action?: string
           content_id?: string
-          created_at?: string | null
+          created_at?: string
           id?: string
           notes?: string | null
           reviewer_id?: string
@@ -267,19 +267,19 @@ export type Database = {
       content_tags: {
         Row: {
           content_id: string
-          created_at: string | null
+          created_at: string
           id: string
           tag: string
         }
         Insert: {
           content_id: string
-          created_at?: string | null
+          created_at?: string
           id?: string
           tag: string
         }
         Update: {
           content_id?: string
-          created_at?: string | null
+          created_at?: string
           id?: string
           tag?: string
         }
@@ -296,7 +296,7 @@ export type Database = {
       daily_usage: {
         Row: {
           created_at: string | null
-          date: string | null
+          date: string
           id: string
           last_scroll_at: string | null
           profile_scrolls: number | null
@@ -305,7 +305,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
-          date?: string | null
+          date?: string
           id?: string
           last_scroll_at?: string | null
           profile_scrolls?: number | null
@@ -314,7 +314,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
-          date?: string | null
+          date?: string
           id?: string
           last_scroll_at?: string | null
           profile_scrolls?: number | null
@@ -325,7 +325,7 @@ export type Database = {
       }
       matches: {
         Row: {
-          created_at: string | null
+          created_at: string
           expires_at: string | null
           id: string
           is_super_like: boolean | null
@@ -333,7 +333,7 @@ export type Database = {
           user2_id: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           expires_at?: string | null
           id?: string
           is_super_like?: boolean | null
@@ -341,7 +341,7 @@ export type Database = {
           user2_id: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           expires_at?: string | null
           id?: string
           is_super_like?: boolean | null
@@ -386,26 +386,26 @@ export type Database = {
       post_comments: {
         Row: {
           content: string
-          created_at: string | null
+          created_at: string
           id: string
           post_id: string
-          updated_at: string | null
+          updated_at: string
           user_id: string
         }
         Insert: {
           content: string
-          created_at?: string | null
+          created_at?: string
           id?: string
           post_id: string
-          updated_at?: string | null
+          updated_at?: string
           user_id: string
         }
         Update: {
           content?: string
-          created_at?: string | null
+          created_at?: string
           id?: string
           post_id?: string
-          updated_at?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
@@ -420,19 +420,19 @@ export type Database = {
       }
       post_likes: {
         Row: {
-          created_at: string | null
+          created_at: string
           id: string
           post_id: string
           user_id: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           id?: string
           post_id: string
           user_id: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           id?: string
           post_id?: string
           user_id?: string
@@ -443,6 +443,27 @@ export type Database = {
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "admin_user_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "new_joiners_feed"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -492,6 +513,27 @@ export type Database = {
             referencedRelation: "posts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "post_payments_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "admin_user_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_payments_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "new_joiners_feed"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_payments_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       posts: {
@@ -534,13 +576,35 @@ export type Database = {
           provider_id?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "posts_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "admin_user_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "new_joiners_feed"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
           age: number | null
           bio: string | null
-          created_at: string | null
+          created_at: string
           display_name: string | null
           gender: string | null
           id: string
@@ -554,7 +618,7 @@ export type Database = {
           profile_image_url: string | null
           profile_images: string[] | null
           role: Database["public"]["Enums"]["app_role"] | null
-          updated_at: string | null
+          updated_at: string
           user_type: Database["public"]["Enums"]["user_type"] | null
           verifications: Json | null
           whatsapp: string | null
@@ -562,7 +626,7 @@ export type Database = {
         Insert: {
           age?: number | null
           bio?: string | null
-          created_at?: string | null
+          created_at?: string
           display_name?: string | null
           gender?: string | null
           id: string
@@ -576,7 +640,7 @@ export type Database = {
           profile_image_url?: string | null
           profile_images?: string[] | null
           role?: Database["public"]["Enums"]["app_role"] | null
-          updated_at?: string | null
+          updated_at?: string
           user_type?: Database["public"]["Enums"]["user_type"] | null
           verifications?: Json | null
           whatsapp?: string | null
@@ -584,7 +648,7 @@ export type Database = {
         Update: {
           age?: number | null
           bio?: string | null
-          created_at?: string | null
+          created_at?: string
           display_name?: string | null
           gender?: string | null
           id?: string
@@ -598,7 +662,7 @@ export type Database = {
           profile_image_url?: string | null
           profile_images?: string[] | null
           role?: Database["public"]["Enums"]["app_role"] | null
-          updated_at?: string | null
+          updated_at?: string
           user_type?: Database["public"]["Enums"]["user_type"] | null
           verifications?: Json | null
           whatsapp?: string | null
@@ -607,36 +671,36 @@ export type Database = {
       }
       subscribers: {
         Row: {
-          created_at: string | null
+          created_at: string
           email: string
           id: string
           stripe_customer_id: string | null
-          subscribed: boolean | null
+          subscribed: boolean
           subscription_end: string | null
           subscription_tier: string | null
-          updated_at: string | null
+          updated_at: string
           user_id: string | null
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           email: string
           id?: string
           stripe_customer_id?: string | null
-          subscribed?: boolean | null
+          subscribed?: boolean
           subscription_end?: string | null
           subscription_tier?: string | null
-          updated_at?: string | null
+          updated_at?: string
           user_id?: string | null
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           email?: string
           id?: string
           stripe_customer_id?: string | null
-          subscribed?: boolean | null
+          subscribed?: boolean
           subscription_end?: string | null
           subscription_tier?: string | null
-          updated_at?: string | null
+          updated_at?: string
           user_id?: string | null
         }
         Relationships: []
@@ -665,7 +729,7 @@ export type Database = {
       superadmin_sessions: {
         Row: {
           admin_id: string
-          created_at: string | null
+          created_at: string
           expires_at: string
           id: string
           ip_address: unknown | null
@@ -674,7 +738,7 @@ export type Database = {
         }
         Insert: {
           admin_id: string
-          created_at?: string | null
+          created_at?: string
           expires_at: string
           id?: string
           ip_address?: unknown | null
@@ -683,7 +747,7 @@ export type Database = {
         }
         Update: {
           admin_id?: string
-          created_at?: string | null
+          created_at?: string
           expires_at?: string
           id?: string
           ip_address?: unknown | null
@@ -694,21 +758,21 @@ export type Database = {
       }
       swipes: {
         Row: {
-          created_at: string | null
+          created_at: string
           id: string
           liked: boolean
           target_user_id: string
           user_id: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           id?: string
           liked: boolean
           target_user_id: string
           user_id: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           id?: string
           liked?: boolean
           target_user_id?: string
@@ -783,21 +847,21 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
-          role: Database["public"]["Enums"]["app_role"] | null
+          role: Database["public"]["Enums"]["app_role"]
           updated_at: string | null
           user_id: string
         }
         Insert: {
           created_at?: string | null
           id?: string
-          role?: Database["public"]["Enums"]["app_role"] | null
+          role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string | null
           user_id: string
         }
         Update: {
           created_at?: string | null
           id?: string
-          role?: Database["public"]["Enums"]["app_role"] | null
+          role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string | null
           user_id?: string
         }
@@ -805,22 +869,169 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      admin_payment_overview: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          currency: string | null
+          display_name: string | null
+          email: string | null
+          id: string | null
+          payment_status: string | null
+          promotion_hours: number | null
+          provider_id: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_payments_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "admin_user_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_payments_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "new_joiners_feed"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_payments_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_user_overview: {
+        Row: {
+          created_at: string | null
+          display_name: string | null
+          email: string | null
+          id: string | null
+          is_blocked: boolean | null
+          last_active: string | null
+          phone: string | null
+          role: Database["public"]["Enums"]["app_role"] | null
+          subscribed: boolean | null
+          subscription_end: string | null
+          subscription_tier: string | null
+          total_matches: number | null
+          total_posts: number | null
+          total_swipes: number | null
+          user_type: Database["public"]["Enums"]["user_type"] | null
+        }
+        Relationships: []
+      }
+      new_joiners_feed: {
+        Row: {
+          age: number | null
+          bio: string | null
+          created_at: string | null
+          display_name: string | null
+          gender: string | null
+          id: string | null
+          interests: string[] | null
+          is_blocked: boolean | null
+          is_new_joiner: boolean | null
+          last_active: string | null
+          location: string | null
+          phone: string | null
+          photo_verified: boolean | null
+          privacy_settings: Json | null
+          profile_image_url: string | null
+          profile_images: string[] | null
+          role: Database["public"]["Enums"]["app_role"] | null
+          updated_at: string | null
+          user_created_at: string | null
+          user_type: Database["public"]["Enums"]["user_type"] | null
+          verifications: Json | null
+          whatsapp: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      has_role: {
-        Args: {
-          _user_id: string
-          _role: Database["public"]["Enums"]["app_role"]
-        }
+      check_duplicate_content: {
+        Args: { hash_value: string }
         Returns: boolean
+      }
+      cleanup_expired_matches: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      generate_content_hash: {
+        Args: { file_data: string }
+        Returns: string
+      }
+      get_content_analytics_summary: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          total_content: number
+          total_views: number
+          total_likes: number
+          total_shares: number
+          published_content: number
+          draft_content: number
+        }[]
+      }
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_user_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_role: {
+        Args:
+          | { _user_id: string; _role: Database["public"]["Enums"]["app_role"] }
+          | { mutable: string }
+        Returns: boolean
+      }
+      increment_content_view: {
+        Args: { content_id: string }
+        Returns: undefined
       }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      is_new_joiner: {
+        Args: Record<PropertyKey, never> | { user_created_at: string }
+        Returns: boolean
+      }
+      is_service_provider: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      log_sensitive_operation: {
+        Args: {
+          p_action: string
+          p_table_name: string
+          p_record_id?: string
+          p_old_values?: Json
+          p_new_values?: Json
+        }
+        Returns: undefined
+      }
+      promote_admin_content: {
+        Args: { content_id: string; priority_level?: number }
+        Returns: undefined
+      }
       promote_to_admin: {
-        Args: { target_user_id: string }
+        Args: { _user_email: string }
+        Returns: undefined
+      }
+      reset_daily_usage: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      unpromote_admin_content: {
+        Args: { content_id: string }
         Returns: undefined
       }
     }
