@@ -14,9 +14,6 @@ console.log('🚀 App.tsx loaded with Google OAuth authentication at:', new Date
 function App() {
   console.log('🔄 App component rendering with Google OAuth');
   
-  // Initialize session management
-  useSessionManager();
-  
   // Add keyboard shortcut for cache clear (Ctrl+Shift+C)
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -33,22 +30,32 @@ function App() {
   return (
     <ErrorBoundary>
       <EnhancedAuthProvider>
-        <Router>
-          {/* Cache clear button - only show in development */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="fixed top-4 right-4 z-50">
-              <CacheClearButton size="sm" />
-            </div>
-          )}
-          
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/" element={<Index />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Router>
+        <AppContent />
       </EnhancedAuthProvider>
     </ErrorBoundary>
+  );
+}
+
+// Separate component to use session manager within the auth context
+function AppContent() {
+  // Initialize session management inside the auth provider context
+  useSessionManager();
+  
+  return (
+    <Router>
+      {/* Cache clear button - only show in development */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="fixed top-4 right-4 z-50">
+          <CacheClearButton size="sm" />
+        </div>
+      )}
+      
+      <Routes>
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/" element={<Index />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
   );
 }
 
