@@ -2,11 +2,11 @@ import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { EnhancedAuthProvider, useEnhancedAuth } from "@/contexts/EnhancedAuthContext";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import { EnhancedAuthProvider, useEnhancedAuth } from "@/contexts/EnhancedAuthContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,39 +17,39 @@ const queryClient = new QueryClient({
   },
 });
 
-const AppRoutes = () => {
+const AppContent = () => {
   const { user, loading } = useEnhancedAuth();
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center">
-        <LoadingSpinner size="lg" text="Loading your app..." />
+        <LoadingSpinner size="lg" text="Loading..." />
       </div>
     );
   }
 
   return (
-    <Routes>
-      <Route path="/auth" element={user ? <Navigate to="/" /> : <Auth />} />
-      <Route path="/" element={user ? <Index /> : <Navigate to="/auth" />} />
-      <Route path="*" element={<Navigate to="/" />} />
-    </Routes>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 font-sans antialiased">
+      <Routes>
+        <Route path="/auth" element={user ? <Navigate to="/" /> : <Auth />} />
+        <Route path="/" element={user ? <Index /> : <Navigate to="/auth" />} />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </div>
   );
 };
 
 const App = () => {
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
+      <BrowserRouter>
+        <QueryClientProvider client={queryClient}>
           <EnhancedAuthProvider>
-            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 font-sans antialiased">
-              <AppRoutes />
-            </div>
+            <AppContent />
             <Toaster />
           </EnhancedAuthProvider>
-        </BrowserRouter>
-      </QueryClientProvider>
+        </QueryClientProvider>
+      </BrowserRouter>
     </ErrorBoundary>
   );
 };
