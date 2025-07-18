@@ -1,38 +1,22 @@
 
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { EnhancedAuthProvider } from './contexts/EnhancedAuthContext';
-import { useSessionManager } from './hooks/useSessionManager';
-import Auth from './pages/Auth';
-import Index from './pages/Index';
-import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/common/ErrorBoundary';
 
-console.log('🚀 App.tsx loaded with authentication at:', new Date().toISOString());
+console.log('🚀 App.tsx loaded with simplified structure at:', new Date().toISOString());
 
 function App() {
-  console.log('🔄 App component rendering with auth structure');
-  
-  // Initialize session management
-  useSessionManager();
+  console.log('🔄 App component rendering with simplified structure');
   
   return (
     <ErrorBoundary>
       <EnhancedAuthProvider>
-        <Router>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route 
-              path="/" 
-              element={
-                <ProtectedRoute>
-                  <Index />
-                </ProtectedRoute>
-              } 
-            />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Router>
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center p-4">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-white mb-4">ConnectsBuddy</h1>
+            <p className="text-gray-300">App is running successfully!</p>
+          </div>
+        </div>
       </EnhancedAuthProvider>
     </ErrorBoundary>
   );
