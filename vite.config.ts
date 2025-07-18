@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => ({
   },
   optimizeDeps: {
     include: ['react', 'react-dom'],
-    force: true, // Force dependency re-bundling
+    force: true, // Force complete dependency re-bundling
   },
   define: {
     'process.env': {},
@@ -30,6 +30,7 @@ export default defineConfig(({ mode }) => ({
   build: {
     rollupOptions: {},
   },
-  // Clear all caches
+  // Force complete cache clearing
   clearScreen: false,
+  cacheDir: '.vite-clean', // Use a different cache directory to force rebuild
 }));
