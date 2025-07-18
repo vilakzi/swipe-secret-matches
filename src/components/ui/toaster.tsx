@@ -1,5 +1,5 @@
 
-import * as React from "react"
+import React from "react"
 import { Toast } from "./toast"
 
 interface ToastData {
@@ -17,7 +17,7 @@ interface ToasterContextType {
 
 const ToasterContext = React.createContext<ToasterContextType | undefined>(undefined)
 
-export const ToasterProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export function ToasterProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = React.useState<ToastData[]>([])
 
   const addToast = React.useCallback((toast: Omit<ToastData, 'id'>) => {
