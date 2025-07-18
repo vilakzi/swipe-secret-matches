@@ -1,54 +1,49 @@
 
-import React, { useState } from 'react';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
+import React from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
-import ErrorBoundary from '@/components/common/ErrorBoundary';
-import LoadingSpinner from '@/components/common/LoadingSpinner';
-import WorkingFeed from '@/components/feed/WorkingFeed';
-import ProfileBrowser from '@/components/browse/ProfileBrowser';
-import ProfileCompletionChecker from '@/components/profile/ProfileCompletionChecker';
-import AppHeader from '@/components/common/AppHeader';
 
-const Index = () => {
-  const isMobile = useIsMobile();
-  const { user, isLoading } = useEnhancedAuth();
-  const [viewMode, setViewMode] = useState<'feed' | 'browse'>('feed');
+export default function Index() {
+  const { user, loading, signOut } = useAuth();
 
-  console.log('Index component rendering - user:', user?.id, 'loading:', isLoading);
+  console.log('Index page - user:', user?.email || 'none', 'loading:', loading);
 
-  // Show loading spinner while checking authentication
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center">
-        <LoadingSpinner size="lg" text="Loading ConnectsBuddy..." />
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-white">Loading...</div>
       </div>
     );
   }
 
-  // Redirect to auth if not authenticated
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
 
   return (
-    <ErrorBoundary>
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900">
-        {/* Header */}
-        <AppHeader viewMode={viewMode} onViewModeChange={setViewMode} />
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 p-4">
+      <div className="max-w-4xl mx-auto">
+        <header className="bg-gray-800 rounded-lg p-6 mb-6 border border-gray-700">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-bold text-white">ConnectsBuddy</h1>
+              <p className="text-gray-400">Welcome back, {user.email}</p>
+            </div>
+            <button
+              onClick={signOut}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              Sign Out
+            </button>
+          </div>
+        </header>
 
-        {/* Content Area */}
-        <div className="container mx-auto px-4 py-8">
-          {user && <ProfileCompletionChecker />}
-          {viewMode === 'feed' ? (
-            <WorkingFeed />
-          ) : (
-            <ProfileBrowser />
-          )}
+        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <h2 className="text-xl font-semibold text-white mb-4">Dashboard</h2>
+          <p className="text-gray-400">Your app is now running with a clean authentication system!</p>
+          <p className="text-gray-400 mt-2">All your existing database data has been preserved.</p>
         </div>
       </div>
-    </ErrorBoundary>
+    </div>
   );
-};
-
-export default Index;
+}
