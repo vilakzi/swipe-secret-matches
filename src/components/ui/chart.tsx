@@ -98,7 +98,9 @@ ${colorConfig
   )
 }
 
-const ChartTooltip = RechartsPrimitive.Tooltip
+// Disable tooltips temporarily to fix React hook error  
+// const ChartTooltip = RechartsPrimitive.Tooltip
+const ChartTooltip = () => null
 
 const ChartTooltipContent = React.forwardRef<
   HTMLDivElement,

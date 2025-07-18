@@ -96,13 +96,14 @@ const AppAnalytics = () => {
                   fontSize={12}
                 />
                 <YAxis stroke="#9CA3AF" fontSize={12} />
-                <Tooltip 
+                {/* Temporarily disable Tooltip to fix React hook error */}
+                {/* <Tooltip 
                   contentStyle={{ 
                     backgroundColor: '#1F2937', 
                     border: '1px solid #374151',
                     borderRadius: '8px'
                   }}
-                />
+                /> */}
                 <Line 
                   type="monotone" 
                   dataKey="total_users" 
@@ -137,13 +138,14 @@ const AppAnalytics = () => {
                   fontSize={12}
                 />
                 <YAxis stroke="#9CA3AF" fontSize={12} />
-                <Tooltip 
+                {/* Temporarily disable Tooltip to fix React hook error */}
+                {/* <Tooltip 
                   contentStyle={{ 
                     backgroundColor: '#1F2937', 
                     border: '1px solid #374151',
                     borderRadius: '8px'
                   }}
-                />
+                /> */}
                 <Bar 
                   dataKey="total_subscribers" 
                   fill="#8B5CF6"
@@ -169,13 +171,14 @@ const AppAnalytics = () => {
                   fontSize={12}
                 />
                 <YAxis stroke="#9CA3AF" fontSize={12} />
-                <Tooltip 
+                {/* Temporarily disable Tooltip to fix React hook error */}
+                {/* <Tooltip 
                   contentStyle={{ 
                     backgroundColor: '#1F2937', 
                     border: '1px solid #374151',
                     borderRadius: '8px'
                   }}
-                />
+                /> */}
                 <Bar 
                   dataKey="total_posts" 
                   fill="#F59E0B"
@@ -201,13 +204,14 @@ const AppAnalytics = () => {
                   fontSize={12}
                 />
                 <YAxis stroke="#9CA3AF" fontSize={12} />
-                <Tooltip 
+                {/* Temporarily disable Tooltip to fix React hook error */}
+                {/* <Tooltip 
                   contentStyle={{ 
                     backgroundColor: '#1F2937', 
                     border: '1px solid #374151',
                     borderRadius: '8px'
                   }}
-                />
+                /> */}
                 <Line 
                   type="monotone" 
                   dataKey="active_users_7d" 
