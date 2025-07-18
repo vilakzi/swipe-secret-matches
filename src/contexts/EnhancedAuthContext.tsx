@@ -10,6 +10,8 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, displayName: string, userType: 'user' | 'service_provider') => Promise<void>;
+  signInWithProvider: (provider: 'google' | 'github' | 'facebook') => Promise<void>;
+  signInWithMagicLink: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -19,6 +21,8 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
   signIn: async () => {},
   signUp: async () => {},
+  signInWithProvider: async () => {},
+  signInWithMagicLink: async () => {},
 });
 
 export const EnhancedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -95,8 +99,37 @@ export const EnhancedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (error) throw error;
   };
 
+  const signInWithProvider = async (provider: 'google' | 'github' | 'facebook') => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/`,
+      },
+    });
+    if (error) throw error;
+  };
+
+  const signInWithMagicLink = async (email: string) => {
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`,
+      },
+    });
+    if (error) throw error;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, signOut, signIn, signUp }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      loading, 
+      signOut, 
+      signIn, 
+      signUp,
+      signInWithProvider,
+      signInWithMagicLink 
+    }}>
       {children}
     </AuthContext.Provider>
   );

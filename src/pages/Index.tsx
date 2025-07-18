@@ -5,6 +5,8 @@ import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import WorkingFeed from '@/components/feed/WorkingFeed';
+import ProfileBrowser from '@/components/browse/ProfileBrowser';
+import ProfileCompletionChecker from '@/components/profile/ProfileCompletionChecker';
 import AppHeader from '@/components/common/AppHeader';
 
 const Index = () => {
@@ -58,18 +60,11 @@ const Index = () => {
 
         {/* Content Area */}
         <div className="container mx-auto px-4 py-8">
+          <ProfileCompletionChecker />
           {viewMode === 'feed' ? (
             <WorkingFeed />
           ) : (
-            <div className="text-center py-12">
-              <div className="bg-gray-800 rounded-lg p-8 max-w-md mx-auto">
-                <h2 className="text-2xl font-bold text-white mb-4">Browse Mode</h2>
-                <p className="text-gray-300 mb-6">Advanced browse functionality coming soon...</p>
-                <p className="text-gray-400 text-sm">
-                  This feature will allow you to filter and search profiles with advanced criteria.
-                </p>
-              </div>
-            </div>
+            <ProfileBrowser />
           )}
         </div>
       </div>
