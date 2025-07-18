@@ -8,6 +8,8 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, displayName: string, userType: 'user' | 'service_provider') => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -15,6 +17,8 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   loading: true,
   signOut: async () => {},
+  signIn: async () => {},
+  signUp: async () => {},
 });
 
 export const EnhancedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -68,8 +72,31 @@ export const EnhancedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) throw error;
+  };
+
+  const signUp = async (email: string, password: string, displayName: string, userType: 'user' | 'service_provider') => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          display_name: displayName,
+          user_type: userType,
+        },
+        emailRedirectTo: `${window.location.origin}/`,
+      },
+    });
+    if (error) throw error;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, signOut, signIn, signUp }}>
       {children}
     </AuthContext.Provider>
   );

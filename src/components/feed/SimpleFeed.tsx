@@ -45,10 +45,10 @@ const SimpleFeed = () => {
     );
   }
 
-  const serviceProviders = profiles.filter(p => p.user_type === 'service_provider').length;
-  const newJoiners = profiles.filter(p => 
+  const serviceProviders = Array.isArray(profiles) ? profiles.filter(p => p.user_type === 'service_provider').length : 0;
+  const newJoiners = Array.isArray(profiles) ? profiles.filter(p => 
     new Date(p.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-  ).length;
+  ).length : 0;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 px-4">
@@ -63,26 +63,26 @@ const SimpleFeed = () => {
       {/* Feed Header */}
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-white mb-2">
-          {role === 'user' ? 'Service Providers' : role === 'service_provider' ? 'Users' : 'All Profiles'}
+          Discover Profiles
         </h2>
         <p className="text-gray-400 text-sm">
-          Showing {profiles.length} profiles {role && `(viewing as ${role})`}
+          Showing {Array.isArray(profiles) ? profiles.length : 0} profiles
         </p>
       </div>
 
       {/* Profiles Feed */}
-      {profiles.length === 0 ? (
+      {!Array.isArray(profiles) || profiles.length === 0 ? (
         <div className="text-center py-12">
           <div className="bg-gray-800 rounded-lg p-8 max-w-md mx-auto">
             <h3 className="text-white font-semibold mb-2">No Profiles Found</h3>
             <p className="text-gray-400 mb-6">
-              No {role === 'user' ? 'service providers' : 'users'} found.
+              No profiles found.
             </p>
           </div>
         </div>
       ) : (
         <div className="space-y-4">
-          {profiles.map((profile) => (
+          {Array.isArray(profiles) && profiles.map((profile) => (
             <EnhancedFeedCard
               key={profile.id}
               profile={profile}

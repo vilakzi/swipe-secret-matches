@@ -1,8 +1,7 @@
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
-import { useUserRole } from '@/hooks/useUserRole';
 
 interface Profile {
   id: string;
@@ -21,7 +20,6 @@ export const useOptimizedProfiles = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useEnhancedAuth();
-  const { role } = useUserRole();
 
   const fetchProfiles = useCallback(async () => {
     if (!user) {
@@ -46,7 +44,7 @@ export const useOptimizedProfiles = () => {
         return;
       }
 
-      setProfiles(data || []);
+      setProfiles(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Unexpected error:', err);
       setError('Failed to load profiles');
@@ -55,21 +53,11 @@ export const useOptimizedProfiles = () => {
     }
   }, [user]);
 
-  const filteredProfiles = useMemo(() => {
-    if (!profiles.length) return [];
-    
-    return profiles.filter(profile => {
-      // Don't show own profile
-      if (profile.id === user?.id) return false;
-      
-      // Role-based filtering
-      if (role === 'admin') return true;
-      if (role === 'user') return profile.user_type === 'service_provider';
-      if (role === 'service_provider') return profile.user_type === 'user';
-      
-      return true;
-    });
-  }, [profiles, user?.id, role]);
+  const filteredProfiles = Array.isArray(profiles) ? profiles.filter(profile => {
+    // Don't show own profile
+    if (profile.id === user?.id) return false;
+    return true;
+  }) : [];
 
   useEffect(() => {
     fetchProfiles();
@@ -80,6 +68,6 @@ export const useOptimizedProfiles = () => {
     loading,
     error,
     refetch: fetchProfiles,
-    totalCount: profiles.length
+    totalCount: Array.isArray(profiles) ? profiles.length : 0
   };
 };
