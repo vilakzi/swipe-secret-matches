@@ -14,7 +14,7 @@ import UnifiedContentUpload from './UnifiedContentUpload';
 import ContentManager from './ContentManager';
 import ContentModerationPanel from './ContentModerationPanel';
 import UserManagement from './UserManagement';
-import AnalyticsDashboard from './AnalyticsDashboard';
+// import AnalyticsDashboard from './AnalyticsDashboard'; // Temporarily disabled to fix React hook errors
 import AdminSettings from './AdminSettings';
 
 const AdminDashboard = () => {
@@ -89,7 +89,10 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
-            <AnalyticsDashboard />
+            {/* <AnalyticsDashboard /> */}
+            <div className="p-8 text-center">
+              <p className="text-gray-400">Analytics dashboard temporarily disabled during React hook fix</p>
+            </div>
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">

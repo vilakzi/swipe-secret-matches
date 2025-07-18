@@ -4,6 +4,11 @@ import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 
+// Ensure React is available globally to prevent hook violations
+if (typeof window !== 'undefined') {
+  (window as any).React = React;
+}
+
 // Mobile viewport optimization
 const viewport = document.querySelector('meta[name=viewport]');
 if (viewport) {
