@@ -1,56 +1,55 @@
 
-import React from "react"
-import { Toast } from "./toast"
+import { useToast } from "@/hooks/use-toast"
+import {
+  Toast,
+  ToastClose,
+  ToastDescription,
+  ToastProvider,
+  ToastTitle,
+  ToastViewport,
+} from "@/components/ui/toast"
 
-interface ToastData {
-  id: string
-  title: string
-  description?: string
-  variant?: 'default' | 'destructive'
-}
-
-interface ToasterContextType {
-  toasts: ToastData[]
-  addToast: (toast: Omit<ToastData, 'id'>) => void
-  removeToast: (id: string) => void
-}
-
-const ToasterContext = React.createContext<ToasterContextType | undefined>(undefined)
-
-export function ToasterProvider({ children }: { children: React.ReactNode }) {
-  const [toasts, setToasts] = React.useState<ToastData[]>([])
-
-  const addToast = React.useCallback((toast: Omit<ToastData, 'id'>) => {
-    const id = Math.random().toString(36).substr(2, 9)
-    setToasts(prev => [...prev, { ...toast, id }])
-  }, [])
-
-  const removeToast = React.useCallback((id: string) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id))
-  }, [])
-
+/**
+ * Custom ToastViewport to show toasts at top center of the screen.
+ */
+function TopCenterToastViewport({ className = "" }) {
   return (
-    <ToasterContext.Provider value={{ toasts, addToast, removeToast }}>
-      {children}
-      <div className="fixed top-0 right-0 z-50 p-4 space-y-2">
-        {toasts.map(toast => (
-          <Toast
-            key={toast.id}
-            title={toast.title}
-            description={toast.description}
-            variant={toast.variant}
-            onClose={() => removeToast(toast.id)}
-          />
-        ))}
-      </div>
-    </ToasterContext.Provider>
+    <ToastViewport
+      className={
+        "fixed top-4 left-1/2 transform -translate-x-1/2 z-[9999] w-full max-w-md px-4 flex flex-col items-center space-y-2 " +
+        className
+      }
+      aria-live="polite"
+      id="main-toast-viewport"
+    />
   )
 }
 
-export const useToaster = () => {
-  const context = React.useContext(ToasterContext)
-  if (!context) {
-    throw new Error('useToaster must be used within a ToasterProvider')
-  }
-  return context
+export function Toaster() {
+  const { toasts } = useToast()
+
+  return (
+    <ToastProvider>
+      <div aria-live="assertive" aria-atomic="true">
+        {toasts.map(function ({ id, title, description, action, ...props }) {
+          // ARIA: set alert role for danger/destructive, otherwise polite
+          const role = props.variant === "destructive" ? "alert" : "status";
+          return (
+            <Toast key={id} {...props} role={role} aria-live={role === "alert" ? "assertive" : "polite"}>
+              <div className="grid gap-1" tabIndex={0}>
+                {title && <ToastTitle>{title}</ToastTitle>}
+                {description && (
+                  <ToastDescription>{description}</ToastDescription>
+                )}
+              </div>
+              {action}
+              <ToastClose />
+            </Toast>
+          )
+        })}
+      </div>
+      {/* Use the custom viewport so toasts render top center */}
+      <TopCenterToastViewport />
+    </ToastProvider>
+  )
 }

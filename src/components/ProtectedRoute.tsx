@@ -1,22 +1,21 @@
 
 import React from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
-import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
+import SecureAuthWrapper from '@/components/auth/SecureAuthWrapper';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  allowedRoles?: ('user' | 'service_provider' | 'admin')[];
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { user, loading } = useEnhancedAuth();
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles = [] }) => {
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center">
-        <div className="text-center p-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-white">Loading...</h2>
-        </div>
+        <div className="text-white text-lg">Loading...</div>
       </div>
     );
   }
@@ -25,7 +24,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <Navigate to="/auth" replace />;
   }
 
-  return <>{children}</>;
+  return (
+    <SecureAuthWrapper requireAuth={true} allowedRoles={allowedRoles}>
+      {children}
+    </SecureAuthWrapper>
+  );
 };
 
 export default ProtectedRoute;

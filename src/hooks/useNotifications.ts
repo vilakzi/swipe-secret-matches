@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
@@ -15,7 +15,7 @@ interface Notification {
 }
 
 export const useNotifications = () => {
-  const { user } = useEnhancedAuth();
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);

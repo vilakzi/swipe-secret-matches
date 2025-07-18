@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
@@ -15,7 +15,7 @@ const SecureAuthWrapper: React.FC<SecureAuthWrapperProps> = ({
   requireAuth = false,
   allowedRoles = []
 }) => {
-  const { user, loading } = useEnhancedAuth();
+  const { user, loading } = useAuth();
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
 

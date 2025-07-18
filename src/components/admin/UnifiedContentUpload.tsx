@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Upload, Crown, MapPin } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import FileUploadSection from '@/components/dashboard/upload/FileUploadSection';
 import CaptionSection from '@/components/dashboard/upload/CaptionSection';
 import PostCard from '@/components/dashboard/PostCard';
@@ -14,7 +14,7 @@ type Step = 1 | 2 | 3;
 type LocationOption = 'all' | 'soweto' | 'jhb-central' | 'pta';
 
 const UnifiedContentUpload = () => {
-  const { user } = useEnhancedAuth();
+  const { user } = useAuth();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [caption, setCaption] = useState('');
   const [selectedLocation, setSelectedLocation] = useState<LocationOption>('all');

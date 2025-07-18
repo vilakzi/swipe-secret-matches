@@ -3,11 +3,11 @@ import React from 'react';
 import { Settings as SettingsIcon, User, Bell, Shield, HelpCircle, LogOut } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const Settings = () => {
-  const { signOut } = useEnhancedAuth();
+  const { signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {

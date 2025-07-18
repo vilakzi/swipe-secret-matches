@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from 'react';
-import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRealProfiles } from './useRealProfiles';
 import { useNewJoiners } from './useNewJoiners';
 import { usePostFetching } from './feed/usePostFetching';
@@ -11,7 +11,7 @@ import { useInfiniteContentFlow } from './feed/useInfiniteContentFlow';
 import { useEngagementTracking } from './feed/useEngagementTracking';
 
 export const useContinuousFeedData = () => {
-  const { user } = useEnhancedAuth() || {};
+  const { user } = useAuth() || {};
   const [shuffleKey, setShuffleKey] = useState(0);
 
   console.log("🌊 Continuous Feed System - Active for user:", user?.id || 'no user');

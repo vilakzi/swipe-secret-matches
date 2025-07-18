@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import EnhancedFileUploadSection from './upload/EnhancedFileUploadSection';
 import CaptionSection from './upload/CaptionSection';

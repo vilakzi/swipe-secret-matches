@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
@@ -9,7 +9,7 @@ import PostsList from '@/components/dashboard/PostsList';
 import PaymentModal from '@/components/PaymentModal';
 
 const ServiceProviderDashboard = () => {
-  const { user } = useEnhancedAuth();
+  const { user } = useAuth();
   const [posts, setPosts] = useState<any[]>([]);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [pendingPost, setPendingPost] = useState<any>(null);

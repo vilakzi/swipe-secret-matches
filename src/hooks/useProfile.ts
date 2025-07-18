@@ -1,12 +1,12 @@
 
 import { useState, useEffect } from 'react';
-import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { ProfileData } from '@/types/profile';
 
 export const useProfile = () => {
-  const { user } = useEnhancedAuth();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData>({
     display_name: '',

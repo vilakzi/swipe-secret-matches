@@ -1,7 +1,7 @@
 
-import React from 'react';
-const { useState, useMemo } = React;
-import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
+import * as React from 'react';
+import { useState, useMemo } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { useContentFeed } from '@/hooks/useContentFeed';
 import { useUserRole } from '@/hooks/useUserRole';
 // Utility imports
@@ -37,7 +37,7 @@ const FeedContent = ({
   const [filterOption, setFilterOption] = useState<FilterOption>('all');
   const [locationOption, setLocationOption] = useState<LocationOption>('all');
   const { contentFeedItems } = useContentFeed();
-  const { user } = useEnhancedAuth();
+  const { user } = useAuth();
   const { role } = useUserRole();
 
   const adminRoles = ["admin", "superadmin"];

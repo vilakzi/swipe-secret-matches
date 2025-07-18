@@ -1,137 +1,109 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
-interface ActivityMetrics {
-  dailyActiveStreak: number;
-  weeklyEngagement: number;
-  totalInteractions: number;
-  lastActiveSession: string | null;
+interface UseUserActivityOptions {
+  inactiveThreshold?: number; // milliseconds
+  scrollThreshold?: number; // pixels
 }
 
-export const useUserActivity = () => {
-  const { user } = useEnhancedAuth();
-  const [isActive, setIsActive] = useState(true);
-  const [sessionStart] = useState(Date.now());
-  const [metrics, setMetrics] = useState<ActivityMetrics>({
-    dailyActiveStreak: 0,
-    weeklyEngagement: 0,
-    totalInteractions: 0,
-    lastActiveSession: null
-  });
+export const useUserActivity = (options: UseUserActivityOptions = {}) => {
+  const { inactiveThreshold = 30000, scrollThreshold = 50 } = options; // 30 seconds default
+  
+  const [isUserActive, setIsUserActive] = useState(true);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const [isViewingVideo, setIsViewingVideo] = useState(false);
+  
+  const lastActivityRef = useRef(Date.now());
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const activityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastScrollY = useRef(window.scrollY);
 
-  // Track user activity states
-  const [shouldAllowAutoRefresh, setShouldAllowAutoRefresh] = useState(true);
-  const [lastInteraction, setLastInteraction] = useState(Date.now());
-
-  // Activity detection
   const updateActivity = useCallback(() => {
-    setIsActive(true);
-    setLastInteraction(Date.now());
-    setShouldAllowAutoRefresh(true);
-  }, []);
+    lastActivityRef.current = Date.now();
+    setIsUserActive(true);
+    
+    // Clear existing timeout
+    if (activityTimeoutRef.current) {
+      clearTimeout(activityTimeoutRef.current);
+    }
+    
+    // Set new timeout for inactivity
+    activityTimeoutRef.current = setTimeout(() => {
+      setIsUserActive(false);
+    }, inactiveThreshold);
+  }, [inactiveThreshold]);
 
-  // Track when user becomes inactive
-  useEffect(() => {
-    const checkInactivity = () => {
-      const now = Date.now();
-      const timeSinceLastInteraction = now - lastInteraction;
+  const handleScroll = useCallback(() => {
+    const currentScrollY = window.scrollY;
+    const scrollDelta = Math.abs(currentScrollY - lastScrollY.current);
+    
+    if (scrollDelta > scrollThreshold) {
+      setIsScrolling(true);
+      updateActivity();
+      lastScrollY.current = currentScrollY;
       
-      if (timeSinceLastInteraction > 30000) { // 30 seconds
-        setIsActive(false);
-        setShouldAllowAutoRefresh(false);
+      // Clear existing scroll timeout
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
       }
-    };
+      
+      // Set scrolling to false after user stops scrolling
+      scrollTimeoutRef.current = setTimeout(() => {
+        setIsScrolling(false);
+      }, 150);
+    }
+  }, [scrollThreshold, updateActivity]);
 
-    const interval = setInterval(checkInactivity, 5000);
-    return () => clearInterval(interval);
-  }, [lastInteraction]);
+  const handleUserInteraction = useCallback(() => {
+    updateActivity();
+  }, [updateActivity]);
 
-  // Global activity listeners
+  // Detect video viewing state
+  const setVideoViewing = useCallback((viewing: boolean) => {
+    setIsViewingVideo(viewing);
+    if (viewing) {
+      updateActivity();
+    }
+  }, [updateActivity]);
+
   useEffect(() => {
-    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    // Activity detection events
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
     
     events.forEach(event => {
-      document.addEventListener(event, updateActivity, true);
+      if (event === 'scroll') {
+        window.addEventListener(event, handleScroll, { passive: true });
+      } else {
+        window.addEventListener(event, handleUserInteraction, { passive: true });
+      }
     });
+
+    // Initialize activity timeout
+    updateActivity();
 
     return () => {
       events.forEach(event => {
-        document.removeEventListener(event, updateActivity, true);
+        if (event === 'scroll') {
+          window.removeEventListener(event, handleScroll);
+        } else {
+          window.removeEventListener(event, handleUserInteraction);
+        }
       });
-    };
-  }, [updateActivity]);
-
-  // Update last active in database
-  useEffect(() => {
-    if (!user) return;
-
-    const updateLastActive = async () => {
-      try {
-        await supabase
-          .from('profiles')
-          .update({ last_active: new Date().toISOString() })
-          .eq('id', user.id);
-      } catch (error) {
-        console.warn('Failed to update last active:', error);
-      }
-    };
-
-    // Update immediately and then every 5 minutes
-    updateLastActive();
-    const interval = setInterval(updateLastActive, 5 * 60 * 1000);
-
-    return () => clearInterval(interval);
-  }, [user]);
-
-  // Track session duration and engagement
-  useEffect(() => {
-    if (!user) return;
-
-    const trackSession = async () => {
-      const sessionDuration = Date.now() - sessionStart;
       
-      try {
-        // You could store this in analytics table
-        console.log('Session duration:', sessionDuration / 1000, 'seconds');
-      } catch (error) {
-        console.warn('Failed to track session:', error);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      if (activityTimeoutRef.current) {
+        clearTimeout(activityTimeoutRef.current);
       }
     };
-
-    // Track session on unmount
-    return trackSession;
-  }, [user, sessionStart]);
-
-  const trackInteraction = useCallback(async (type: string, data?: any) => {
-    if (!user) return;
-
-    try {
-      await supabase
-        .from('content_analytics')
-        .insert({
-          content_id: data?.contentId || 'general',
-          metric_type: type,
-          user_id: user.id,
-          value: 1,
-          metadata: data
-        });
-
-      setMetrics(prev => ({
-        ...prev,
-        totalInteractions: prev.totalInteractions + 1
-      }));
-    } catch (error) {
-      console.warn('Failed to track interaction:', error);
-    }
-  }, [user]);
+  }, [handleScroll, handleUserInteraction, updateActivity]);
 
   return {
-    isActive,
-    shouldAllowAutoRefresh,
-    metrics,
-    trackInteraction,
-    updateActivity
+    isUserActive,
+    isScrolling,
+    isViewingVideo,
+    setVideoViewing,
+    shouldAllowAutoRefresh: isUserActive && !isScrolling && !isViewingVideo
   };
 };

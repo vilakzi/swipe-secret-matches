@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from 'react';
-import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRealProfiles } from './useRealProfiles';
 import { useNewJoiners } from './useNewJoiners';
 import { usePostFetching } from './feed/usePostFetching';
@@ -14,7 +14,7 @@ import { useFreshFeedRotation } from './useFreshFeedRotation';
 import { useUniversalContentDistribution } from './useUniversalContentDistribution';
 
 export const useDynamicFeedEngine = () => {
-  const { user } = useEnhancedAuth() || {};
+  const { user } = useAuth() || {};
   const [shuffleKey, setShuffleKey] = useState(() => Date.now() + Math.random());
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Heart, Share } from "lucide-react";
 import PostComments from "./PostComments";
 import React, { useEffect, useState } from "react";
-import { useEnhancedAuth } from "@/contexts/EnhancedAuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { fetchPostLikedUserIDs, likePost, unlikePost, isPostLikedByUser } from "@/utils/feed/postLikesUtils";
 import { toast } from "@/hooks/use-toast";
 
@@ -22,7 +22,7 @@ const PostCardActions = ({
   onContact,
   isSubscribed,
 }: PostCardActionsProps) => {
-  const { user } = useEnhancedAuth();
+  const { user } = useAuth();
   const [likedUserIDs, setLikedUserIDs] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 

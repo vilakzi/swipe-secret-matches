@@ -1,11 +1,11 @@
 
 import { useState, useEffect } from 'react';
-import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { sessionManager } from '@/utils/secureSessionManager';
 import { getCurrentSecurityContext, SecurityContext } from '@/utils/authorizationUtils';
 
 export const useSecureSession = () => {
-  const { user, session } = useEnhancedAuth();
+  const { user, session } = useAuth();
   const [securityContext, setSecurityContext] = useState<SecurityContext | null>(null);
   const [isValidating, setIsValidating] = useState(false);
 

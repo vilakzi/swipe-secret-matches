@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Upload, Camera, X, Plus } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface PhotoUploadProps {
   photos: string[];
@@ -14,7 +14,7 @@ interface PhotoUploadProps {
 }
 
 const PhotoUpload = ({ photos, onPhotosChange, maxPhotos = 6 }: PhotoUploadProps) => {
-  const { user } = useEnhancedAuth();
+  const { user } = useAuth();
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 

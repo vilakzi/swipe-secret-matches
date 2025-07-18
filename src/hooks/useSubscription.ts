@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
 interface SubscriptionStatus {
@@ -16,7 +16,7 @@ interface UsageStatus {
 }
 
 export const useSubscription = () => {
-  const { user, session } = useEnhancedAuth();
+  const { user, session } = useAuth();
   const [status, setStatus] = useState<SubscriptionStatus>({
     subscribed: false,
     loading: true
@@ -61,7 +61,7 @@ export const useSubscription = () => {
 };
 
 export const useUsageTracking = () => {
-  const { user, session } = useEnhancedAuth();
+  const { user, session } = useAuth();
   const [usage, setUsage] = useState<UsageStatus>({
     scrollsToday: 0,
     remainingScrolls: 5,

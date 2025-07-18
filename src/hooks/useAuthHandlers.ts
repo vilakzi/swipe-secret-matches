@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from 'react';
-import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { validateEmail } from '@/utils/emailValidation';
@@ -9,7 +9,7 @@ import { useRetryableOperation } from './useRetryableOperation';
 
 export const useAuthHandlers = () => {
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp } = useEnhancedAuth();
+  const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const { handleError, handleSuccess } = useErrorHandler();
 
@@ -87,7 +87,7 @@ export const useAuthHandlers = () => {
           navigate('/');
         } else {
           // Sign up with enhanced error handling
-          await signUp(email, password, displayName, userType);
+          await signUp(email, password, displayName, userType, isAdmin);
 
           // Update profile with additional info
           try {

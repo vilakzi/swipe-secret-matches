@@ -1,6 +1,6 @@
 import { Card } from '@/components/ui/card';
 import { usePresence } from '@/hooks/usePresence';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProviderHeader from './provider/ProviderHeader';
 import ProviderRating from './provider/ProviderRating';
