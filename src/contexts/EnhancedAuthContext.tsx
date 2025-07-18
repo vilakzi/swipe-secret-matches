@@ -40,6 +40,7 @@ export const EnhancedAuthProvider: React.FC<EnhancedAuthProviderProps> = ({ chil
   // Initialize authentication state
   React.useEffect(() => {
     console.log('Enhanced Auth: Initializing real authentication');
+    let isInitialized = false;
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -47,7 +48,10 @@ export const EnhancedAuthProvider: React.FC<EnhancedAuthProviderProps> = ({ chil
         console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
-        setIsLoading(false);
+        if (!isInitialized) {
+          setIsLoading(false);
+          isInitialized = true;
+        }
       }
     );
 
@@ -56,7 +60,10 @@ export const EnhancedAuthProvider: React.FC<EnhancedAuthProviderProps> = ({ chil
       console.log('Initial session check:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
-      setIsLoading(false);
+      if (!isInitialized) {
+        setIsLoading(false);
+        isInitialized = true;
+      }
     });
 
     return () => subscription.unsubscribe();
