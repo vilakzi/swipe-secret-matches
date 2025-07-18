@@ -3,6 +3,7 @@ import * as React from 'react';
 import { createContext, useContext, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import toast from 'react-hot-toast';
 
 console.log('EnhancedAuthContext module loading');
 
@@ -11,10 +12,14 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
+  loading: boolean; // Add this for compatibility
   isAuthenticated: boolean;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
-  loading: boolean; // Add this for compatibility
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, displayName: string, userType: 'user' | 'service_provider') => Promise<void>;
+  signInWithProvider: (provider: 'google' | 'github' | 'facebook') => Promise<void>;
+  signInWithMagicLink: (email: string) => Promise<void>;
 }
 
 interface EnhancedAuthProviderProps {
@@ -71,6 +76,7 @@ export const EnhancedAuthProvider: React.FC<EnhancedAuthProviderProps> = ({ chil
       
       if (error) {
         console.error('Google sign in error:', error);
+        toast.error(error.message || 'Failed to sign in with Google');
         throw error;
       }
     } catch (error) {
@@ -88,10 +94,103 @@ export const EnhancedAuthProvider: React.FC<EnhancedAuthProviderProps> = ({ chil
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('Sign out error:', error);
+        toast.error(error.message || 'Failed to sign out');
+        throw error;
+      }
+      toast.success('Signed out successfully');
+    } catch (error) {
+      console.error('Sign out failed:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const signIn = React.useCallback(async (email: string, password: string) => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        toast.error(error.message || 'Failed to sign in');
         throw error;
       }
     } catch (error) {
-      console.error('Sign out failed:', error);
+      console.error('Sign in failed:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const signUp = React.useCallback(async (email: string, password: string, displayName: string, userType: 'user' | 'service_provider') => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            display_name: displayName,
+            user_type: userType,
+          },
+          emailRedirectTo: `${window.location.origin}/`
+        }
+      });
+      
+      if (error) {
+        toast.error(error.message || 'Failed to sign up');
+        throw error;
+      }
+    } catch (error) {
+      console.error('Sign up failed:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const signInWithProvider = React.useCallback(async (provider: 'google' | 'github' | 'facebook') => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/`
+        }
+      });
+      
+      if (error) {
+        toast.error(error.message || `Failed to sign in with ${provider}`);
+        throw error;
+      }
+    } catch (error) {
+      console.error(`${provider} sign in failed:`, error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const signInWithMagicLink = React.useCallback(async (email: string) => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`
+        }
+      });
+      
+      if (error) {
+        toast.error(error.message || 'Failed to send magic link');
+        throw error;
+      }
+    } catch (error) {
+      console.error('Magic link failed:', error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -107,10 +206,14 @@ export const EnhancedAuthProvider: React.FC<EnhancedAuthProviderProps> = ({ chil
       isAuthenticated: !!user,
       signInWithGoogle,
       signOut,
+      signIn,
+      signUp,
+      signInWithProvider,
+      signInWithMagicLink,
     };
     console.log('EnhancedAuth context value:', value);
     return value;
-  }, [user, session, isLoading, signInWithGoogle, signOut]);
+  }, [user, session, isLoading, signInWithGoogle, signOut, signIn, signUp, signInWithProvider, signInWithMagicLink]);
 
   return (
     <EnhancedAuthContext.Provider value={contextValue}>

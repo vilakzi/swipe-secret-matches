@@ -1,10 +1,10 @@
 
 import React from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
 import { Navigate } from 'react-router-dom';
 
 export default function Index() {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, signOut } = useEnhancedAuth();
 
   console.log('Index page - user:', user?.email || 'none', 'loading:', loading);
 
