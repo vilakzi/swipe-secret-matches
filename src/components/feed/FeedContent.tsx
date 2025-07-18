@@ -1,5 +1,5 @@
 
-import * as React from 'react';
+import React from 'react';
 const { useState, useMemo } = React;
 import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
 import { useContentFeed } from '@/hooks/useContentFeed';

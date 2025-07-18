@@ -10,9 +10,7 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
   },
   plugins: [
-    react({
-      jsxImportSource: 'react',
-    }),
+    react(),
     mode === 'development' &&
     componentTagger(),
   ].filter(Boolean),
@@ -21,8 +19,10 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  esbuild: {
-    jsx: 'automatic',
-    jsxImportSource: 'react',
+  optimizeDeps: {
+    include: ['react', 'react-dom'],
+  },
+  define: {
+    'process.env': {},
   },
 }));
