@@ -22,18 +22,22 @@ export default defineConfig(({ mode }) => ({
   },
   optimizeDeps: {
     include: ['react', 'react-dom'],
-    exclude: ['@radix-ui/react-tooltip'], // Explicitly exclude tooltip
-    force: true, // Force complete dependency re-bundling
+    exclude: [
+      '@radix-ui/react-tooltip', 
+      '@radix-ui/react-toast',
+      'sonner' // Also exclude sonner as it might use tooltips
+    ],
+    force: true, 
   },
   define: {
     'process.env': {},
   },
   build: {
     rollupOptions: {
-      external: ['@radix-ui/react-tooltip'] // Exclude from build
+      external: ['@radix-ui/react-tooltip', '@radix-ui/react-toast', 'sonner']
     },
   },
-  // Force complete cache clearing and rebuild
+  // NUCLEAR CACHE CLEARING
   clearScreen: false,
-  cacheDir: '.vite-cache-clean-' + Date.now(), // Use timestamped cache dir to force complete rebuild
+  cacheDir: '.vite-nuclear-clean-' + Date.now() + '-' + Math.random().toString(36),
 }));
