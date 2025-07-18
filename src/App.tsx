@@ -2,6 +2,8 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { EnhancedAuthProvider } from './contexts/EnhancedAuthContext';
+import { ToasterProvider, useToaster } from './components/ui/toaster';
+import { setGlobalToastFunction } from './hooks/use-toast';
 import { useSessionManager } from './hooks/useSessionManager';
 import { clearAppCache } from './utils/cacheManager';
 import Auth from './pages/Auth';
@@ -29,11 +31,25 @@ function App() {
   
   return (
     <ErrorBoundary>
-      <EnhancedAuthProvider>
-        <AppContent />
-      </EnhancedAuthProvider>
+      <ToasterProvider>
+        <ToasterSetup />
+        <EnhancedAuthProvider>
+          <AppContent />
+        </EnhancedAuthProvider>
+      </ToasterProvider>
     </ErrorBoundary>
   );
+}
+
+// Component to set up global toast function
+function ToasterSetup() {
+  const { addToast } = useToaster();
+  
+  useEffect(() => {
+    setGlobalToastFunction(addToast);
+  }, [addToast]);
+  
+  return null;
 }
 
 // Separate component to use session manager within the auth context

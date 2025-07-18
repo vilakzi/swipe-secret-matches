@@ -4,6 +4,8 @@ import { createContext, useContext, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
+console.log('EnhancedAuthContext module loading');
+
 // Type definitions
 interface AuthContextType {
   user: User | null;
@@ -24,6 +26,8 @@ const EnhancedAuthContext = createContext<AuthContextType | null>(null);
 
 // Provider component with real Google OAuth
 export const EnhancedAuthProvider: React.FC<EnhancedAuthProviderProps> = ({ children }) => {
+  console.log('EnhancedAuthProvider rendering');
+  
   const [user, setUser] = React.useState<User | null>(null);
   const [session, setSession] = React.useState<Session | null>(null);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
@@ -94,15 +98,19 @@ export const EnhancedAuthProvider: React.FC<EnhancedAuthProviderProps> = ({ chil
     }
   }, []);
 
-  const contextValue = React.useMemo(() => ({
-    user,
-    session,
-    isLoading,
-    loading: isLoading, // Add this for compatibility
-    isAuthenticated: !!user,
-    signInWithGoogle,
-    signOut,
-  }), [user, session, isLoading, signInWithGoogle, signOut]);
+  const contextValue = React.useMemo(() => {
+    const value = {
+      user,
+      session,
+      isLoading,
+      loading: isLoading, // Add this for compatibility
+      isAuthenticated: !!user,
+      signInWithGoogle,
+      signOut,
+    };
+    console.log('EnhancedAuth context value:', value);
+    return value;
+  }, [user, session, isLoading, signInWithGoogle, signOut]);
 
   return (
     <EnhancedAuthContext.Provider value={contextValue}>
@@ -113,17 +121,23 @@ export const EnhancedAuthProvider: React.FC<EnhancedAuthProviderProps> = ({ chil
 
 // Custom hook with error handling
 export const useEnhancedAuth = (): AuthContextType => {
+  console.log('useEnhancedAuth called');
   const context = useContext(EnhancedAuthContext);
   
   if (!context) {
-    throw new Error(
+    const error = new Error(
       'useEnhancedAuth must be used within an EnhancedAuthProvider. ' +
       'Make sure your component is wrapped with <EnhancedAuthProvider>.'
     );
+    console.error(error);
+    throw error;
   }
   
+  console.log('useEnhancedAuth returning context:', context);
   return context;
 };
 
 // Export context for advanced usage
 export { EnhancedAuthContext };
+
+console.log('EnhancedAuthContext module loaded');

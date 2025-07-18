@@ -1,24 +1,28 @@
 
-import { useState, useCallback } from 'react';
-
 interface ToastProps {
   title: string;
   description?: string;
   variant?: 'default' | 'destructive';
 }
 
+let globalToastFunction: ((toast: ToastProps) => void) | null = null;
+
+export const setGlobalToastFunction = (fn: (toast: ToastProps) => void) => {
+  globalToastFunction = fn;
+};
+
 export const toast = ({ title, description, variant = 'default' }: ToastProps) => {
-  // For now, we'll log to console and could later implement actual toast UI
-  const message = `${title}${description ? ': ' + description : ''}`;
-  
-  if (variant === 'destructive') {
-    console.error('🚨 Error Toast:', message);
+  if (globalToastFunction) {
+    globalToastFunction({ title, description, variant });
   } else {
-    console.log('✅ Success Toast:', message);
+    // Fallback to console
+    const message = `${title}${description ? ': ' + description : ''}`;
+    if (variant === 'destructive') {
+      console.error('🚨 Error Toast:', message);
+    } else {
+      console.log('✅ Success Toast:', message);
+    }
   }
-  
-  // You could implement actual toast notifications here later
-  // For now, this prevents the app from breaking
 };
 
 export const useToast = () => {
