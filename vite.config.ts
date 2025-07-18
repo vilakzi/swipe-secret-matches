@@ -21,24 +21,9 @@ export default defineConfig(({ mode }) => ({
     },
   },
   optimizeDeps: {
-    include: ['react', 'react-dom'],
-    exclude: [
-      '@radix-ui/react-tooltip', 
-      '@radix-ui/react-toast',
-      'sonner',
-      'next-themes'
-    ],
-    force: true, 
+    include: ['react', 'react-dom', '@supabase/supabase-js'],
   },
   define: {
     'process.env': {},
   },
-  build: {
-    rollupOptions: {
-      external: ['@radix-ui/react-tooltip', '@radix-ui/react-toast', 'sonner', 'next-themes']
-    },
-  },
-  // ULTIMATE CACHE CLEARING - forces complete rebuild
-  clearScreen: false,
-  cacheDir: '.vite-ultimate-clean-' + Date.now() + '-' + Math.random() + '-force',
 }));
