@@ -5,13 +5,12 @@ import { EnhancedAuthProvider } from './contexts/EnhancedAuthContext';
 import { useSessionManager } from './hooks/useSessionManager';
 import Auth from './pages/Auth';
 import Index from './pages/Index';
-import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/common/ErrorBoundary';
 
-console.log('🚀 App.tsx loaded with authentication at:', new Date().toISOString());
+console.log('🚀 App.tsx loaded with authentication bypassed at:', new Date().toISOString());
 
 function App() {
-  console.log('🔄 App component rendering with auth structure');
+  console.log('🔄 App component rendering with auth bypassed');
   
   // Initialize session management
   useSessionManager();
@@ -22,14 +21,7 @@ function App() {
         <Router>
           <Routes>
             <Route path="/auth" element={<Auth />} />
-            <Route 
-              path="/" 
-              element={
-                <ProtectedRoute>
-                  <Index />
-                </ProtectedRoute>
-              } 
-            />
+            <Route path="/" element={<Index />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>

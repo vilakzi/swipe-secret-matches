@@ -13,6 +13,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, displayName: string, userType: string) => Promise<void>;
   signOut: () => Promise<void>;
+  loading: boolean; // Add this for compatibility
 }
 
 interface EnhancedAuthProviderProps {
@@ -22,89 +23,87 @@ interface EnhancedAuthProviderProps {
 // Create context with default value
 const EnhancedAuthContext = createContext<AuthContextType | null>(null);
 
-// Provider component with proper session handling
+// Provider component with authentication bypass
 export const EnhancedAuthProvider: React.FC<EnhancedAuthProviderProps> = ({ children }) => {
   const [user, setUser] = React.useState<User | null>(null);
   const [session, setSession] = React.useState<Session | null>(null);
-  const [isLoading, setIsLoading] = React.useState<boolean>(true);
+  const [isLoading, setIsLoading] = React.useState<boolean>(false); // Set to false to bypass loading
 
-  // Initialize auth state
+  // Mock user for bypass mode
+  const mockUser = React.useMemo(() => ({
+    id: 'mock-user-id',
+    email: 'demo@example.com',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    aud: 'authenticated',
+    role: 'authenticated',
+    email_confirmed_at: new Date().toISOString(),
+    phone: null,
+    confirmed_at: new Date().toISOString(),
+    last_sign_in_at: new Date().toISOString(),
+    app_metadata: {},
+    user_metadata: {
+      display_name: 'Demo User'
+    },
+    identities: [],
+    factors: []
+  } as User), []);
+
+  // Initialize with mock authentication for bypass
   React.useEffect(() => {
-    console.log('Enhanced Auth: Initializing auth state');
-    
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Enhanced Auth state changed:', event, session?.user?.email);
-        setSession(session);
-        setUser(session?.user ?? null);
-        setIsLoading(false);
-      }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Enhanced Auth: Initial session check', session?.user?.email);
-      setSession(session);
-      setUser(session?.user ?? null);
-      setIsLoading(false);
-    });
-
-    return () => {
-      console.log('Enhanced Auth: Cleaning up auth listener');
-      subscription.unsubscribe();
-    };
-  }, []);
+    console.log('Enhanced Auth: BYPASS MODE - Setting mock user');
+    setUser(mockUser);
+    setSession({
+      access_token: 'mock-token',
+      refresh_token: 'mock-refresh',
+      expires_in: 3600,
+      expires_at: Date.now() + 3600000,
+      token_type: 'bearer',
+      user: mockUser
+    } as Session);
+    setIsLoading(false);
+  }, [mockUser]);
 
   const signIn = React.useCallback(async (email: string, password: string) => {
-    console.log('Enhanced Auth: Signing in user');
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-
-    if (error) {
-      console.error('Enhanced Auth: Sign in error', error);
-      throw error;
-    }
-  }, []);
+    console.log('Enhanced Auth: BYPASS MODE - Mock sign in');
+    // In bypass mode, just set the mock user
+    setUser(mockUser);
+    setSession({
+      access_token: 'mock-token',
+      refresh_token: 'mock-refresh',
+      expires_in: 3600,
+      expires_at: Date.now() + 3600000,
+      token_type: 'bearer',
+      user: mockUser
+    } as Session);
+  }, [mockUser]);
 
   const signUp = React.useCallback(async (email: string, password: string, displayName: string, userType: string) => {
-    console.log('Enhanced Auth: Signing up user');
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          display_name: displayName,
-          user_type: userType
-        }
-      }
-    });
-
-    if (error) {
-      console.error('Enhanced Auth: Sign up error', error);
-      throw error;
-    }
-  }, []);
+    console.log('Enhanced Auth: BYPASS MODE - Mock sign up');
+    // In bypass mode, just set the mock user
+    setUser(mockUser);
+    setSession({
+      access_token: 'mock-token',
+      refresh_token: 'mock-refresh',
+      expires_in: 3600,
+      expires_at: Date.now() + 3600000,
+      token_type: 'bearer',
+      user: mockUser
+    } as Session);
+  }, [mockUser]);
 
   const signOut = React.useCallback(async () => {
-    console.log('Enhanced Auth: Signing out user');
-    const { error } = await supabase.auth.signOut();
-    
-    if (error) {
-      console.error('Enhanced Auth: Sign out error', error);
-      throw error;
-    }
+    console.log('Enhanced Auth: BYPASS MODE - Mock sign out');
+    // In bypass mode, just clear the mock user
+    setUser(null);
+    setSession(null);
   }, []);
 
   const contextValue = React.useMemo(() => ({
     user,
     session,
     isLoading,
+    loading: isLoading, // Add this for compatibility
     isAuthenticated: !!user,
     signIn,
     signUp,
