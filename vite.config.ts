@@ -22,16 +22,13 @@ export default defineConfig(({ mode }) => ({
   },
   optimizeDeps: {
     include: ['react', 'react-dom'],
-    exclude: ['@radix-ui/react-tooltip'], // Explicitly exclude the problematic package
     force: true, // Force dependency re-bundling
   },
   define: {
     'process.env': {},
   },
   build: {
-    rollupOptions: {
-      external: ['@radix-ui/react-tooltip'], // Ensure it's not bundled
-    },
+    rollupOptions: {},
   },
   // Clear all caches
   clearScreen: false,
