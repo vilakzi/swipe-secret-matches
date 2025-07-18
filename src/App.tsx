@@ -6,7 +6,10 @@ import ErrorBoundary from "@/components/common/ErrorBoundary";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import DebugInfo from "@/components/common/DebugInfo";
 import { EnhancedAuthProvider, useEnhancedAuth } from "@/contexts/EnhancedAuthContext";
+
+console.log('🚀 App.tsx loaded at:', new Date().toISOString());
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,12 +21,25 @@ const queryClient = new QueryClient({
 });
 
 const AppContent = () => {
-  const { user, loading } = useEnhancedAuth();
+  const { user, loading, authError } = useEnhancedAuth();
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center">
-        <LoadingSpinner size="lg" text="Loading..." />
+        <div className="text-center">
+          <LoadingSpinner size="lg" text="Loading..." />
+          {authError && (
+            <div className="mt-4 p-4 bg-yellow-900/50 border border-yellow-600 rounded-lg max-w-md">
+              <p className="text-yellow-200 text-sm">{authError}</p>
+              <button 
+                onClick={() => window.location.reload()} 
+                className="mt-2 px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
@@ -40,12 +56,15 @@ const AppContent = () => {
 };
 
 const App = () => {
+  console.log('🔄 App component rendering at:', new Date().toISOString());
+  
   return (
     <ErrorBoundary>
       <BrowserRouter>
         <QueryClientProvider client={queryClient}>
           <EnhancedAuthProvider>
             <AppContent />
+            <DebugInfo />
             <Toaster />
           </EnhancedAuthProvider>
         </QueryClientProvider>

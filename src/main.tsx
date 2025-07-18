@@ -69,9 +69,19 @@ if (!rootElement) {
   throw new Error('Root element not found');
 }
 
+console.log('🎯 main.tsx: Starting React app render at:', new Date().toISOString());
+console.log('🎯 Root element found:', !!rootElement);
+
 const root = ReactDOM.createRoot(rootElement);
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-);
+
+try {
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
+  );
+  console.log('✅ React app render initiated successfully');
+} catch (error) {
+  console.error('❌ Failed to render React app:', error);
+  throw error;
+}
