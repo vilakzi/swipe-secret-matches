@@ -37,19 +37,20 @@ export const useUserPreferences = () => {
         .from('user_preferences')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle(); // Use maybeSingle instead of single to avoid errors when no data
 
       if (error && error.code !== 'PGRST116') {
-        throw error;
+        console.error('Error fetching preferences:', error);
+        return;
       }
 
       if (data) {
         setPreferences({
-          min_age: data.min_age,
-          max_age: data.max_age,
-          max_distance: data.max_distance,
-          show_me: data.show_me as any,
-          location_enabled: data.location_enabled
+          min_age: data.min_age || 18,
+          max_age: data.max_age || 50,
+          max_distance: data.max_distance || 50,
+          show_me: (data.show_me as any) || 'everyone',
+          location_enabled: data.location_enabled ?? true
         });
       }
     } catch (error: any) {
@@ -72,7 +73,15 @@ export const useUserPreferences = () => {
           updated_at: new Date().toISOString()
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating preferences:', error);
+        toast({
+          title: "Error updating preferences",
+          description: error.message,
+          variant: "destructive"
+        });
+        return;
+      }
 
       setPreferences(updatedPreferences);
       
@@ -81,6 +90,7 @@ export const useUserPreferences = () => {
         description: "Your search preferences have been saved."
       });
     } catch (error: any) {
+      console.error('Error updating preferences:', error);
       toast({
         title: "Error updating preferences",
         description: error.message,

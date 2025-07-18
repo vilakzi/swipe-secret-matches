@@ -6,7 +6,6 @@ const urlsToCache = [
   '/static/css/main.css',
   '/manifest.json',
   '/favicon.ico',
-  // Mobile-optimized assets
   '/offline.html'
 ];
 
@@ -23,20 +22,24 @@ self.addEventListener('install', (event) => {
         console.log('SW: Cache install failed:', error);
       })
   );
-  // Force activation of new service worker
   self.skipWaiting();
 });
 
-// Enhanced fetch with mobile optimizations
+// Enhanced fetch with proper method filtering for caching
 self.addEventListener('fetch', (event) => {
-  // Handle API requests differently on mobile
+  // Only handle GET requests for caching
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
+  // Handle API requests differently
   if (event.request.url.includes('/api/')) {
     event.respondWith(
       caches.open(CACHE_NAME).then(cache => {
         return fetch(event.request)
           .then(response => {
-            // Cache successful API responses for offline use
-            if (response.status === 200) {
+            // Only cache successful GET responses
+            if (response.status === 200 && event.request.method === 'GET') {
               cache.put(event.request, response.clone());
             }
             return response;
@@ -50,7 +53,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle regular requests
+  // Handle regular requests (only GET)
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
@@ -60,8 +63,8 @@ self.addEventListener('fetch', (event) => {
         
         return fetch(event.request)
           .then(response => {
-            // Cache successful responses
-            if (response.status === 200 && response.type === 'basic') {
+            // Cache successful GET responses only
+            if (response.status === 200 && response.type === 'basic' && event.request.method === 'GET') {
               const responseToCache = response.clone();
               caches.open(CACHE_NAME)
                 .then(cache => {
@@ -80,7 +83,7 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Enhanced activate event with mobile considerations
+// Enhanced activate event
 self.addEventListener('activate', (event) => {
   console.log('SW: Activate event');
   event.waitUntil(
@@ -94,19 +97,18 @@ self.addEventListener('activate', (event) => {
         })
       );
     }).then(() => {
-      // Take control of all clients immediately
       return self.clients.claim();
     })
   );
 });
 
-// Enhanced push notifications with mobile-specific features
+// Push notifications
 self.addEventListener('push', (event) => {
   const options = {
     body: event.data ? event.data.text() : 'New notification from Connect',
     icon: '/favicon.ico',
     badge: '/favicon.ico',
-    vibrate: [100, 50, 100, 50, 100], // More complex vibration pattern for mobile
+    vibrate: [100, 50, 100, 50, 100],
     data: {
       dateOfArrival: Date.now(),
       primaryKey: 1
@@ -123,7 +125,7 @@ self.addEventListener('push', (event) => {
         icon: '/favicon.ico'
       }
     ],
-    requireInteraction: true, // Keep notification until user interacts
+    requireInteraction: true,
     silent: false,
     tag: 'connect-notification'
   };
@@ -133,7 +135,7 @@ self.addEventListener('push', (event) => {
   );
 });
 
-// Enhanced notification click handling for mobile
+// Notification click handling
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   
@@ -153,21 +155,19 @@ self.addEventListener('notificationclick', (event) => {
   }
 });
 
-// Background sync for mobile offline actions
+// Background sync
 self.addEventListener('sync', (event) => {
   if (event.tag === 'background-sync') {
     event.waitUntil(
-      // Handle background sync tasks
       Promise.resolve()
     );
   }
 });
 
-// Periodic background sync for mobile
+// Periodic background sync
 self.addEventListener('periodicsync', (event) => {
   if (event.tag === 'content-sync') {
     event.waitUntil(
-      // Sync content in the background
       Promise.resolve()
     );
   }

@@ -36,6 +36,15 @@ class ErrorBoundary extends Component<Props, State> {
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
     }
+
+    // Log additional debugging information
+    if (error.message.includes('length')) {
+      console.error('⚠️ Potential array/string length error - check for undefined data');
+    }
+    
+    if (error.message.includes('Cannot read properties')) {
+      console.error('⚠️ Potential null/undefined object access - add null checks');
+    }
   }
 
   handleRetry = () => {
