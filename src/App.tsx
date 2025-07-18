@@ -46,7 +46,7 @@ const App = () => {
         <QueryClientProvider client={queryClient}>
           <EnhancedAuthProvider>
             <AppContent />
-            <Toaster />
+            {/* <Toaster /> */}
           </EnhancedAuthProvider>
         </QueryClientProvider>
       </BrowserRouter>
