@@ -1,20 +1,32 @@
-import * as React from "react"
-// import * as TooltipPrimitive from "@radix-ui/react-tooltip"
 
+import * as React from "react"
 import { cn } from "@/lib/utils"
 
-// Temporarily disabled to fix React hook violations
-// const TooltipProvider = TooltipPrimitive.Provider
-// const Tooltip = TooltipPrimitive.Root
-// const TooltipTrigger = TooltipPrimitive.Trigger
+// Simple non-hook components to prevent React hook violations
+const TooltipProvider = ({ children }: { children: React.ReactNode }) => {
+  return <>{children}</>
+}
 
-// Simple placeholder components to prevent import errors
-const TooltipProvider = ({ children, ...props }: any) => <>{children}</>
-const Tooltip = ({ children, ...props }: any) => <>{children}</>
-const TooltipTrigger = React.forwardRef<HTMLDivElement, any>(({ children, asChild, ...props }, ref) => {
-  const Comp = asChild ? React.Fragment : "div"
-  return <Comp ref={ref} {...props}>{children}</Comp>
+const Tooltip = ({ children }: { children: React.ReactNode }) => {
+  return <>{children}</>
+}
+
+const TooltipTrigger = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & {
+    asChild?: boolean
+  }
+>(({ children, asChild, ...props }, ref) => {
+  if (asChild) {
+    return <>{children}</>
+  }
+  return (
+    <div ref={ref} {...props}>
+      {children}
+    </div>
+  )
 })
+TooltipTrigger.displayName = "TooltipTrigger"
 
 const TooltipContent = React.forwardRef<
   HTMLDivElement,
