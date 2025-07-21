@@ -1,13 +1,13 @@
 
 import React, { useState, useCallback, memo } from 'react';
 import FeedHeader from './feed/FeedHeader';
-import OptimizedFeedContent from './feed/OptimizedFeedContent';
+import StableFeedContent from './feed/StableFeedContent';
 import PullToRefresh from './feed/PullToRefresh';
-import SmartFeedIndicator from './feed/SmartFeedIndicator';
+import UpdateIndicator from './feed/UpdateIndicator';
 import PWAInstallPrompt from './common/PWAInstallPrompt';
 import OfflineBanner from './common/OfflineBanner';
 import LoadingSpinner from './common/LoadingSpinner';
-import { useOptimizedFeed } from '@/hooks/useOptimizedFeed';
+import { useStableFeed } from '@/hooks/useStableFeed';
 import { usePerformanceOptimizations } from '@/hooks/usePerformanceOptimizations';
 import { toast } from '@/hooks/use-toast';
 
@@ -26,28 +26,33 @@ const InstagramFeedOptimized = memo(({
 }: InstagramFeedOptimizedProps) => {
   const [showFilters, setShowFilters] = useState(false);
   
-  // Use optimized feed hook
+  // Use stable feed hook - user controlled updates only
   const { 
     feedItems, 
     isLoading, 
     hasMore, 
     loadMore, 
-    refresh, 
+    refresh,
+    handleScrollActivity,
+    hasQueuedUpdates,
+    updateQueueCount,
+    applyQueuedUpdates,
+    isUserScrolling,
     totalItems 
-  } = useOptimizedFeed({
+  } = useStableFeed({
     pageSize: 20,
-    enableRealTime: true,
-    cacheTime: 300000
+    enableBackgroundUpdates: true, // Queue updates, don't apply automatically
+    respectUserActivity: true // Respect when user is actively viewing
   });
 
   // Initialize performance optimizations
   usePerformanceOptimizations();
 
   const handlePullRefresh = useCallback(async () => {
-    console.log('🔄 Pull refresh triggered');
+    console.log('🔄 User initiated refresh');
     
     try {
-      refresh();
+      await refresh();
       onRefresh();
       
       toast({
@@ -64,10 +69,33 @@ const InstagramFeedOptimized = memo(({
     }
   }, [refresh, onRefresh]);
 
-  console.log('🚀 OptimizedFeed render:', {
+  const handleApplyUpdates = useCallback(async () => {
+    console.log('🔄 User applying queued updates');
+    
+    try {
+      await applyQueuedUpdates();
+      
+      toast({
+        title: "Updates applied!",
+        description: `${updateQueueCount} new items loaded`,
+      });
+    } catch (error) {
+      console.error('Apply updates error:', error);
+      toast({
+        title: "Update failed",
+        description: "Please try refreshing",
+        variant: "destructive"
+      });
+    }
+  }, [applyQueuedUpdates, updateQueueCount]);
+
+  console.log('🚀 StableFeed render:', {
     totalItems,
     isLoading,
-    hasMore
+    hasMore,
+    hasQueuedUpdates,
+    updateQueueCount,
+    isUserScrolling
   });
 
   // Show loading spinner when loading and no items
@@ -102,15 +130,16 @@ const InstagramFeedOptimized = memo(({
       {/* Offline banner */}
       <OfflineBanner />
       
-      {/* Smart Feed Indicator */}
-      <SmartFeedIndicator
-        queueCount={0}
-        onRefresh={handlePullRefresh}
+      {/* Update indicator for queued updates */}
+      <UpdateIndicator
+        hasUpdates={hasQueuedUpdates}
+        updateCount={updateQueueCount}
+        onApplyUpdates={handleApplyUpdates}
       />
       
       <div className="max-w-md mx-auto">
         <PullToRefresh onRefresh={handlePullRefresh} className="pt-32">
-          <OptimizedFeedContent
+          <StableFeedContent
             feedItems={feedItems}
             likedItems={likedItems}
             isSubscribed={true}
@@ -119,17 +148,18 @@ const InstagramFeedOptimized = memo(({
             hasMore={hasMore}
             loadMore={loadMore}
             isLoading={isLoading}
+            onScrollActivity={handleScrollActivity}
           />
           
           <div className="text-center py-6">
             <div className="text-gray-400 text-sm space-y-1">
               <div className="flex items-center justify-center space-x-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span>Optimized Feed Active</span>
+                <span>Stable Feed Active</span>
               </div>
-              <div>Content: {totalItems}</div>
+              <div>Content: {totalItems} • {hasQueuedUpdates ? `${updateQueueCount} queued` : 'Up to date'}</div>
               <div className="text-xs text-gray-500">
-                High performance • PWA ready • Offline capable
+                User controlled • No auto-refresh • Scroll preserved
               </div>
             </div>
           </div>
