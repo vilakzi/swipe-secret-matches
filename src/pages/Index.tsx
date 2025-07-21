@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Heart, User, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import OnlineStatus from '@/components/OnlineStatus';
-import InstagramFeed from '@/components/InstagramFeed';
+import InstagramFeedOptimized from '@/components/InstagramFeedOptimized';
 import ProfileCompletionPrompt from '@/components/onboarding/ProfileCompletionPrompt';
 import { usePresence } from '@/hooks/usePresence';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -92,11 +92,11 @@ const Index = () => {
       return;
     }
     
-    console.log('🚀 Triggering feed refresh');
+    console.log('🚀 Triggering optimized feed refresh');
     setRefreshKey(prev => prev + 1);
     toast({
       title: "Feed refreshed!",
-      description: "Latest content loaded",
+      description: "Latest content loaded with optimizations",
     });
   }, [user, addError]);
 
@@ -139,7 +139,7 @@ const Index = () => {
               <Heart className="w-8 h-8 text-pink-500" />
               <div>
                 <h1 className="text-2xl font-bold text-white">Connect</h1>
-                <p className="text-xs text-gray-400">Real-time feed</p>
+                <p className="text-xs text-gray-400">Optimized & PWA ready</p>
               </div>
             </div>
             
@@ -178,7 +178,7 @@ const Index = () => {
             </div>
           }
         >
-          <InstagramFeed
+          <InstagramFeedOptimized
             onLike={handleLike}
             onContact={handleContact}
             onRefresh={handleRefresh}
