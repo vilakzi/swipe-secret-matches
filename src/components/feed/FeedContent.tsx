@@ -20,6 +20,7 @@ interface FeedContentProps {
   onContact: (profile: Profile) => void;
   onRefresh?: () => void;
   engagementTracker?: any;
+  onVideoViewing?: (viewing: boolean) => void;
 }
 
 const FeedContent = ({
@@ -29,7 +30,8 @@ const FeedContent = ({
   onLike,
   onContact,
   onRefresh,
-  engagementTracker
+  engagementTracker,
+  onVideoViewing
 }: FeedContentProps) => {
   const [sortOption, setSortOption] = useState<SortOption>('newest');
   const [filterOption, setFilterOption] = useState<FilterOption>('all');
@@ -213,6 +215,7 @@ const FeedContent = ({
         isSubscribed={isSubscribed}
         onLike={onLike}
         onContact={onContact}
+        onVideoViewing={onVideoViewing}
       />
     </div>
   );

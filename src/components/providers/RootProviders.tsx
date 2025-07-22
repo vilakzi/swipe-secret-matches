@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,19 +14,22 @@ interface RootProvidersProps {
 
 const RootProviders = ({ children }: RootProvidersProps) => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <ErrorProvider>
-          <BrowserRouter>
-            <AuthProvider>
-              <SecureApiProvider>
-                {children}
-              </SecureApiProvider>
-            </AuthProvider>
-          </BrowserRouter>
-        </ErrorProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <React.Fragment>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <ErrorProvider>
+            <BrowserRouter>
+              <AuthProvider>
+                <SecureApiProvider>
+                  {children}
+                </SecureApiProvider>
+              </AuthProvider>
+            </BrowserRouter>
+          </ErrorProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </React.Fragment>
   );
 };
+
 export default RootProviders;

@@ -12,7 +12,7 @@ export const usePostFetching = () => {
       setLoading(true);
       setError(null);
       
-      console.log('Fetching posts from database...');
+      console.log('🎯 Fetching posts with content validation...');
       
       const { data: postsData, error } = await supabase
         .from('posts')
@@ -34,6 +34,8 @@ export const usePostFetching = () => {
         `)
         .gt('expires_at', new Date().toISOString())
         .eq('payment_status', 'paid')
+        .not('content_url', 'is', null)
+        .not('content_url', 'eq', '')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -42,20 +44,49 @@ export const usePostFetching = () => {
         return;
       }
 
+      // Filter and validate posts with content - ensure we have real data
+      const validPosts = (postsData || []).filter(post => {
+        const hasValidContent = post.content_url && 
+          post.content_url.trim() !== '' && 
+          !post.content_url.includes('placeholder');
+        
+        const hasValidProfile = post.profiles && 
+          post.profiles.id && 
+          post.profiles.display_name && 
+          post.profiles.display_name.trim() !== '';
+        
+        return hasValidContent && hasValidProfile;
+      });
+
       // Enhanced post processing with admin prioritization
-      const processedPosts = (postsData || []).map(post => {
+      const processedPosts = validPosts.map(post => {
         const role = post.profiles?.role?.toLowerCase() || '';
-        const isAdmin = ['admin'].includes(role);
+        const isAdmin = ['admin', 'superadmin'].includes(role);
         
         return {
           ...post,
           isAdminPost: isAdmin,
           priorityWeight: isAdmin ? 10 : 1,
-          boostFactor: isAdmin ? 3.0 : 1.0
+          boostFactor: isAdmin ? 3.0 : 1.0,
+          // Ensure content URL is valid
+          content_url: post.content_url.startsWith('http') 
+            ? post.content_url 
+            : `${post.content_url}`
         };
       });
 
-      console.log('Processed posts with admin priority:', processedPosts.length);
+      console.log(`✅ Processed ${processedPosts.length} valid posts with real content`);
+      
+      // If we have no posts, let's check what's in the database
+      if (processedPosts.length === 0) {
+        console.log('⚠️ No valid posts found, checking database...');
+        const { data: allPosts } = await supabase
+          .from('posts')
+          .select('id, content_url, payment_status, expires_at')
+          .limit(5);
+        console.log('Raw posts in database:', allPosts);
+      }
+      
       setPosts(processedPosts);
     } catch (error) {
       console.error('Error in fetchPosts:', error);

@@ -49,11 +49,11 @@ const VideoModal = ({ isOpen, onClose, videoSrc, videoPoster }: VideoModalProps)
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
         ref={containerRef}
-        className={`max-w-[95vw] w-fit ${
+        className={`${
           isFullscreen 
-            ? 'h-screen max-h-screen max-w-screen' 
-            : 'h-[90vh] max-h-[90vh]'
-        } bg-black/95 border-gray-700 p-4 flex items-center justify-center`}
+            ? 'w-screen h-screen max-w-none max-h-none p-0' 
+            : 'max-w-[95vw] max-h-[95vh] w-auto h-auto p-2'
+        } bg-black border-none flex items-center justify-center`}
       >
         <div className="relative w-full h-full flex items-center justify-center">
           <ImprovedVideoPlayer
@@ -61,10 +61,10 @@ const VideoModal = ({ isOpen, onClose, videoSrc, videoPoster }: VideoModalProps)
             poster={videoPoster}
             className={`${
               isFullscreen 
-                ? 'max-w-full max-h-full object-contain' 
-                : 'max-w-[85vw] max-h-[80vh] object-contain'
-            }`}
-            autoPlay={false}
+                ? 'w-full h-full max-w-full max-h-full' 
+                : 'w-full h-full max-w-[90vw] max-h-[90vh]'
+            } object-contain`}
+            autoPlay={true}
             controls={true}
             loop={true}
             muted={false}

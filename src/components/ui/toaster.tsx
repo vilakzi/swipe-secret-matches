@@ -10,13 +10,13 @@ import {
 } from "@/components/ui/toast"
 
 /**
- * Custom ToastViewport to show toasts at top center of the screen.
+ * Enhanced ToastViewport with larger, responsive sizing for better visual presence
  */
-function TopCenterToastViewport({ className = "" }) {
+function EnhancedToastViewport({ className = "" }) {
   return (
     <ToastViewport
       className={
-        "fixed top-4 left-1/2 transform -translate-x-1/2 z-[9999] w-full max-w-md px-4 flex flex-col items-center space-y-2 " +
+        "fixed top-4 left-1/2 transform -translate-x-1/2 z-[9999] w-full max-w-sm sm:max-w-xl lg:max-w-2xl px-4 flex flex-col items-center space-y-3 " +
         className
       }
       aria-live="polite"
@@ -36,7 +36,7 @@ export function Toaster() {
           const role = props.variant === "destructive" ? "alert" : "status";
           return (
             <Toast key={id} {...props} role={role} aria-live={role === "alert" ? "assertive" : "polite"}>
-              <div className="grid gap-1" tabIndex={0}>
+              <div className="grid gap-2 flex-1" tabIndex={0}>
                 {title && <ToastTitle>{title}</ToastTitle>}
                 {description && (
                   <ToastDescription>{description}</ToastDescription>
@@ -48,8 +48,8 @@ export function Toaster() {
           )
         })}
       </div>
-      {/* Use the custom viewport so toasts render top center */}
-      <TopCenterToastViewport />
+      {/* Use the enhanced viewport for larger, responsive toasts */}
+      <EnhancedToastViewport />
     </ToastProvider>
   )
 }
