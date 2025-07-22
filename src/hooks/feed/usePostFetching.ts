@@ -12,7 +12,7 @@ export const usePostFetching = () => {
       setLoading(true);
       setError(null);
       
-      console.log('Fetching posts from database...');
+      console.log('🎯 Fetching posts with content validation...');
       
       const { data: postsData, error } = await supabase
         .from('posts')
@@ -34,6 +34,8 @@ export const usePostFetching = () => {
         `)
         .gt('expires_at', new Date().toISOString())
         .eq('payment_status', 'paid')
+        .not('content_url', 'is', null)
+        .not('content_url', 'eq', '')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -42,10 +44,21 @@ export const usePostFetching = () => {
         return;
       }
 
+      // Filter and validate posts with content
+      const validPosts = (postsData || []).filter(post => {
+        const hasValidContent = post.content_url && post.content_url.trim() !== '';
+        const hasValidProfile = post.profiles && 
+          post.profiles.id && 
+          post.profiles.display_name && 
+          post.profiles.display_name.trim() !== '';
+        
+        return hasValidContent && hasValidProfile;
+      });
+
       // Enhanced post processing with admin prioritization
-      const processedPosts = (postsData || []).map(post => {
+      const processedPosts = validPosts.map(post => {
         const role = post.profiles?.role?.toLowerCase() || '';
-        const isAdmin = ['admin'].includes(role);
+        const isAdmin = ['admin', 'superadmin'].includes(role);
         
         return {
           ...post,
@@ -55,7 +68,7 @@ export const usePostFetching = () => {
         };
       });
 
-      console.log('Processed posts with admin priority:', processedPosts.length);
+      console.log(`✅ Processed ${processedPosts.length} valid posts with content`);
       setPosts(processedPosts);
     } catch (error) {
       console.error('Error in fetchPosts:', error);

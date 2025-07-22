@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,7 +13,7 @@ interface StableFeedOptions {
 
 interface UpdateQueue {
   posts: any[];
-  profiles: any[]; // Keep for compatibility but unused
+  profiles: any[];
   timestamp: number;
 }
 
@@ -30,7 +31,7 @@ export const useStableFeed = (options: StableFeedOptions = {}) => {
   // Track user scrolling activity
   const handleScrollActivity = useCallback(() => {
     setIsUserScrolling(true);
-    setHasQueuedUpdates(false); // Hide update indicator while scrolling
+    setHasQueuedUpdates(false);
     
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
@@ -38,17 +39,14 @@ export const useStableFeed = (options: StableFeedOptions = {}) => {
     
     scrollTimeoutRef.current = setTimeout(() => {
       setIsUserScrolling(false);
-    }, 2000); // Consider user inactive after 2 seconds of no scrolling
+    }, 2000);
   }, []);
 
-  // REMOVED: No longer fetching standalone profiles
-  // Only show users who have posted content
-  const profiles: any[] = [];
-
-  // Stable posts query - no auto invalidation
+  // Fetch posts with content
   const { data: posts = [], isLoading: postsLoading } = useQuery({
     queryKey: ['stable-posts', currentPage],
     queryFn: async () => {
+      console.log('🎯 Fetching posts with content...');
       const { data, error } = await supabase
         .from('posts')
         .select(`
@@ -66,18 +64,45 @@ export const useStableFeed = (options: StableFeedOptions = {}) => {
       if (error) throw error;
       return data || [];
     },
-    staleTime: Infinity, // Never auto-refetch
-    gcTime: 1000 * 60 * 30, // 30 minutes cache
+    staleTime: Infinity,
+    gcTime: 1000 * 60 * 30,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
   });
 
-  // Create optimized feed items - ONLY posts with content
+  // Fetch profiles with content (images) - only if we don't have enough posts
+  const { data: profiles = [], isLoading: profilesLoading } = useQuery({
+    queryKey: ['stable-profiles', currentPage],
+    queryFn: async () => {
+      console.log('🎯 Fetching profiles with images...');
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('is_blocked', false)
+        .not('profile_image_url', 'is', null)
+        .not('profile_image_url', 'eq', '')
+        .not('display_name', 'is', null)
+        .not('display_name', 'eq', '')
+        .order('created_at', { ascending: false })
+        .range(0, Math.max(10, pageSize - posts.length)); // Fill gaps if posts are few
+
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: Infinity,
+    gcTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    enabled: posts.length < 5, // Only fetch profiles if we have few posts
+  });
+
+  // Create balanced feed items
   const feedItems = useMemo(() => {
-    console.log('🔧 Creating optimized feed items - POSTS ONLY');
+    console.log('🔧 Creating balanced feed with posts and profiles');
     
-    // Filter posts to ensure they have valid content and profiles
+    // Process posts - only those with valid content and profiles
     const validPosts = posts.filter(post => 
       post && 
       post.id && 
@@ -89,9 +114,10 @@ export const useStableFeed = (options: StableFeedOptions = {}) => {
 
     const postItems: FeedItem[] = validPosts.map(post => {
       const isVideo = post.content_url.includes('.mp4') || post.content_url.includes('.mov') || post.content_url.includes('.webm');
+      const isAdmin = post.profiles?.role === 'admin' || post.profiles?.role === 'superadmin';
       
       return {
-        id: `post-${post.id}`, // Stable key prefix
+        id: `post-${post.id}`,
         type: 'post' as const,
         profile: {
           id: post.profiles.id,
@@ -118,17 +144,53 @@ export const useStableFeed = (options: StableFeedOptions = {}) => {
         createdAt: post.created_at,
         isVideo,
         videoDuration: post.video_duration,
-        videoThumbnail: post.video_thumbnail
+        videoThumbnail: post.video_thumbnail,
+        isAdminPost: isAdmin
       };
     });
 
-    // Prioritize admin posts and stable sorting
-    const adminPosts = postItems.filter(item => item.profile.role === 'admin');
-    const regularPosts = postItems.filter(item => item.profile.role !== 'admin');
+    // Process profiles - only those with images and valid names
+    const validProfiles = profiles.filter(profile => 
+      profile && 
+      profile.id && 
+      profile.display_name && 
+      profile.display_name.trim() !== '' &&
+      profile.profile_image_url && 
+      profile.profile_image_url.trim() !== ''
+    );
+
+    const profileItems: FeedItem[] = validProfiles.map(profile => ({
+      id: `profile-${profile.id}`,
+      type: 'profile' as const,
+      profile: {
+        id: profile.id,
+        name: profile.display_name,
+        age: profile.age || 25,
+        image: profile.profile_image_url,
+        bio: profile.bio || '',
+        whatsapp: profile.whatsapp || '',
+        location: profile.location || 'Unknown',
+        gender: (profile.gender === 'male' || profile.gender === 'female') ? profile.gender : 'male',
+        userType: profile.user_type || 'user',
+        role: profile.role || 'user',
+        isRealAccount: true,
+        verifications: profile.verifications || {
+          phoneVerified: false,
+          emailVerified: true,
+          photoVerified: false,
+          locationVerified: false,
+          premiumUser: false
+        }
+      }
+    }));
+
+    // Combine and organize feed items
+    const adminPosts = postItems.filter(item => item.isAdminPost);
+    const regularPosts = postItems.filter(item => !item.isAdminPost);
     
-    // Deterministic shuffling for stable feed
+    // Deterministic shuffling for stability
     const seed = user?.id ? user.id.charCodeAt(0) : 42;
-    const shuffledRegular = regularPosts.sort((a, b) => {
+    const shuffledRegular = [...regularPosts, ...profileItems].sort((a, b) => {
       const aHash = a.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), seed);
       const bHash = b.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), seed);
       return aHash - bHash;
@@ -136,91 +198,96 @@ export const useStableFeed = (options: StableFeedOptions = {}) => {
 
     const finalItems = [...adminPosts, ...shuffledRegular];
     
-    console.log(`✅ Optimized feed: ${finalItems.length} posts (${adminPosts.length} admin, ${regularPosts.length} regular) - NO EMPTY PROFILES`);
+    console.log(`✅ Balanced feed: ${finalItems.length} items (${postItems.length} posts, ${profileItems.length} profiles)`);
     return finalItems;
-  }, [posts, user?.id]);
+  }, [posts, profiles, user?.id]);
 
-  // Background update monitoring (only when enabled)
+  // Background update monitoring
   useEffect(() => {
     if (!enableBackgroundUpdates) return;
 
-    let updateChannel: any;
-    
-    const setupBackgroundUpdates = () => {
-      updateChannel = supabase
-        .channel('background-feed-updates')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'posts'
-        }, (payload) => {
-          if (!isUserScrolling || !respectUserActivity) {
-            console.log('📦 Queuing post update:', payload);
-            setUpdateQueue(prev => ({
-              ...prev,
-              posts: [...prev.posts, payload],
-              timestamp: Date.now()
-            }));
-            setHasQueuedUpdates(true);
-          }
-        })
-        // Removed profile monitoring - only tracking posts now
-        .subscribe();
-    };
-
-    setupBackgroundUpdates();
+    const channel = supabase
+      .channel('background-feed-updates')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'posts'
+      }, (payload) => {
+        if (!isUserScrolling || !respectUserActivity) {
+          console.log('📦 Queuing post update:', payload);
+          setUpdateQueue(prev => ({
+            ...prev,
+            posts: [...prev.posts, payload],
+            timestamp: Date.now()
+          }));
+          setHasQueuedUpdates(true);
+        }
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'profiles'
+      }, (payload) => {
+        if (!isUserScrolling || !respectUserActivity) {
+          console.log('📦 Queuing profile update:', payload);
+          setUpdateQueue(prev => ({
+            ...prev,
+            profiles: [...prev.profiles, payload],
+            timestamp: Date.now()
+          }));
+          setHasQueuedUpdates(true);
+        }
+      })
+      .subscribe();
 
     return () => {
-      if (updateChannel) {
-        supabase.removeChannel(updateChannel);
-      }
+      supabase.removeChannel(channel);
     };
   }, [enableBackgroundUpdates, isUserScrolling, respectUserActivity]);
 
-  // Manual refresh - user controlled only
+  // Manual refresh
   const refresh = useCallback(async () => {
     console.log('🔄 Manual refresh initiated');
     
-    // Clear update queue
     setUpdateQueue({ posts: [], profiles: [], timestamp: Date.now() });
     setHasQueuedUpdates(false);
-    
-    // Reset pagination
     setCurrentPage(0);
     
-    // Manually invalidate posts query only
     await queryClient.invalidateQueries({ queryKey: ['stable-posts'] });
+    await queryClient.invalidateQueries({ queryKey: ['stable-profiles'] });
     
     console.log('✅ Manual refresh completed');
   }, [queryClient]);
 
-  // Load more - controlled pagination
+  // Load more
   const loadMore = useCallback(() => {
-    if (!isUserScrolling) { // Only load more when user is not actively scrolling
+    if (!isUserScrolling) {
       setCurrentPage(prev => prev + 1);
     }
   }, [isUserScrolling]);
 
-  // Apply queued updates - user controlled
+  // Apply queued updates
   const applyQueuedUpdates = useCallback(async () => {
     console.log('🔄 Applying queued updates');
     
     setUpdateQueue({ posts: [], profiles: [], timestamp: Date.now() });
     setHasQueuedUpdates(false);
     
-    // Only invalidate posts since we removed profiles
     await queryClient.invalidateQueries({ queryKey: ['stable-posts'] });
+    await queryClient.invalidateQueries({ queryKey: ['stable-profiles'] });
   }, [queryClient]);
+
+  const isLoading = postsLoading || profilesLoading;
 
   return {
     feedItems,
-    isLoading: postsLoading,
+    isLoading,
     hasMore: posts.length === pageSize,
     loadMore,
     refresh,
     handleScrollActivity,
     hasQueuedUpdates,
-    updateQueueCount: updateQueue.posts.length,
+    updateQueueCount: updateQueue.posts.length + updateQueue.profiles.length,
     applyQueuedUpdates,
     isUserScrolling,
     totalItems: feedItems.length
