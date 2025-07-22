@@ -42,7 +42,7 @@ export const useStableFeed = (options: StableFeedOptions = {}) => {
     }, 2000);
   }, []);
 
-  // Fetch posts with content
+  // Fetch posts with content - only valid posts
   const { data: posts = [], isLoading: postsLoading } = useQuery({
     queryKey: ['stable-posts', currentPage],
     queryFn: async () => {
@@ -58,49 +58,76 @@ export const useStableFeed = (options: StableFeedOptions = {}) => {
         `)
         .gt('expires_at', new Date().toISOString())
         .eq('payment_status', 'paid')
+        .not('content_url', 'is', null)
+        .not('content_url', 'eq', '')
         .order('created_at', { ascending: false })
-        .range(currentPage * pageSize, (currentPage + 1) * pageSize - 1);
+        .limit(pageSize);
 
-      if (error) throw error;
-      return data || [];
+      if (error) {
+        console.error('Error fetching posts:', error);
+        throw error;
+      }
+
+      // Filter out posts without valid profiles or content
+      const validPosts = (data || []).filter(post => {
+        const hasValidContent = post.content_url && post.content_url.trim() !== '';
+        const hasValidProfile = post.profiles && 
+          post.profiles.id && 
+          post.profiles.display_name && 
+          post.profiles.display_name.trim() !== '';
+        
+        return hasValidContent && hasValidProfile;
+      });
+
+      console.log(`✅ Fetched ${validPosts.length} valid posts with content`);
+      return validPosts;
     },
-    staleTime: Infinity,
+    staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 30,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
   });
 
-  // Fetch profiles with content (images) - only if we don't have enough posts
+  // Fetch admin profiles with content - ONLY admin/superadmin accounts
   const { data: profiles = [], isLoading: profilesLoading } = useQuery({
-    queryKey: ['stable-profiles', currentPage],
+    queryKey: ['stable-admin-profiles'],
     queryFn: async () => {
-      console.log('🎯 Fetching profiles with images...');
+      console.log('🎯 Fetching admin profiles with images...');
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
+        .in('role', ['admin', 'superadmin']) // Only admin accounts
         .eq('is_blocked', false)
         .not('profile_image_url', 'is', null)
         .not('profile_image_url', 'eq', '')
         .not('display_name', 'is', null)
         .not('display_name', 'eq', '')
         .order('created_at', { ascending: false })
-        .range(0, Math.max(10, pageSize - posts.length)); // Fill gaps if posts are few
+        .limit(10);
 
-      if (error) throw error;
-      return data || [];
+      if (error) {
+        console.error('Error fetching admin profiles:', error);
+        throw error;
+      }
+
+      const validProfiles = (data || []).filter(profile => 
+        profile && 
+        profile.id && 
+        profile.display_name && 
+        profile.display_name.trim() !== '' &&
+        profile.profile_image_url && 
+        profile.profile_image_url.trim() !== '' &&
+        ['admin', 'superadmin'].includes(profile.role)
+      );
+
+      console.log(`✅ Fetched ${validProfiles.length} valid admin profiles`);
+      return validProfiles;
     },
-    staleTime: Infinity,
+    staleTime: 1000 * 60 * 10, // 10 minutes
     gcTime: 1000 * 60 * 30,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
-    enabled: posts.length < 5, // Only fetch profiles if we have few posts
   });
 
-  // Create balanced feed items
+  // Create balanced feed items with admin prioritization
   const feedItems = useMemo(() => {
-    console.log('🔧 Creating balanced feed with posts and profiles');
+    console.log('🔧 Creating balanced feed with posts and admin profiles');
     
     // Process posts - only those with valid content and profiles
     const validPosts = posts.filter(post => 
@@ -113,8 +140,10 @@ export const useStableFeed = (options: StableFeedOptions = {}) => {
     );
 
     const postItems: FeedItem[] = validPosts.map(post => {
-      const isVideo = post.content_url.includes('.mp4') || post.content_url.includes('.mov') || post.content_url.includes('.webm');
-      const isAdmin = post.profiles?.role === 'admin' || post.profiles?.role === 'superadmin';
+      const isVideo = post.content_url.includes('.mp4') || 
+                     post.content_url.includes('.mov') || 
+                     post.content_url.includes('.webm');
+      const isAdmin = ['admin', 'superadmin'].includes(post.profiles?.role);
       
       return {
         id: `post-${post.id}`,
@@ -149,17 +178,8 @@ export const useStableFeed = (options: StableFeedOptions = {}) => {
       };
     });
 
-    // Process profiles - only those with images and valid names
-    const validProfiles = profiles.filter(profile => 
-      profile && 
-      profile.id && 
-      profile.display_name && 
-      profile.display_name.trim() !== '' &&
-      profile.profile_image_url && 
-      profile.profile_image_url.trim() !== ''
-    );
-
-    const profileItems: FeedItem[] = validProfiles.map(profile => ({
+    // Process admin profiles - only admin/superadmin accounts
+    const adminProfileItems: FeedItem[] = profiles.map(profile => ({
       id: `profile-${profile.id}`,
       type: 'profile' as const,
       profile: {
@@ -171,36 +191,29 @@ export const useStableFeed = (options: StableFeedOptions = {}) => {
         whatsapp: profile.whatsapp || '',
         location: profile.location || 'Unknown',
         gender: (profile.gender === 'male' || profile.gender === 'female') ? profile.gender : 'male',
-        userType: profile.user_type || 'user',
-        role: profile.role || 'user',
+        userType: profile.user_type || 'admin',
+        role: profile.role || 'admin',
         isRealAccount: true,
         verifications: profile.verifications || {
-          phoneVerified: false,
+          phoneVerified: true,
           emailVerified: true,
-          photoVerified: false,
-          locationVerified: false,
-          premiumUser: false
+          photoVerified: true,
+          locationVerified: true,
+          premiumUser: true
         }
       }
     }));
 
-    // Combine and organize feed items
+    // Combine admin posts first, then regular posts, then admin profiles
     const adminPosts = postItems.filter(item => item.isAdminPost);
     const regularPosts = postItems.filter(item => !item.isAdminPost);
     
-    // Deterministic shuffling for stability
-    const seed = user?.id ? user.id.charCodeAt(0) : 42;
-    const shuffledRegular = [...regularPosts, ...profileItems].sort((a, b) => {
-      const aHash = a.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), seed);
-      const bHash = b.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), seed);
-      return aHash - bHash;
-    });
-
-    const finalItems = [...adminPosts, ...shuffledRegular];
+    // Prioritize admin content
+    const finalItems = [...adminPosts, ...adminProfileItems, ...regularPosts];
     
-    console.log(`✅ Balanced feed: ${finalItems.length} items (${postItems.length} posts, ${profileItems.length} profiles)`);
+    console.log(`✅ Balanced feed: ${finalItems.length} items (${postItems.length} posts, ${adminProfileItems.length} admin profiles)`);
     return finalItems;
-  }, [posts, profiles, user?.id]);
+  }, [posts, profiles]);
 
   // Background update monitoring
   useEffect(() => {
@@ -254,7 +267,7 @@ export const useStableFeed = (options: StableFeedOptions = {}) => {
     setCurrentPage(0);
     
     await queryClient.invalidateQueries({ queryKey: ['stable-posts'] });
-    await queryClient.invalidateQueries({ queryKey: ['stable-profiles'] });
+    await queryClient.invalidateQueries({ queryKey: ['stable-admin-profiles'] });
     
     console.log('✅ Manual refresh completed');
   }, [queryClient]);
@@ -274,7 +287,7 @@ export const useStableFeed = (options: StableFeedOptions = {}) => {
     setHasQueuedUpdates(false);
     
     await queryClient.invalidateQueries({ queryKey: ['stable-posts'] });
-    await queryClient.invalidateQueries({ queryKey: ['stable-profiles'] });
+    await queryClient.invalidateQueries({ queryKey: ['stable-admin-profiles'] });
   }, [queryClient]);
 
   const isLoading = postsLoading || profilesLoading;

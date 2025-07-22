@@ -44,9 +44,12 @@ export const usePostFetching = () => {
         return;
       }
 
-      // Filter and validate posts with content
+      // Filter and validate posts with content - ensure we have real data
       const validPosts = (postsData || []).filter(post => {
-        const hasValidContent = post.content_url && post.content_url.trim() !== '';
+        const hasValidContent = post.content_url && 
+          post.content_url.trim() !== '' && 
+          !post.content_url.includes('placeholder');
+        
         const hasValidProfile = post.profiles && 
           post.profiles.id && 
           post.profiles.display_name && 
@@ -64,11 +67,26 @@ export const usePostFetching = () => {
           ...post,
           isAdminPost: isAdmin,
           priorityWeight: isAdmin ? 10 : 1,
-          boostFactor: isAdmin ? 3.0 : 1.0
+          boostFactor: isAdmin ? 3.0 : 1.0,
+          // Ensure content URL is valid
+          content_url: post.content_url.startsWith('http') 
+            ? post.content_url 
+            : `${post.content_url}`
         };
       });
 
-      console.log(`✅ Processed ${processedPosts.length} valid posts with content`);
+      console.log(`✅ Processed ${processedPosts.length} valid posts with real content`);
+      
+      // If we have no posts, let's check what's in the database
+      if (processedPosts.length === 0) {
+        console.log('⚠️ No valid posts found, checking database...');
+        const { data: allPosts } = await supabase
+          .from('posts')
+          .select('id, content_url, payment_status, expires_at')
+          .limit(5);
+        console.log('Raw posts in database:', allPosts);
+      }
+      
       setPosts(processedPosts);
     } catch (error) {
       console.error('Error in fetchPosts:', error);
