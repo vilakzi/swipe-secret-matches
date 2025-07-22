@@ -12,7 +12,7 @@ interface StableFeedOptions {
 
 interface UpdateQueue {
   posts: any[];
-  profiles: any[];
+  profiles: any[]; // Keep for compatibility but unused
   timestamp: number;
 }
 
@@ -41,25 +41,9 @@ export const useStableFeed = (options: StableFeedOptions = {}) => {
     }, 2000); // Consider user inactive after 2 seconds of no scrolling
   }, []);
 
-  // Stable profiles query - no auto invalidation
-  const { data: profiles = [], isLoading: profilesLoading } = useQuery({
-    queryKey: ['stable-profiles'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('is_blocked', false)
-        .limit(100);
-
-      if (error) throw error;
-      return data || [];
-    },
-    staleTime: Infinity, // Never auto-refetch
-    gcTime: 1000 * 60 * 30, // 30 minutes cache
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
-  });
+  // REMOVED: No longer fetching standalone profiles
+  // Only show users who have posted content
+  const profiles: any[] = [];
 
   // Stable posts query - no auto invalidation
   const { data: posts = [], isLoading: postsLoading } = useQuery({
@@ -89,73 +73,72 @@ export const useStableFeed = (options: StableFeedOptions = {}) => {
     refetchOnReconnect: false,
   });
 
-  // Create stable feed items with preserved keys
+  // Create optimized feed items - ONLY posts with content
   const feedItems = useMemo(() => {
-    console.log('🔧 Creating stable feed items');
+    console.log('🔧 Creating optimized feed items - POSTS ONLY');
     
-    const profileItems: FeedItem[] = profiles.map(profile => ({
-      id: `profile-${profile.id}`, // Stable key prefix
-      type: 'profile' as const,
-      profile: {
-        id: profile.id,
-        name: profile.display_name || 'Unknown',
-        age: profile.age || 25,
-        image: profile.profile_image_url || '/placeholder.svg',
-        bio: profile.bio || '',
-        whatsapp: profile.whatsapp || '',
-        location: profile.location || 'Unknown',
-        gender: (profile.gender === 'male' || profile.gender === 'female') ? profile.gender : 'male',
-        userType: profile.user_type || 'user',
-        role: profile.role || 'user',
-        isRealAccount: true,
-        verifications: profile.verifications || {
-          phoneVerified: false,
-          emailVerified: true,
-          photoVerified: false,
-          locationVerified: false,
-          premiumUser: false
-        }
-      }
-    }));
+    // Filter posts to ensure they have valid content and profiles
+    const validPosts = posts.filter(post => 
+      post && 
+      post.id && 
+      post.content_url && 
+      post.profiles?.id && 
+      post.profiles?.display_name && 
+      post.profiles.display_name.trim() !== ''
+    );
 
-    const postItems: FeedItem[] = posts.map(post => ({
-      id: `post-${post.id}`, // Stable key prefix
-      type: 'post' as const,
-      profile: {
-        id: post.profiles?.id || 'unknown',
-        name: post.profiles?.display_name || 'Anonymous',
-        age: post.profiles?.age || 25,
-        image: post.profiles?.profile_image_url || '/placeholder.svg',
-        bio: post.profiles?.bio || '',
-        whatsapp: post.profiles?.whatsapp || '',
-        location: post.profiles?.location || 'Unknown',
-        gender: (post.profiles?.gender === 'male' || post.profiles?.gender === 'female') ? post.profiles.gender : 'male',
-        userType: post.profiles?.user_type || 'user',
-        role: post.profiles?.role || 'user',
-        isRealAccount: true,
-        verifications: post.profiles?.verifications || {
-          phoneVerified: false,
-          emailVerified: true,
-          photoVerified: false,
-          locationVerified: false,
-          premiumUser: false
-        }
-      },
-      postImage: post.content_url,
-      caption: post.caption || '',
-      createdAt: post.created_at
-    }));
+    const postItems: FeedItem[] = validPosts.map(post => {
+      const isVideo = post.content_url.includes('.mp4') || post.content_url.includes('.mov') || post.content_url.includes('.webm');
+      
+      return {
+        id: `post-${post.id}`, // Stable key prefix
+        type: 'post' as const,
+        profile: {
+          id: post.profiles.id,
+          name: post.profiles.display_name,
+          age: post.profiles.age || 25,
+          image: post.profiles.profile_image_url || '/placeholder.svg',
+          bio: post.profiles.bio || '',
+          whatsapp: post.profiles.whatsapp || '',
+          location: post.profiles.location || 'Unknown',
+          gender: (post.profiles.gender === 'male' || post.profiles.gender === 'female') ? post.profiles.gender : 'male',
+          userType: post.profiles.user_type || 'user',
+          role: post.profiles.role || 'user',
+          isRealAccount: true,
+          verifications: post.profiles.verifications || {
+            phoneVerified: false,
+            emailVerified: true,
+            photoVerified: false,
+            locationVerified: false,
+            premiumUser: false
+          }
+        },
+        postImage: post.content_url,
+        caption: post.caption || '',
+        createdAt: post.created_at,
+        isVideo,
+        videoDuration: post.video_duration,
+        videoThumbnail: post.video_thumbnail
+      };
+    });
 
-    // Stable shuffling with deterministic seed based on user ID
-    const allItems = [...postItems, ...profileItems];
+    // Prioritize admin posts and stable sorting
+    const adminPosts = postItems.filter(item => item.profile.role === 'admin');
+    const regularPosts = postItems.filter(item => item.profile.role !== 'admin');
+    
+    // Deterministic shuffling for stable feed
     const seed = user?.id ? user.id.charCodeAt(0) : 42;
-    
-    return allItems.sort((a, b) => {
+    const shuffledRegular = regularPosts.sort((a, b) => {
       const aHash = a.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), seed);
       const bHash = b.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), seed);
       return aHash - bHash;
     });
-  }, [profiles, posts, user?.id]);
+
+    const finalItems = [...adminPosts, ...shuffledRegular];
+    
+    console.log(`✅ Optimized feed: ${finalItems.length} posts (${adminPosts.length} admin, ${regularPosts.length} regular) - NO EMPTY PROFILES`);
+    return finalItems;
+  }, [posts, user?.id]);
 
   // Background update monitoring (only when enabled)
   useEffect(() => {
@@ -181,21 +164,7 @@ export const useStableFeed = (options: StableFeedOptions = {}) => {
             setHasQueuedUpdates(true);
           }
         })
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'profiles'
-        }, (payload) => {
-          if (!isUserScrolling || !respectUserActivity) {
-            console.log('📦 Queuing profile update:', payload);
-            setUpdateQueue(prev => ({
-              ...prev,
-              profiles: [...prev.profiles, payload],
-              timestamp: Date.now()
-            }));
-            setHasQueuedUpdates(true);
-          }
-        })
+        // Removed profile monitoring - only tracking posts now
         .subscribe();
     };
 
@@ -219,8 +188,7 @@ export const useStableFeed = (options: StableFeedOptions = {}) => {
     // Reset pagination
     setCurrentPage(0);
     
-    // Manually invalidate queries
-    await queryClient.invalidateQueries({ queryKey: ['stable-profiles'] });
+    // Manually invalidate posts query only
     await queryClient.invalidateQueries({ queryKey: ['stable-posts'] });
     
     console.log('✅ Manual refresh completed');
@@ -240,19 +208,19 @@ export const useStableFeed = (options: StableFeedOptions = {}) => {
     setUpdateQueue({ posts: [], profiles: [], timestamp: Date.now() });
     setHasQueuedUpdates(false);
     
-    await queryClient.invalidateQueries({ queryKey: ['stable-profiles'] });
+    // Only invalidate posts since we removed profiles
     await queryClient.invalidateQueries({ queryKey: ['stable-posts'] });
   }, [queryClient]);
 
   return {
     feedItems,
-    isLoading: profilesLoading || postsLoading,
+    isLoading: postsLoading,
     hasMore: posts.length === pageSize,
     loadMore,
     refresh,
     handleScrollActivity,
     hasQueuedUpdates,
-    updateQueueCount: updateQueue.posts.length + updateQueue.profiles.length,
+    updateQueueCount: updateQueue.posts.length,
     applyQueuedUpdates,
     isUserScrolling,
     totalItems: feedItems.length
