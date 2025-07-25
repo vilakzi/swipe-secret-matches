@@ -1,8 +1,8 @@
 
 import { QueryClient } from "@tanstack/react-query";
 
-// Create optimized query client with performance settings
-const createQueryClient = () => new QueryClient({
+// Create a single stable query client instance
+export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
@@ -13,7 +13,3 @@ const createQueryClient = () => new QueryClient({
     },
   },
 });
-
-// Export both the factory function and instance
-export { createQueryClient };
-export const queryClient = createQueryClient();
