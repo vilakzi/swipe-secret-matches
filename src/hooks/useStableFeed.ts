@@ -94,7 +94,7 @@ export const useStableFeed = (options: StableFeedOptions = {}) => {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .in('role', ['admin', 'superadmin']) // Only admin accounts
+        .eq('role', 'admin') // Only admin accounts
         .eq('is_blocked', false)
         .not('profile_image_url', 'is', null)
         .not('profile_image_url', 'eq', '')
@@ -115,7 +115,7 @@ export const useStableFeed = (options: StableFeedOptions = {}) => {
         profile.display_name.trim() !== '' &&
         profile.profile_image_url && 
         profile.profile_image_url.trim() !== '' &&
-        ['admin', 'superadmin'].includes(profile.role)
+        profile.role === 'admin'
       );
 
       console.log(`✅ Fetched ${validProfiles.length} valid admin profiles`);
@@ -143,7 +143,7 @@ export const useStableFeed = (options: StableFeedOptions = {}) => {
       const isVideo = post.content_url.includes('.mp4') || 
                      post.content_url.includes('.mov') || 
                      post.content_url.includes('.webm');
-      const isAdmin = ['admin', 'superadmin'].includes(post.profiles?.role);
+      const isAdmin = post.profiles?.role === 'admin';
       
       return {
         id: `post-${post.id}`,
