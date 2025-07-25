@@ -42,20 +42,16 @@ export const useStableFeed = (options: StableFeedOptions = {}) => {
     }, 2000);
   }, []);
 
-  // Fetch posts with content - only valid posts
+  // Fetch posts with content - simplified query
   const { data: posts = [], isLoading: postsLoading } = useQuery({
     queryKey: ['stable-posts', currentPage],
     queryFn: async () => {
-      console.log('🎯 Fetching posts with content...');
-      const { data, error } = await supabase
+      console.log('🎯 Fetching posts with simplified query...');
+      
+      // First get posts
+      const { data: postsData, error: postsError } = await supabase
         .from('posts')
-        .select(`
-          *,
-          profiles!posts_provider_id_fkey(
-            id, display_name, profile_image_url, location,
-            user_type, age, bio, whatsapp, gender, role, verifications
-          )
-        `)
+        .select('*')
         .gt('expires_at', new Date().toISOString())
         .eq('payment_status', 'paid')
         .not('content_url', 'is', null)
@@ -63,23 +59,42 @@ export const useStableFeed = (options: StableFeedOptions = {}) => {
         .order('created_at', { ascending: false })
         .limit(pageSize);
 
-      if (error) {
-        console.error('Error fetching posts:', error);
-        throw error;
+      if (postsError) {
+        console.error('Error fetching posts:', postsError);
+        throw postsError;
       }
 
-      // Filter out posts without valid profiles or content
-      const validPosts = (data || []).filter(post => {
-        const hasValidContent = post.content_url && post.content_url.trim() !== '';
-        const hasValidProfile = post.profiles && 
-          post.profiles.id && 
-          post.profiles.display_name && 
-          post.profiles.display_name.trim() !== '';
-        
-        return hasValidContent && hasValidProfile;
-      });
+      console.log(`✅ Raw posts fetched: ${postsData?.length || 0}`);
 
-      console.log(`✅ Fetched ${validPosts.length} valid posts with content`);
+      // Get unique provider IDs
+      const providerIds = [...new Set(postsData?.map(p => p.provider_id).filter(Boolean) || [])];
+      
+      let profilesData: any[] = [];
+      if (providerIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('*')
+          .in('id', providerIds);
+        
+        if (!profilesError && profiles) {
+          profilesData = profiles;
+          console.log(`✅ Profiles fetched: ${profiles.length}`);
+        }
+      }
+
+      // Combine posts with profiles
+      const postsWithProfiles = (postsData || []).map(post => ({
+        ...post,
+        profiles: profilesData.find(p => p.id === post.provider_id)
+      }));
+
+      // Simple validation - just ensure content exists
+      const validPosts = postsWithProfiles.filter(post => 
+        post.content_url && 
+        post.content_url.trim() !== ''
+      );
+
+      console.log(`✅ Valid posts with content: ${validPosts.length}`);
       return validPosts;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -129,14 +144,12 @@ export const useStableFeed = (options: StableFeedOptions = {}) => {
   const feedItems = useMemo(() => {
     console.log('🔧 Creating balanced feed with posts and admin profiles');
     
-    // Process posts - only those with valid content and profiles
+    // Process posts - simpler validation
     const validPosts = posts.filter(post => 
       post && 
       post.id && 
       post.content_url && 
-      post.profiles?.id && 
-      post.profiles?.display_name && 
-      post.profiles.display_name.trim() !== ''
+      post.content_url.trim() !== ''
     );
 
     const postItems: FeedItem[] = validPosts.map(post => {
@@ -149,18 +162,18 @@ export const useStableFeed = (options: StableFeedOptions = {}) => {
         id: `post-${post.id}`,
         type: 'post' as const,
         profile: {
-          id: post.profiles.id,
-          name: post.profiles.display_name,
-          age: post.profiles.age || 25,
-          image: post.profiles.profile_image_url || '/placeholder.svg',
-          bio: post.profiles.bio || '',
-          whatsapp: post.profiles.whatsapp || '',
-          location: post.profiles.location || 'Unknown',
-          gender: (post.profiles.gender === 'male' || post.profiles.gender === 'female') ? post.profiles.gender : 'male',
-          userType: post.profiles.user_type || 'user',
-          role: post.profiles.role || 'user',
+          id: post.profiles?.id || post.provider_id,
+          name: post.profiles?.display_name || 'User',
+          age: post.profiles?.age || 25,
+          image: post.profiles?.profile_image_url || '/placeholder.svg',
+          bio: post.profiles?.bio || '',
+          whatsapp: post.profiles?.whatsapp || '',
+          location: post.profiles?.location || 'Unknown',
+          gender: (post.profiles?.gender === 'male' || post.profiles?.gender === 'female') ? post.profiles.gender : 'male',
+          userType: post.profiles?.user_type || 'user',
+          role: post.profiles?.role || 'user',
           isRealAccount: true,
-          verifications: post.profiles.verifications || {
+          verifications: post.profiles?.verifications || {
             phoneVerified: false,
             emailVerified: true,
             photoVerified: false,
