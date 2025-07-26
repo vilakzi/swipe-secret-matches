@@ -16,6 +16,11 @@ import { useSessionManager } from "@/hooks/useSessionManager";
 import { useAuth } from "@/contexts/AuthContext";
 import Auth from "@/pages/Auth";
 
+// Ensure React is available before creating query client
+if (!React) {
+  throw new Error('React is not available');
+}
+
 // Create query client here to ensure it's available
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,20 +51,21 @@ const LoadingSpinner = () => (
 );
 
 const MainApp = () => {
-  console.log('MainApp: Starting with providers in correct order');
+  console.log('MainApp: Starting with minimal providers');
+  
+  // Basic safety check
+  if (!React || typeof React.useState !== 'function') {
+    return <div>Loading React...</div>;
+  }
   
   return (
-    <React.StrictMode>
+    <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <ErrorProvider>
-            <AuthProvider>
-              <MainAppContent />
-            </AuthProvider>
-          </ErrorProvider>
-        </TooltipProvider>
+        <AuthProvider>
+          <MainAppContent />
+        </AuthProvider>
       </QueryClientProvider>
-    </React.StrictMode>
+    </ErrorBoundary>
   );
 };
 
@@ -93,80 +99,82 @@ const MainAppContent = () => {
   }
 
   return (
-    <ErrorBoundary>
-      <Toaster />
-      <Sonner />
-      
-      <React.Suspense fallback={<LoadingSpinner />}>
-        <Routes>
-          <Route 
-            path="/auth" 
-            element={user ? <Navigate to="/" replace /> : <Auth />} 
-          />
-          <Route path="/" element={
-            <ProtectedRoute>
-              <AppLayout>
-                <ErrorBoundary>
-                  <Index />
-                </ErrorBoundary>
-              </AppLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/profile" element={
-            <ProtectedRoute>
-              <AppLayout>
-                <ErrorBoundary>
-                  <Profile />
-                </ErrorBoundary>
-              </AppLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/profile/:userId" element={
-            <ProtectedRoute>
+    <TooltipProvider>
+      <ErrorProvider>
+        <Toaster />
+        <Sonner />
+        
+        <React.Suspense fallback={<LoadingSpinner />}>
+          <Routes>
+            <Route 
+              path="/auth" 
+              element={user ? <Navigate to="/" replace /> : <Auth />} 
+            />
+            <Route path="/" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <ErrorBoundary>
+                    <Index />
+                  </ErrorBoundary>
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <ErrorBoundary>
+                    <Profile />
+                  </ErrorBoundary>
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/profile/:userId" element={
+              <ProtectedRoute>
+                <AppLayout showBottomNav={false}>
+                  <ErrorBoundary>
+                    <UserProfile />
+                  </ErrorBoundary>
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <ErrorBoundary>
+                    <Settings />
+                  </ErrorBoundary>
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard" element={
+              <ServiceProviderRoute>
+                <AppLayout showBottomNav={false}>
+                  <ErrorBoundary>
+                    <ServiceProviderDashboard />
+                  </ErrorBoundary>
+                </AppLayout>
+              </ServiceProviderRoute>
+            } />
+            <Route path="/admin" element={
+              <AdminRoute>
+                <AppLayout showBottomNav={false}>
+                  <ErrorBoundary>
+                    <AdminDashboard />
+                  </ErrorBoundary>
+                </AppLayout>
+              </AdminRoute>
+            } />
+            <Route path="*" element={
               <AppLayout showBottomNav={false}>
                 <ErrorBoundary>
-                  <UserProfile />
+                  <NotFound />
                 </ErrorBoundary>
               </AppLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/settings" element={
-            <ProtectedRoute>
-              <AppLayout>
-                <ErrorBoundary>
-                  <Settings />
-                </ErrorBoundary>
-              </AppLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/dashboard" element={
-            <ServiceProviderRoute>
-              <AppLayout showBottomNav={false}>
-                <ErrorBoundary>
-                  <ServiceProviderDashboard />
-                </ErrorBoundary>
-              </AppLayout>
-            </ServiceProviderRoute>
-          } />
-          <Route path="/admin" element={
-            <AdminRoute>
-              <AppLayout showBottomNav={false}>
-                <ErrorBoundary>
-                  <AdminDashboard />
-                </ErrorBoundary>
-              </AppLayout>
-            </AdminRoute>
-          } />
-          <Route path="*" element={
-            <AppLayout showBottomNav={false}>
-              <ErrorBoundary>
-                <NotFound />
-              </ErrorBoundary>
-            </AppLayout>
-          } />
-        </Routes>
-      </React.Suspense>
-    </ErrorBoundary>
+            } />
+          </Routes>
+        </React.Suspense>
+      </ErrorProvider>
+    </TooltipProvider>
   );
 };
 
