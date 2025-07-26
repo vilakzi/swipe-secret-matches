@@ -46,18 +46,20 @@ const LoadingSpinner = () => (
 );
 
 const MainApp = () => {
-  console.log('MainApp: Starting with all providers inside');
+  console.log('MainApp: Starting with providers in correct order');
   
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <ErrorProvider>
-          <AuthProvider>
-            <MainAppContent />
-          </AuthProvider>
-        </ErrorProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <ErrorProvider>
+            <AuthProvider>
+              <MainAppContent />
+            </AuthProvider>
+          </ErrorProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </React.StrictMode>
   );
 };
 
