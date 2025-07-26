@@ -23,12 +23,6 @@ const ProfileAvatar = ({ profileData }: ProfileAvatarProps) => {
       
       <div className="text-center">
         <h2 className="text-2xl font-bold text-white">{profileData.display_name}</h2>
-        {profileData.age && (
-          <p className="text-gray-400">{profileData.age} years old</p>
-        )}
-        {profileData.location && (
-          <p className="text-gray-400">{profileData.location}</p>
-        )}
         
         <div className="mt-2">
           <VerificationBadges verifications={profileData.verifications} size="md" />
