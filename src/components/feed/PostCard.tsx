@@ -142,37 +142,15 @@ const PostCard = memo<PostCardProps>(({
             />
           )}
 
-          {/* Profile content */}
-          {item.type === 'profile' && (
-            <div className="p-4">
-              <div className="text-center">
-                <img
-                  src={item.profile.image}
-                  alt={`${item.profile.name}'s profile`}
-                  className="w-full h-72 object-cover rounded-lg cursor-pointer"
-                  onClick={handleAvatarClick}
-                  loading="lazy"
-                />
-                <div className="mt-4">
-                  <h3 className="text-lg font-semibold text-white">{item.profile.name}</h3>
-                  <p className="text-sm text-gray-400">Age: {item.profile.age}</p>
-                  <p className="text-sm text-gray-400">{item.profile.location}</p>
-                  {item.profile.bio && (
-                    <p className="text-sm text-gray-300 mt-2">{item.profile.bio}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
 
           <div className="p-4">
-            <PostCardActions
-              itemId={item.id}
-              showComments={showComments}
-              onToggleComments={handleToggleComments}
-              onContact={handleContact}
-              isSubscribed={isSubscribed}
-            />
+          <PostCardActions
+            itemId={item.id}
+            showComments={showComments}
+            onToggleComments={handleToggleComments}
+            onContact={() => {}} // Remove contact functionality for Instagram-style
+            isSubscribed={isSubscribed}
+          />
             {item.caption && (
               <PostCardCaption
                 name={item.profile.name}

@@ -11,7 +11,7 @@ interface PostCardActionsProps {
   itemId: string;
   showComments: boolean;
   onToggleComments: () => void;
-  onContact: (e: React.MouseEvent) => void;
+  onContact?: (e: React.MouseEvent) => void; // Make optional since we're removing dating features
   isSubscribed: boolean;
 }
 
@@ -19,7 +19,7 @@ const PostCardActions = ({
   itemId,
   showComments,
   onToggleComments,
-  onContact,
+  onContact, // Keep but won't use for Instagram-style feed
   isSubscribed,
 }: PostCardActionsProps) => {
   const { user } = useAuth();
@@ -59,34 +59,24 @@ const PostCardActions = ({
   };
 
   return (
-    <div className="flex items-center justify-between mb-3">
-      <div className="flex items-center space-x-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          className={`p-0 ${liked ? "text-red-500" : "text-white"}`}
-          onClick={handleLike}
-          disabled={loading}
-        >
-          <Heart className={`w-6 h-6 ${liked ? "fill-current" : ""}`} />
-          <span className="ml-2 text-sm">{likedUserIDs.length}</span>
-        </Button>
-        <PostComments
-          postId={itemId}
-          isOpen={showComments}
-          onToggle={onToggleComments}
-        />
-        <Button variant="ghost" size="sm" className="text-white p-0">
-          <Share className="w-6 h-6" />
-        </Button>
-      </div>
+    <div className="flex items-center space-x-4 mb-3">
       <Button
         variant="ghost"
         size="sm"
-        className="text-white p-0"
-        onClick={onContact}
+        className={`p-0 ${liked ? "text-red-500" : "text-white"}`}
+        onClick={handleLike}
+        disabled={loading}
       >
-        Contact
+        <Heart className={`w-6 h-6 ${liked ? "fill-current" : ""}`} />
+        <span className="ml-2 text-sm">{likedUserIDs.length}</span>
+      </Button>
+      <PostComments
+        postId={itemId}
+        isOpen={showComments}
+        onToggle={onToggleComments}
+      />
+      <Button variant="ghost" size="sm" className="text-white p-0">
+        <Share className="w-6 h-6" />
       </Button>
     </div>
   );

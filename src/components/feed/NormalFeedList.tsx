@@ -1,7 +1,5 @@
 import React, { useMemo, useState, useRef, useCallback, useEffect } from "react";
 import { isValidMedia } from "@/utils/feed/mediaUtils";
-import WelcomeCard from "./WelcomeCard";
-import FeedProfileCard from "./FeedProfileCard";
 import FeedPostCard from "./FeedPostCard";
 import { FeedItem, Profile } from "./types/feedTypes";
 
@@ -63,7 +61,7 @@ const NormalFeedList: React.FC<NormalFeedListProps> = ({
   if (shuffledFeed.length === 0) {
     return (
       <div className="text-center py-8" aria-live="polite">
-        <p className="text-gray-400">No profiles found.</p>
+        <p className="text-gray-400">No posts found.</p>
       </div>
     );
   }
@@ -71,29 +69,10 @@ const NormalFeedList: React.FC<NormalFeedListProps> = ({
   return (
     <>
       {shuffledFeed.slice(0, visibleCount).map((item: any) => {
-        if (item.isWelcome) {
-          return (
-            <WelcomeCard
-              key={`welcome-${item.profile.id}`}
-              profile={item.profile}
-            />
-          );
-        }
+        // Only show posts for Instagram-style feed
         if (item.type === "post" && isValidMedia(item.postImage)) {
           return (
             <FeedPostCard
-              key={item.id}
-              item={item}
-              likedItems={likedItems}
-              isSubscribed={isSubscribed}
-              onLike={onLike}
-              onContact={onContact}
-            />
-          );
-        }
-        if (item.type === "profile") {
-          return (
-            <FeedProfileCard
               key={item.id}
               item={item}
               likedItems={likedItems}

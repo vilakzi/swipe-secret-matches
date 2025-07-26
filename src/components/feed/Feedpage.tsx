@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import PostUploadForm from '@/components/dashboard/PostUploadForm';
+
 import FeedContent from '@/components/feed/FeedContent';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from './types/feedTypes';
@@ -110,24 +110,9 @@ const Feed = () => {
     };
   }, []);
 
-  // Add new post to feed instantly (for optimistic updates from PostUploadForm)
-  const handleAddPostToFeed = (newPost: any) => {
-    console.log('Adding post to feed:', newPost);
-    fetchFeed(); // Refresh to get the latest data
-  };
 
   return (
-    <div>
-      <PostUploadForm
-        onUploadSuccess={() => {
-          console.log('Upload success, refreshing feed');
-          fetchFeed();
-        }}
-        onShowPayment={(post) => {
-          console.log('Show payment for post:', post);
-        }}
-        onAddPostToFeed={handleAddPostToFeed}
-      />
+    <div className="max-w-md mx-auto">
       <FeedContent
         feedItems={feedItems}
         likedItems={likedItems}

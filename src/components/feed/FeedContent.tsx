@@ -172,15 +172,11 @@ const FeedContent = ({
       switch (filterOption) {
         case 'posts':
           return items.filter(item => item.type === 'post');
-        case 'profiles':
-          return items.filter(item => item.type === 'profile');
-        case 'welcome':
-          return items.filter(item => item.isWelcome);
         case 'admin':
           return items.filter(item => item.isContent || adminRoles.includes(String(item.profile.role).toLowerCase()));
         case 'all':
         default:
-          return items;
+          return items.filter(item => item.type === 'post'); // Only show posts for Instagram-style
       }
     };
   }, [filterOption, adminRoles]);

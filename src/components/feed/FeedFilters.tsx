@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 export type SortOption = 'newest' | 'oldest' | 'popular';
-export type FilterOption = 'all' | 'posts' | 'profiles' | 'welcome' | 'admin';
+export type FilterOption = 'all' | 'posts' | 'admin';
 export type LocationOption = 'all' | 'soweto' | 'jhb-central' | 'pta';
 
 interface FeedFiltersProps {
@@ -65,18 +65,6 @@ const FeedFilters: React.FC<FeedFiltersProps> = ({
                 onClick={() => onFilterChange('posts')}
               >
                 Posts Only
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                className={currentFilter === 'profiles' ? 'bg-accent text-accent-foreground' : ''}
-                onClick={() => onFilterChange('profiles')}
-              >
-                Profiles Only
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                className={currentFilter === 'welcome' ? 'bg-accent text-accent-foreground' : ''}
-                onClick={() => onFilterChange('welcome')}
-              >
-                New Joiners
               </DropdownMenuItem>
               <DropdownMenuItem 
                 className={currentFilter === 'admin' ? 'bg-accent text-accent-foreground' : ''}

@@ -80,15 +80,11 @@ const PostCardHeader = ({
                 <VerificationBadges verifications={profile.verifications} />
               )}
             </div>
-            <div className="flex items-center space-x-2 text-sm text-gray-400">
-              <span>{profile.age}</span>
-              {profile.location && <span>• {profile.location}</span>}
-              {isSubscribed && (
-                <Badge variant="secondary" className="text-xs">
-                  Premium
-                </Badge>
-              )}
-            </div>
+            {profile.location && (
+              <div className="text-sm text-gray-400">
+                <span>{profile.location}</span>
+              </div>
+            )}
           </div>
         </div>
         {children}
