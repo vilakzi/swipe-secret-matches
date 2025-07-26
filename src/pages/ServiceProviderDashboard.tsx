@@ -6,12 +6,11 @@ import { supabase } from '@/integrations/supabase/client';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import PostUploadForm from '@/components/dashboard/PostUploadForm';
 import PostsList from '@/components/dashboard/PostsList';
-import PaymentModal from '@/components/PaymentModal';
+
 
 const ServiceProviderDashboard = () => {
   const { user } = useAuth();
   const [posts, setPosts] = useState<any[]>([]);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [pendingPost, setPendingPost] = useState<any>(null);
 
   useEffect(() => {
@@ -36,7 +35,8 @@ const ServiceProviderDashboard = () => {
 
   const handleShowPayment = (post: any) => {
     setPendingPost(post);
-    setShowPaymentModal(true);
+    // For Instagram-style, just add directly without payment
+    handleAddPostToFeed(post);
   };
 
   const handleAddPostToFeed = (newPost: any) => {
@@ -74,15 +74,6 @@ const ServiceProviderDashboard = () => {
         <PostsList posts={posts} />
       </div>
 
-      {showPaymentModal && (
-        <PaymentModal
-          onSuccess={handlePaymentSuccess}
-          onClose={() => {
-            setShowPaymentModal(false);
-            setPendingPost(null);
-          }}
-        />
-      )}
     </div>
   );
 };

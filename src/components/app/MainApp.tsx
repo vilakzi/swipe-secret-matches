@@ -6,7 +6,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import ServiceProviderRoute from "@/components/ServiceProviderRoute";
 import AdminRoute from "@/components/AdminRoute";
 import AppLayout from "@/components/layout/AppLayout";
-import AgeVerificationBanner from "@/components/AgeVerificationBanner";
+
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 import ErrorFallback from "@/components/common/ErrorFallback";
 import { useSessionManager } from "@/hooks/useSessionManager";
@@ -17,12 +17,9 @@ import Auth from "@/pages/Auth";
 const Index = React.lazy(() => import("@/pages/Index"));
 const Profile = React.lazy(() => import("@/pages/Profile"));
 const UserProfile = React.lazy(() => import("@/pages/UserProfile"));
-const Matches = React.lazy(() => import("@/pages/Matches"));
 const Settings = React.lazy(() => import("@/pages/Settings"));
-const Onboarding = React.lazy(() => import("@/pages/Onboarding"));
 const ServiceProviderDashboard = React.lazy(() => import("@/pages/ServiceProviderDashboard"));
 const AdminDashboard = React.lazy(() => import("@/pages/AdminDashboard"));
-const ProviderProfile = React.lazy(() => import("@/pages/ProviderProfile"));
 const NotFound = React.lazy(() => import("@/pages/NotFound"));
 
 const LoadingSpinner = () => (
@@ -67,22 +64,13 @@ const MainApp = () => {
     <ErrorBoundary>
       <Toaster />
       <Sonner />
-      <AgeVerificationBanner />
+      
       <React.Suspense fallback={<LoadingSpinner />}>
         <Routes>
           <Route 
             path="/auth" 
             element={user ? <Navigate to="/" replace /> : <Auth />} 
           />
-          <Route path="/onboarding" element={
-            <ProtectedRoute>
-              <AppLayout showBottomNav={false}>
-                <ErrorBoundary>
-                  <Onboarding />
-                </ErrorBoundary>
-              </AppLayout>
-            </ProtectedRoute>
-          } />
           <Route path="/" element={
             <ProtectedRoute>
               <AppLayout>
@@ -106,24 +94,6 @@ const MainApp = () => {
               <AppLayout showBottomNav={false}>
                 <ErrorBoundary>
                   <UserProfile />
-                </ErrorBoundary>
-              </AppLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/provider/:providerId" element={
-            <ProtectedRoute>
-              <AppLayout showBottomNav={false}>
-                <ErrorBoundary>
-                  <ProviderProfile />
-                </ErrorBoundary>
-              </AppLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/matches" element={
-            <ProtectedRoute>
-              <AppLayout>
-                <ErrorBoundary>
-                  <Matches />
                 </ErrorBoundary>
               </AppLayout>
             </ProtectedRoute>
