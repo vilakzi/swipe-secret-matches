@@ -1,9 +1,11 @@
 import React from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
+import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ErrorProvider } from "@/components/common/ErrorTaskBar";
+import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ServiceProviderRoute from "@/components/ServiceProviderRoute";
 import AdminRoute from "@/components/AdminRoute";
@@ -13,6 +15,17 @@ import ErrorFallback from "@/components/common/ErrorFallback";
 import { useSessionManager } from "@/hooks/useSessionManager";
 import { useAuth } from "@/contexts/AuthContext";
 import Auth from "@/pages/Auth";
+
+// Create query client here to ensure it's available
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 // Lazy load heavy components to improve mobile performance
 const Index = React.lazy(() => import("@/pages/Index"));
@@ -33,7 +46,23 @@ const LoadingSpinner = () => (
 );
 
 const MainApp = () => {
-  // Call hooks at the top level
+  console.log('MainApp: Starting with all providers inside');
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <ErrorProvider>
+          <AuthProvider>
+            <MainAppContent />
+          </AuthProvider>
+        </ErrorProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
+
+const MainAppContent = () => {
+  // Call hooks at the top level inside AuthProvider context
   useSessionManager();
   
   let user = null;
@@ -62,13 +91,11 @@ const MainApp = () => {
   }
 
   return (
-    <TooltipProvider>
-      <ErrorProvider>
-        <ErrorBoundary>
-          <Toaster />
-          <Sonner />
-          
-          <React.Suspense fallback={<LoadingSpinner />}>
+    <ErrorBoundary>
+      <Toaster />
+      <Sonner />
+      
+      <React.Suspense fallback={<LoadingSpinner />}>
         <Routes>
           <Route 
             path="/auth" 
@@ -136,10 +163,8 @@ const MainApp = () => {
             </AppLayout>
           } />
         </Routes>
-          </React.Suspense>
-        </ErrorBoundary>
-      </ErrorProvider>
-    </TooltipProvider>
+      </React.Suspense>
+    </ErrorBoundary>
   );
 };
 
