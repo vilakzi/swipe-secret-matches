@@ -4,18 +4,15 @@ import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { SecureApiProvider } from "@/components/security/SecureApiWrapper";
 import { ErrorProvider } from "@/components/common/ErrorTaskBar";
 
-// Create query client directly in this file to avoid any import issues
+// Create a stable query client instance
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes
+      staleTime: 5 * 60 * 1000,
       retry: 1,
       refetchOnWindowFocus: false,
-      refetchOnMount: false,
     },
   },
 });
@@ -25,23 +22,20 @@ interface RootProvidersProps {
 }
 
 const RootProviders = ({ children }: RootProvidersProps) => {
-  console.log('RootProviders: Starting provider setup');
-  console.log('RootProviders: QueryClient created:', queryClient);
+  console.log('RootProviders: Starting with essential providers');
   
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
         <ErrorProvider>
-          <BrowserRouter>
+          <TooltipProvider>
             <AuthProvider>
-              <SecureApiProvider>
-                {children}
-              </SecureApiProvider>
+              {children}
             </AuthProvider>
-          </BrowserRouter>
+          </TooltipProvider>
         </ErrorProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </BrowserRouter>
   );
 };
 

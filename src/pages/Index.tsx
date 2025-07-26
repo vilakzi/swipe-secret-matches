@@ -5,32 +5,22 @@ import { Button } from '@/components/ui/button';
 import { Heart, User, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import OnlineStatus from '@/components/OnlineStatus';
-import InstagramFeedOptimized from '@/components/InstagramFeedOptimized';
-import ProfileCompletionPrompt from '@/components/onboarding/ProfileCompletionPrompt';
+import Feedpage from '@/components/feed/Feedpage';
 import { usePresence } from '@/hooks/usePresence';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useInactivityTracker } from '@/hooks/useInactivityTracker';
 import { toast } from '@/hooks/use-toast';
-import { useError } from "@/components/common/ErrorTaskBar";
-
 import ErrorBoundary from '@/components/common/ErrorBoundary';
-import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 
 const Index = () => {
   const { user, signOut } = useAuth();
   const { isUserOnline } = usePresence();
-  const { role, isServiceProvider, loading: roleLoading } = useUserRole();
+  const { isServiceProvider, loading: roleLoading } = useUserRole();
   const navigate = useNavigate();
-  const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
-  const [refreshKey, setRefreshKey] = useState(0);
 
-  const { addError } = useError();
-  const { logError } = usePerformanceMonitor('IndexPage');
-
-  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL LOGIC
-  // Auto-logout after 2 minutes of inactivity
+  // Auto-logout after 30 minutes of inactivity
   useInactivityTracker({
-    timeoutMinutes: 2,
+    timeoutMinutes: 30,
     onInactive: useCallback(() => {
       toast({
         title: "Session expired",
@@ -41,66 +31,10 @@ const Index = () => {
     }, [signOut])
   });
 
-  // Error handler for the error boundary
-  const handleError = useCallback((error: Error) => {
-    logError(error);
-    addError(`Application error: ${error.message}`);
-  }, [logError, addError]);
-
   const handleDashboard = useCallback(() => {
     navigate('/dashboard');
   }, [navigate]);
 
-  const handleLike = useCallback((itemId: string, profileId: string) => {
-    if (!user) {
-      addError("You must be logged in to like profiles.");
-      return;
-    }
-    
-    setLikedItems(prev => {
-      const newLiked = new Set(prev);
-      if (newLiked.has(itemId)) {
-        newLiked.delete(itemId);
-      } else {
-        newLiked.add(itemId);
-      }
-      return newLiked;
-    });
-
-    toast({
-      title: likedItems.has(itemId) ? "Like removed" : "Profile liked!",
-      description: likedItems.has(itemId) ? "You unliked this profile." : "Your like has been sent!",
-    });
-  }, [user, addError, likedItems]);
-
-  const handleContact = useCallback((profile: any) => {
-    if (!user) {
-      addError("You must be logged in to contact profiles.");
-      return;
-    }
-    
-    if (profile.whatsapp) {
-      window.open(`https://wa.me/${profile.whatsapp.replace(/[^0-9]/g, '')}`, '_blank');
-    } else {
-      addError("WhatsApp contact not available for this profile.");
-    }
-  }, [user, addError]);
-
-  const handleRefresh = useCallback(() => {
-    if (!user) {
-      addError("You must be logged in to refresh the feed.");
-      return;
-    }
-    
-    console.log('🚀 Triggering optimized feed refresh');
-    setRefreshKey(prev => prev + 1);
-    toast({
-      title: "Feed refreshed!",
-      description: "Latest content loaded with optimizations",
-    });
-  }, [user, addError]);
-
-  // NOW WE CAN HAVE CONDITIONAL RENDERING AFTER ALL HOOKS
   // Show loading state
   if (roleLoading) {
     return (
@@ -131,15 +65,15 @@ const Index = () => {
   }
 
   return (
-    <ErrorBoundary onError={handleError}>
-      <div className="min-h-screen">
-        <header className="fixed top-0 left-0 right-0 z-40 bg-black/80 backdrop-blur-md border-b border-gray-700">
+    <ErrorBoundary>
+      <div className="min-h-screen bg-black">
+        <header className="fixed top-0 left-0 right-0 z-40 bg-black/90 backdrop-blur-md border-b border-gray-700">
           <div className="p-4 flex justify-between items-center max-w-md mx-auto">
             <div className="flex items-center space-x-3">
               <Heart className="w-8 h-8 text-pink-500" />
               <div>
-                <h1 className="text-2xl font-bold text-white">Connect</h1>
-                <p className="text-xs text-gray-400">Optimized & PWA ready</p>
+                <h1 className="text-2xl font-bold text-white">Social</h1>
+                <p className="text-xs text-gray-400">Instagram-style feed</p>
               </div>
             </div>
             
@@ -168,24 +102,9 @@ const Index = () => {
           </div>
         </header>
 
-        <ErrorBoundary 
-          fallback={
-            <div className="text-center p-8">
-              <p className="text-white">Feed temporarily unavailable</p>
-              <Button onClick={() => window.location.reload()} className="mt-4">
-                Refresh Page
-              </Button>
-            </div>
-          }
-        >
-          <InstagramFeedOptimized
-            onLike={handleLike}
-            onContact={handleContact}
-            onRefresh={handleRefresh}
-            likedItems={likedItems}
-            key={refreshKey}
-          />
-        </ErrorBoundary>
+        <div className="pt-20">
+          <Feedpage />
+        </div>
       </div>
     </ErrorBoundary>
   );
