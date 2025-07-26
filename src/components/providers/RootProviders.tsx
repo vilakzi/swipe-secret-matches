@@ -1,12 +1,10 @@
 
 import React from 'react';
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { ErrorProvider } from "@/components/common/ErrorTaskBar";
 
-// Create a stable query client instance
+// Create a minimal query client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -22,18 +20,14 @@ interface RootProvidersProps {
 }
 
 const RootProviders = ({ children }: RootProvidersProps) => {
-  console.log('RootProviders: Starting with essential providers');
+  console.log('RootProviders: Minimal setup to avoid React context issues');
   
   return (
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
-        <ErrorProvider>
-          <TooltipProvider>
-            <AuthProvider>
-              {children}
-            </AuthProvider>
-          </TooltipProvider>
-        </ErrorProvider>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </QueryClientProvider>
     </BrowserRouter>
   );

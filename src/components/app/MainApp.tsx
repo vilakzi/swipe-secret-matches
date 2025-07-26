@@ -2,11 +2,12 @@ import React from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { ErrorProvider } from "@/components/common/ErrorTaskBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ServiceProviderRoute from "@/components/ServiceProviderRoute";
 import AdminRoute from "@/components/AdminRoute";
 import AppLayout from "@/components/layout/AppLayout";
-
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 import ErrorFallback from "@/components/common/ErrorFallback";
 import { useSessionManager } from "@/hooks/useSessionManager";
@@ -61,11 +62,13 @@ const MainApp = () => {
   }
 
   return (
-    <ErrorBoundary>
-      <Toaster />
-      <Sonner />
-      
-      <React.Suspense fallback={<LoadingSpinner />}>
+    <TooltipProvider>
+      <ErrorProvider>
+        <ErrorBoundary>
+          <Toaster />
+          <Sonner />
+          
+          <React.Suspense fallback={<LoadingSpinner />}>
         <Routes>
           <Route 
             path="/auth" 
@@ -133,8 +136,10 @@ const MainApp = () => {
             </AppLayout>
           } />
         </Routes>
-      </React.Suspense>
-    </ErrorBoundary>
+          </React.Suspense>
+        </ErrorBoundary>
+      </ErrorProvider>
+    </TooltipProvider>
   );
 };
 
