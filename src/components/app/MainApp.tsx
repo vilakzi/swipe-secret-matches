@@ -1,36 +1,14 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
-import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ErrorProvider } from "@/components/common/ErrorTaskBar";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ServiceProviderRoute from "@/components/ServiceProviderRoute";
 import AdminRoute from "@/components/AdminRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
-import ErrorFallback from "@/components/common/ErrorFallback";
 import { useSessionManager } from "@/hooks/useSessionManager";
-import { useAuth } from "@/contexts/AuthContext";
 import Auth from "@/pages/Auth";
-
-// Ensure React is available before creating query client
-if (!React) {
-  throw new Error('React is not available');
-}
-
-// Create query client here to ensure it's available
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000,
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
 
 // Lazy load heavy components to improve mobile performance
 const Index = React.lazy(() => import("@/pages/Index"));
@@ -51,60 +29,29 @@ const LoadingSpinner = () => (
 );
 
 const MainApp = () => {
-  console.log('MainApp: Starting with minimal providers');
-  
-  // Basic safety check
-  if (!React || typeof React.useState !== 'function') {
-    return <div>Loading React...</div>;
-  }
+  console.log('MainApp: Simplified initialization');
   
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <MainAppContent />
-        </AuthProvider>
-      </QueryClientProvider>
+      <AuthProvider>
+        <MainAppContent />
+      </AuthProvider>
     </ErrorBoundary>
   );
 };
 
 const MainAppContent = () => {
-  // Call hooks at the top level inside AuthProvider context
   useSessionManager();
-  
-  let user = null;
-  let loading = true;
-  
-  // Safely use auth context with error handling
-  try {
-    const authContext = useAuth();
-    user = authContext.user;
-    loading = authContext.loading;
-  } catch (error) {
-    console.error('Auth context error:', error);
-    // If auth context fails, show error fallback
-    return (
-      <ErrorFallback
-        title="Authentication Error"
-        message="There was an issue with the authentication system. Please refresh the page."
-        showGoHome={false}
-      />
-    );
-  }
+  const { user, loading } = useAuth();
 
-  // Show loading spinner while auth is being determined
   if (loading) {
     return <LoadingSpinner />;
   }
 
   return (
     <TooltipProvider>
-      <ErrorProvider>
-        <Toaster />
-        <Sonner />
-        
-        <React.Suspense fallback={<LoadingSpinner />}>
+      <div className="min-h-screen bg-background">
+        <Suspense fallback={<LoadingSpinner />}>
           <Routes>
             <Route 
               path="/auth" 
@@ -172,8 +119,8 @@ const MainAppContent = () => {
               </AppLayout>
             } />
           </Routes>
-        </React.Suspense>
-      </ErrorProvider>
+        </Suspense>
+      </div>
     </TooltipProvider>
   );
 };
