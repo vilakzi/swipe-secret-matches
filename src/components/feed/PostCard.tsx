@@ -1,183 +1,162 @@
 
-import React, { memo, useState, useCallback } from 'react';
-import { Card } from "@/components/ui/card";
-import { usePresence } from "@/hooks/usePresence";
-import { useNavigate } from "react-router-dom";
-import { useImageModal } from "@/hooks/useImageModal";
-import ImageModal from "@/components/ui/ImageModal";
-import PostCardHeader from "./PostCardHeader";
-import PostCardActions from "./PostCardActions";
-import PostCardCaption from "./PostCardCaption";
-import PostComments from "./PostComments";
-import PostCardDeleteMenu from "./PostCardDeleteMenu";
-import PostCardContent from "./PostCardContent";
-import { isVideo } from "@/utils/feed/mediaUtils";
-import PostCardEngagement from "./PostCardEngagement";
-
-interface Profile {
-  id: string;
-  name: string;
-  age: number;
-  image: string;
-  bio: string;
-  whatsapp: string;
-  location: string;
-  gender?: "male" | "female";
-  liked?: boolean;
-  posts?: string[];
-  isRealAccount?: boolean;
-  userType?: string;
-  role?: string;
-}
-
-interface FeedItem {
-  id: string;
-  type: "profile" | "post";
-  profile: Profile;
-  postImage?: string;
-  caption?: string;
-  isAdminCard?: boolean;
-  isAdminPost?: boolean;
-  isVideo?: boolean;
-  createdAt?: string;
-}
+import React, { useState } from 'react';
+import { Heart, MessageCircle, Share, Bookmark, MoreHorizontal } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { formatDistanceToNow } from 'date-fns';
+import CommentsModal from './CommentsModal';
 
 interface PostCardProps {
-  item: FeedItem;
-  likedItems: Set<string>;
-  isSubscribed: boolean;
-  onLike: (itemId: string, profileId: string) => void;
-  onContact: (profile: Profile) => void;
-  onDelete?: (itemId: string) => void;
-  engagementTracker?: any;
+  post: {
+    id: string;
+    user_id: string;
+    content_url: string;
+    caption: string;
+    post_type: 'image' | 'video';
+    created_at: string;
+    likes_count: number;
+    comments_count: number;
+    profiles: {
+      id: string;
+      username: string;
+      full_name: string;
+      avatar_url: string;
+    };
+    likes: { user_id: string }[];
+  };
+  currentUserId?: string;
+  onLike: (postId: string, isLiked: boolean) => void;
 }
 
-const PostCard = memo<PostCardProps>(({
-  item,
-  likedItems,
-  isSubscribed,
-  onLike,
-  onContact,
-  onDelete,
-  engagementTracker,
-}) => {
-  const { isUserOnline } = usePresence();
-  const navigate = useNavigate();
-  const { isOpen, imageSrc, imageAlt, openModal, closeModal } = useImageModal();
+const PostCard = ({ post, currentUserId, onLike }: PostCardProps) => {
   const [showComments, setShowComments] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  
+  const isLiked = post.likes.some(like => like.user_id === currentUserId);
+  const timeAgo = formatDistanceToNow(new Date(post.created_at), { addSuffix: true });
 
-  // Safety checks
-  if (!item?.id || !item?.profile) {
-    console.warn('PostCard: Invalid item data', item);
-    return null;
-  }
-
-  // Memoized handlers
-  const handleProfileClick = useCallback(() => {
-    engagementTracker?.trackEngagement(item.id, 'tap');
-    navigate(`/profile/${item.profile.id}`);
-  }, [engagementTracker, item.id, item.profile.id, navigate]);
-
-  const handleLike = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    engagementTracker?.trackEngagement(item.id, 'like');
-    onLike(item.id, item.profile.id);
-  }, [engagementTracker, item.id, item.profile.id, onLike]);
-
-  const handleContact = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    engagementTracker?.trackEngagement(item.id, 'contact');
-    onContact(item.profile);
-  }, [engagementTracker, item.id, item.profile, onContact]);
-
-  const handleAvatarClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    engagementTracker?.trackEngagement(item.id, 'tap');
-    openModal(item.profile.image, `${item.profile.name}'s profile photo`);
-  }, [engagementTracker, item.id, item.profile.image, item.profile.name, openModal]);
-
-  const handlePostImageClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    engagementTracker?.trackEngagement(item.id, 'tap');
-    openModal(item.postImage || "", `${item.profile.name}'s post`);
-  }, [engagementTracker, item.id, item.postImage, item.profile.name, openModal]);
-
-  const handleToggleComments = useCallback(() => {
-    setShowComments(prev => !prev);
-  }, []);
-
-  // Check if this is a video post
-  const isVideoPost = item.type === 'post' && item.postImage && isVideo(item.postImage);
+  const handleLike = () => {
+    onLike(post.id, isLiked);
+  };
 
   return (
     <>
-      <PostCardEngagement itemId={item.id} engagementTracker={engagementTracker}>
-        <Card 
-          className="bg-gray-800 border-gray-700 mb-4 touch-target" 
-          tabIndex={0} 
-          aria-label={`${item.type === 'post' ? 'Post' : 'Profile'} from ${item.profile.name}`}
-        >
-          <PostCardHeader
-            profile={item.profile}
-            isSubscribed={isSubscribed}
-            isUserOnline={isUserOnline}
-            onProfileClick={handleProfileClick}
-            onAvatarClick={handleAvatarClick}
-            isVideoPost={isVideoPost}
-          >
-            <PostCardDeleteMenu
-              postId={item.id}
-              profileId={item.profile.id}
-              onDelete={onDelete}
-            />
-          </PostCardHeader>
-          
-          {/* Post content */}
-          {item.type === 'post' && item.postImage && (
-            <PostCardContent
-              postImage={item.postImage}
-              profileName={item.profile.name}
-              onPostImageClick={handlePostImageClick}
-              onProfileClick={handleProfileClick}
+      <article className="bg-background border-b border-border">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center space-x-3">
+            <Avatar className="w-8 h-8">
+              <AvatarImage src={post.profiles.avatar_url} />
+              <AvatarFallback className="bg-primary/10 text-primary">
+                {post.profiles.username?.[0]?.toUpperCase() || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="font-semibold text-sm text-foreground">
+                {post.profiles.username || post.profiles.full_name}
+              </p>
+              <p className="text-xs text-muted-foreground">{timeAgo}</p>
+            </div>
+          </div>
+          <Button variant="ghost" size="sm">
+            <MoreHorizontal className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Media Content */}
+        <div className="relative aspect-square bg-muted">
+          {post.post_type === 'image' ? (
+            <>
+              {!imageLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="animate-pulse bg-muted-foreground/20 w-8 h-8 rounded" />
+                </div>
+              )}
+              <img
+                src={post.content_url}
+                alt={post.caption}
+                className={`w-full h-full object-cover transition-opacity duration-300 ${
+                  imageLoaded ? 'opacity-100' : 'opacity-0'
+                }`}
+                onLoad={() => setImageLoaded(true)}
+                loading="lazy"
+              />
+            </>
+          ) : (
+            <video
+              src={post.content_url}
+              className="w-full h-full object-cover"
+              controls
+              preload="metadata"
             />
           )}
+        </div>
 
-
-          <div className="p-4">
-          <PostCardActions
-            itemId={item.id}
-            showComments={showComments}
-            onToggleComments={handleToggleComments}
-            onContact={() => {}} // Remove contact functionality for Instagram-style
-            isSubscribed={isSubscribed}
-          />
-            {item.caption && (
-              <PostCardCaption
-                name={item.profile.name}
-                caption={item.caption}
-                onProfileClick={handleProfileClick}
-              />
-            )}
-            {showComments && (
-              <PostComments
-                postId={item.id}
-                isOpen={showComments}
-                onToggle={handleToggleComments}
-              />
-            )}
+        {/* Actions */}
+        <div className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLike}
+                className={`p-0 h-auto ${isLiked ? 'text-red-500' : 'text-foreground'}`}
+              >
+                <Heart className={`w-6 h-6 ${isLiked ? 'fill-current' : ''}`} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowComments(true)}
+                className="p-0 h-auto text-foreground"
+              >
+                <MessageCircle className="w-6 h-6" />
+              </Button>
+              <Button variant="ghost" size="sm" className="p-0 h-auto text-foreground">
+                <Share className="w-6 h-6" />
+              </Button>
+            </div>
+            <Button variant="ghost" size="sm" className="p-0 h-auto text-foreground">
+              <Bookmark className="w-6 h-6" />
+            </Button>
           </div>
-        </Card>
-      </PostCardEngagement>
-      
-      <ImageModal
-        isOpen={isOpen}
-        onClose={closeModal}
-        imageSrc={imageSrc}
-        imageAlt={imageAlt}
+
+          {/* Likes Count */}
+          {post.likes_count > 0 && (
+            <p className="font-semibold text-sm text-foreground mb-2">
+              {post.likes_count} {post.likes_count === 1 ? 'like' : 'likes'}
+            </p>
+          )}
+
+          {/* Caption */}
+          {post.caption && (
+            <div className="text-sm text-foreground mb-2">
+              <span className="font-semibold mr-2">{post.profiles.username}</span>
+              <span>{post.caption}</span>
+            </div>
+          )}
+
+          {/* Comments */}
+          {post.comments_count > 0 && (
+            <button
+              onClick={() => setShowComments(true)}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              View all {post.comments_count} comments
+            </button>
+          )}
+        </div>
+      </article>
+
+      {/* Comments Modal */}
+      <CommentsModal
+        isOpen={showComments}
+        onClose={() => setShowComments(false)}
+        postId={post.id}
+        postUser={post.profiles}
       />
     </>
   );
-});
+};
 
-PostCard.displayName = 'PostCard';
 export default PostCard;
