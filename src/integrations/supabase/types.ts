@@ -159,6 +159,39 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          actor_id: string
+          comment_id: string | null
+          created_at: string
+          id: string
+          is_read: boolean
+          post_id: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          actor_id: string
+          comment_id?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          post_id?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          actor_id?: string
+          comment_id?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          post_id?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       post_hashtags: {
         Row: {
           created_at: string
@@ -290,6 +323,60 @@ export type Database = {
         }
         Relationships: []
       }
+      stories: {
+        Row: {
+          content_url: string
+          created_at: string
+          expires_at: string
+          id: string
+          story_type: string
+          updated_at: string
+          user_id: string
+          views_count: number
+        }
+        Insert: {
+          content_url: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          story_type: string
+          updated_at?: string
+          user_id: string
+          views_count?: number
+        }
+        Update: {
+          content_url?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          story_type?: string
+          updated_at?: string
+          user_id?: string
+          views_count?: number
+        }
+        Relationships: []
+      }
+      story_views: {
+        Row: {
+          id: string
+          story_id: string
+          user_id: string
+          viewed_at: string
+        }
+        Insert: {
+          id?: string
+          story_id: string
+          user_id: string
+          viewed_at?: string
+        }
+        Update: {
+          id?: string
+          story_id?: string
+          user_id?: string
+          viewed_at?: string
+        }
+        Relationships: []
+      }
       "themba connect": {
         Row: {
           created_at: string
@@ -305,12 +392,46 @@ export type Database = {
         }
         Relationships: []
       }
+      user_activity: {
+        Row: {
+          is_online: boolean
+          last_seen_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          is_online?: boolean
+          last_seen_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          is_online?: boolean
+          last_seen_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_expired_stories: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      create_notification: {
+        Args: {
+          p_user_id: string
+          p_actor_id: string
+          p_type: string
+          p_post_id?: string
+          p_comment_id?: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

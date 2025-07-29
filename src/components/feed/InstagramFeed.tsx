@@ -4,9 +4,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import PostCard from './PostCard';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { Button } from '@/components/ui/button';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Heart } from 'lucide-react';
 import CreatePostModal from './CreatePostModal';
 import { Input } from '@/components/ui/input';
+import { StoriesBar } from '@/components/stories/StoriesBar';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
+import { useRealTimeActivity } from '@/hooks/useRealTimeActivity';
 
 interface Post {
   id: string;
@@ -33,6 +36,9 @@ const InstagramFeed = () => {
   const [hasMore, setHasMore] = useState(true);
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Enable real-time activity tracking
+  useRealTimeActivity();
 
   const fetchPosts = useCallback(async (offset = 0, search = '') => {
     try {
@@ -158,15 +164,21 @@ const InstagramFeed = () => {
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border p-4">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-foreground">Feed</h1>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowCreatePost(true)}
-            className="text-primary hover:bg-primary/10"
-          >
-            <Plus className="w-5 h-5" />
-          </Button>
+          <h1 className="text-2xl font-bold text-foreground">Instagram</h1>
+          <div className="flex items-center space-x-2">
+            <Button variant="ghost" size="sm">
+              <Heart className="w-5 h-5" />
+            </Button>
+            <NotificationBell />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowCreatePost(true)}
+              className="text-primary hover:bg-primary/10"
+            >
+              <Plus className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
         
         <div className="relative">
@@ -179,6 +191,9 @@ const InstagramFeed = () => {
           />
         </div>
       </div>
+
+      {/* Stories Bar */}
+      <StoriesBar />
 
       {/* Posts Feed */}
       <div className="pb-20">
