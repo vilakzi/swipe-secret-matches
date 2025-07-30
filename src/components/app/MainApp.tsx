@@ -7,7 +7,7 @@ import ServiceProviderRoute from "@/components/ServiceProviderRoute";
 import AdminRoute from "@/components/AdminRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
-import { useSessionManager } from "@/hooks/useSessionManager";
+// import { useSessionManager } from "@/hooks/useSessionManager"; // Temporarily disabled
 import Auth from "@/pages/Auth";
 
 // Lazy load heavy components to improve mobile performance
@@ -41,7 +41,8 @@ const MainApp = () => {
 };
 
 const MainAppContent = () => {
-  useSessionManager();
+  // TODO: Re-enable session manager after fixing React context issues
+  // useSessionManager();
   const { user, loading } = useAuth();
 
   if (loading) {
