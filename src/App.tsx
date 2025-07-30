@@ -2,6 +2,7 @@
 import React from 'react';
 import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import MainApp from "@/components/app/MainApp";
 
@@ -22,8 +23,15 @@ const App: React.FC = () => {
   return (
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
-        <MainApp />
-        <Toaster />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <MainApp />
+          <Toaster />
+        </ThemeProvider>
       </QueryClientProvider>
     </BrowserRouter>
   );
