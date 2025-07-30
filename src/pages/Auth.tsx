@@ -1,9 +1,9 @@
 
 import React from 'react';
-import ResponsiveAuthForm from '@/components/auth/ResponsiveAuthForm';
+import SimpleWorkingAuthForm from '@/components/auth/SimpleWorkingAuthForm';
 
 const Auth = () => {
-  return <ResponsiveAuthForm />;
+  return <SimpleWorkingAuthForm />;
 };
 
 export default Auth;
