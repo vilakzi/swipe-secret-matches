@@ -41,9 +41,9 @@ const PostCard = ({ post, currentUserId, onLike }: PostCardProps) => {
 
   return (
     <>
-      <article className="bg-background border-b border-border">
+      <article className="bg-background border-b border-border/20 mb-4 sm:mb-6 rounded-lg sm:rounded-none overflow-hidden shadow-sm">
         {/* Header */}
-        <div className="flex items-center justify-between p-4">
+        <div className="flex items-center justify-between p-3 sm:p-4">
           <div className="flex items-center space-x-3">
             <Avatar className="w-8 h-8">
               <AvatarImage src={post.profiles.avatar_url} />
@@ -63,13 +63,13 @@ const PostCard = ({ post, currentUserId, onLike }: PostCardProps) => {
           </Button>
         </div>
 
-        {/* Media Content */}
-        <div className="relative aspect-square bg-muted">
+        {/* Media Content - Mobile Optimized */}
+        <div className="relative bg-muted min-h-[280px] sm:min-h-[400px] md:aspect-square">
           {post.post_type === 'image' ? (
             <>
               {!imageLoaded && (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="animate-pulse bg-muted-foreground/20 w-8 h-8 rounded" />
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
                 </div>
               )}
               <img
@@ -77,47 +77,53 @@ const PostCard = ({ post, currentUserId, onLike }: PostCardProps) => {
                 alt={post.caption}
                 className={`w-full h-full object-cover transition-opacity duration-300 ${
                   imageLoaded ? 'opacity-100' : 'opacity-0'
-                }`}
+                } cursor-pointer hover:scale-105 transition-transform duration-200`}
                 onLoad={() => setImageLoaded(true)}
                 loading="lazy"
+                onClick={() => {
+                  // Mobile-friendly image viewer would go here
+                  window.open(post.content_url, '_blank');
+                }}
               />
             </>
           ) : (
             <video
               src={post.content_url}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover rounded-none"
               controls
               preload="metadata"
+              playsInline
+              muted
             />
           )}
         </div>
 
-        {/* Actions */}
-        <div className="p-4">
+        {/* Actions - Mobile Optimized */}
+        <div className="p-3 sm:p-4">
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-6 sm:space-x-4">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleLike}
-                className={`p-0 h-auto ${isLiked ? 'text-red-500' : 'text-foreground'}`}
+                className={`p-0 h-auto active:scale-95 transition-transform ${isLiked ? 'text-red-500' : 'text-foreground'}`}
               >
-                <Heart className={`w-6 h-6 ${isLiked ? 'fill-current' : ''}`} />
+                <Heart className={`w-7 h-7 sm:w-6 sm:h-6 ${isLiked ? 'fill-current' : ''}`} />
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowComments(true)}
-                className="p-0 h-auto text-foreground"
+                className="p-0 h-auto text-foreground active:scale-95 transition-transform"
               >
-                <MessageCircle className="w-6 h-6" />
+                <MessageCircle className="w-7 h-7 sm:w-6 sm:h-6" />
               </Button>
-              <Button variant="ghost" size="sm" className="p-0 h-auto text-foreground">
-                <Share className="w-6 h-6" />
+              <Button variant="ghost" size="sm" className="p-0 h-auto text-foreground active:scale-95 transition-transform">
+                <Share className="w-7 h-7 sm:w-6 sm:h-6" />
               </Button>
             </div>
-            <Button variant="ghost" size="sm" className="p-0 h-auto text-foreground">
-              <Bookmark className="w-6 h-6" />
+            <Button variant="ghost" size="sm" className="p-0 h-auto text-foreground active:scale-95 transition-transform">
+              <Bookmark className="w-7 h-7 sm:w-6 sm:h-6" />
             </Button>
           </div>
 

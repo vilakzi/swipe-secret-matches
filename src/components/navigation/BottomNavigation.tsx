@@ -58,7 +58,7 @@ const BottomNavigation = () => {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-md border-t border-gray-700">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border/20 shadow-lg">
       <div className="flex justify-around items-center py-2 px-4 max-w-md mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -68,15 +68,15 @@ const BottomNavigation = () => {
             <button
               key={item.id}
               onClick={() => navigate(item.path)}
-              className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-all duration-200 ${
+              className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-all duration-300 ${
                 active
-                  ? 'text-purple-400 bg-purple-500/20'
-                  : 'text-gray-400 hover:text-white hover:bg-white/10'
+                  ? 'text-primary bg-primary/10 scale-105'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
               }`}
               aria-label={item.label}
             >
-              <Icon className={`w-5 h-5 mb-1 ${active ? 'scale-110' : ''}`} />
-              <span className="text-xs font-medium">{item.label}</span>
+              <Icon className={`w-5 h-5 mb-1 transition-transform ${active ? 'scale-110' : ''}`} />
+              <span className={`text-xs font-medium transition-colors ${active ? 'text-primary' : ''}`}>{item.label}</span>
             </button>
           );
         })}

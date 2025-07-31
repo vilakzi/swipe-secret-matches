@@ -103,8 +103,8 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
   // Step 2: Preview & details
   if (step === 2 && selectedFile) {
     return (
-      <Card className="bg-black/20 backdrop-blur-md border-gray-700 p-6 mb-8">
-        <h2 className="text-xl font-bold text-white mb-4">Preview Your Post</h2>
+      <Card className="bg-card/95 backdrop-blur-md border-border p-4 sm:p-6 mb-8 shadow-lg">
+        <h2 className="text-xl font-bold text-foreground mb-4">Preview Your Post</h2>
         
         <MobileUploadProgress
           progress={uploadProgress}
@@ -146,8 +146,8 @@ const PostUploadForm = ({ onUploadSuccess, onShowPayment, onAddPostToFeed }: Pos
 
   // Step 1: Select file
   return (
-    <Card className="bg-black/20 backdrop-blur-md border-gray-700 p-6 mb-8">
-      <h2 className="text-xl font-bold text-white mb-4">Create New Post</h2>
+    <Card className="bg-card/95 backdrop-blur-md border-border p-4 sm:p-6 mb-8 shadow-lg">
+      <h2 className="text-xl font-bold text-foreground mb-4">Create New Post</h2>
       <EnhancedFileUploadSection
         selectedFile={selectedFile}
         onFileChange={handleFileChange}

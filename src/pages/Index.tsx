@@ -2,10 +2,10 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Heart, User, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import OnlineStatus from '@/components/OnlineStatus';
 import InstagramFeed from '@/components/feed/InstagramFeed';
+import BottomNavigation from '@/components/navigation/BottomNavigation';
 import { usePresence } from '@/hooks/usePresence';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useInactivityTracker } from '@/hooks/useInactivityTracker';
@@ -70,48 +70,14 @@ const Index = () => {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pb-20">
         {/* Main Content */}
         <div className="max-w-lg mx-auto">
           <InstagramFeed />
         </div>
-
-        {/* Bottom Navigation */}
-        <nav className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md border-t border-border">
-          <div className="flex justify-around items-center py-2 px-4 max-w-lg mx-auto">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/')}
-              className="flex flex-col items-center space-y-1 text-foreground"
-            >
-              <Heart className="w-5 h-5" />
-              <span className="text-xs">Home</span>
-            </Button>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleProfile}
-              className="flex flex-col items-center space-y-1 text-foreground"
-            >
-              <User className="w-5 h-5" />
-              <span className="text-xs">Profile</span>
-            </Button>
-
-            {isServiceProvider && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleDashboard}
-                className="flex flex-col items-center space-y-1 text-foreground"
-              >
-                <Settings className="w-5 h-5" />
-                <span className="text-xs">Dashboard</span>
-              </Button>
-            )}
-          </div>
-        </nav>
+        
+        {/* Unified Bottom Navigation */}
+        <BottomNavigation />
       </div>
     </ErrorBoundary>
   );

@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import PostUploadForm from '@/components/dashboard/PostUploadForm';
 import PostsList from '@/components/dashboard/PostsList';
+import BottomNavigation from '@/components/navigation/BottomNavigation';
 
 
 const ServiceProviderDashboard = () => {
@@ -61,7 +62,7 @@ const ServiceProviderDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-primary/5 p-4 pb-20">
       <div className="max-w-4xl mx-auto">
         <DashboardHeader />
         
@@ -73,7 +74,9 @@ const ServiceProviderDashboard = () => {
 
         <PostsList posts={posts} />
       </div>
-
+      
+      {/* Unified Bottom Navigation */}
+      <BottomNavigation />
     </div>
   );
 };
