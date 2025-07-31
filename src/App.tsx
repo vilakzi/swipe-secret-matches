@@ -17,7 +17,7 @@ const queryClient = new QueryClient({
   },
 });
 
-const App: React.FC = () => {
+function App() {
   console.log('App.tsx: Starting with simplified provider structure');
   
   return (
@@ -35,6 +35,6 @@ const App: React.FC = () => {
       </QueryClientProvider>
     </BrowserRouter>
   );
-};
+}
 
 export default App;

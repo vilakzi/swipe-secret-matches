@@ -19,7 +19,7 @@ const ServiceProviderDashboard = React.lazy(() => import("@/pages/ServiceProvide
 const AdminDashboard = React.lazy(() => import("@/pages/AdminDashboard"));
 const NotFound = React.lazy(() => import("@/pages/NotFound"));
 
-const LoadingSpinner = () => (
+const LoadingSpinner: React.FC = () => (
   <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center">
     <div className="text-center p-8">
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
@@ -28,7 +28,7 @@ const LoadingSpinner = () => (
   </div>
 );
 
-const MainApp = () => {
+const MainApp: React.FC = () => {
   console.log('MainApp: Simplified initialization');
   
   return (
@@ -40,7 +40,7 @@ const MainApp = () => {
   );
 };
 
-const MainAppContent = () => {
+const MainAppContent: React.FC = () => {
   // TODO: Re-enable session manager after fixing React context issues
   // useSessionManager();
   const { user, loading } = useAuth();
