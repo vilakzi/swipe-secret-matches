@@ -14,8 +14,8 @@ import ErrorBoundary from '@/components/common/ErrorBoundary';
 
 const Index = () => {
   const { user, signOut } = useAuth();
-  const { isUserOnline } = usePresence();
   const { isServiceProvider, loading: roleLoading } = useUserRole();
+  const { isUserOnline } = usePresence(); // Always call the hook
   const navigate = useNavigate();
 
   // Auto-logout after 30 minutes of inactivity
