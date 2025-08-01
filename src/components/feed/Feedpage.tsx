@@ -1,37 +1,43 @@
 
 import React, { useState, useEffect } from 'react';
-
 import FeedContent from '@/components/feed/FeedContent';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from './types/feedTypes';
+import { checkDemoContentExists, createDemoContent } from '@/utils/demoContentSeeder';
 
 const Feed = () => {
   const [feedItems, setFeedItems] = useState<any[]>([]);
   const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
   const [isSubscribed, setIsSubscribed] = useState(false);
 
+  // Check and create demo content if needed
+  const initializeFeed = async () => {
+    const contentCheck = await checkDemoContentExists();
+    
+    if (!contentCheck.hasProfiles || !contentCheck.hasPosts) {
+      console.log('📝 No demo content found, creating sample data...');
+      await createDemoContent();
+    }
+  };
+
   // Fetch posts from the posts table and transform them into feed items
   const fetchFeed = async () => {
     try {
-      console.log('Fetching real posts from database...');
-      // Get posts with profile information
+      console.log('📱 Fetching posts from database...');
+      // Get posts with profile information using correct join
       const { data: posts, error: postsError } = await supabase
         .from('posts')
         .select(`
           *,
-          profiles:provider_id (
+          profiles!posts_user_id_fkey (
             id,
-            display_name,
+            user_id,
+            username,
+            full_name,
             bio,
-            profile_image_url,
-            location,
-            age,
-            whatsapp,
-            user_type,
-            role,
-            created_at,
-            verifications
-          )
+            avatar_url
+          ),
+          likes!left (user_id)
         `)
         .order('created_at', { ascending: false });
 
@@ -52,18 +58,18 @@ const Feed = () => {
           type: 'post' as const,
           profile: {
             id: profile.id,
-            name: profile.display_name || 'Unknown User',
-            age: profile.age || 25,
-            image: profile.profile_image_url || '/placeholder.svg',
+            name: profile.full_name || profile.username || 'Unknown User',
+            age: 25,
+            image: profile.avatar_url || '/placeholder.svg',
             bio: profile.bio || '',
-            whatsapp: profile.whatsapp || '',
-            location: profile.location || '',
-            userType: profile.user_type || 'user',
-            role: profile.role,
-            joinDate: profile.created_at,
+            whatsapp: '',
+            location: '',
+            userType: 'user',
+            role: null,
+            joinDate: new Date().toISOString(),
             posts: [post.content_url],
             isRealAccount: true,
-            verifications: profile.verifications || {
+            verifications: {
               phoneVerified: false,
               emailVerified: true,
               photoVerified: false,
@@ -73,7 +79,7 @@ const Feed = () => {
           } as Profile,
           postImage: post.content_url,
           caption: post.caption,
-          isAdminCard: ['admin', 'superadmin'].includes(profile.role),
+          isAdminCard: false,
           createdAt: post.created_at
         };
       }).filter(Boolean) || [];
@@ -86,7 +92,8 @@ const Feed = () => {
   };
 
   useEffect(() => {
-    fetchFeed();
+    // Initialize demo content and then fetch feed
+    initializeFeed().then(fetchFeed);
 
     // Set up real-time subscription for new posts
     const channel = supabase

@@ -41,7 +41,7 @@ const PostCard = ({ post, currentUserId, onLike }: PostCardProps) => {
 
   return (
     <>
-      <article className="bg-background border-b border-border/20 mb-4 sm:mb-6 rounded-lg sm:rounded-none overflow-hidden shadow-sm">
+      <article className="bg-background border-b border-border/20 mb-4 sm:mb-6 rounded-lg sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow max-w-lg mx-auto sm:max-w-none">
         {/* Header */}
         <div className="flex items-center justify-between p-3 sm:p-4">
           <div className="flex items-center space-x-3">
