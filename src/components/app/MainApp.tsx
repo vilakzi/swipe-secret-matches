@@ -7,10 +7,8 @@ import ServiceProviderRoute from "@/components/ServiceProviderRoute";
 import AdminRoute from "@/components/AdminRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
-// Session manager removed - causing React context issues
 import Auth from "@/pages/Auth";
 
-// Lazy load heavy components to improve mobile performance
 const Index = React.lazy(() => import("@/pages/Index"));
 const Profile = React.lazy(() => import("@/pages/Profile"));
 const UserProfile = React.lazy(() => import("@/pages/UserProfile"));
@@ -19,28 +17,16 @@ const ServiceProviderDashboard = React.lazy(() => import("@/pages/ServiceProvide
 const AdminDashboard = React.lazy(() => import("@/pages/AdminDashboard"));
 const NotFound = React.lazy(() => import("@/pages/NotFound"));
 
-const LoadingSpinner: React.FC = () => (
-  <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-purple-900 flex items-center justify-center">
+const LoadingSpinner = () => (
+  <div className="min-h-screen bg-background flex items-center justify-center">
     <div className="text-center p-8">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
-      <h2 className="text-xl font-semibold text-white">Loading...</h2>
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+      <h2 className="text-xl font-semibold">Loading...</h2>
     </div>
   </div>
 );
 
-const MainApp: React.FC = () => {
-  console.log('MainApp: Simplified initialization');
-  
-  return (
-    <ErrorBoundary>
-      <AuthProvider>
-        <MainAppContent />
-      </AuthProvider>
-    </ErrorBoundary>
-  );
-};
-
-const MainAppContent: React.FC = () => {
+const AppRoutes = () => {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -121,6 +107,16 @@ const MainAppContent: React.FC = () => {
         </Suspense>
       </div>
     </TooltipProvider>
+  );
+};
+
+const MainApp = () => {
+  return (
+    <ErrorBoundary>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </ErrorBoundary>
   );
 };
 
