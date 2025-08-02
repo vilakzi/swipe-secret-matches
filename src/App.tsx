@@ -18,22 +18,22 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  console.log('App.tsx: Initializing clean app structure');
-  
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="dark"
-        enableSystem
-        disableTransitionOnChange
-      >
-        <BrowserRouter>
-          <MainApp />
-          <Toaster />
-        </BrowserRouter>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <BrowserRouter>
+            <MainApp />
+            <Toaster />
+          </BrowserRouter>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </React.StrictMode>
   );
 }
 
