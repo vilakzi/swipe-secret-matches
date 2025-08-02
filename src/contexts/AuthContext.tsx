@@ -23,7 +23,8 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  console.log('AuthProvider: Initializing...');
+  console.log('AuthProvider: Initializing with React:', React);
+  console.log('AuthProvider: React.useState available:', React.useState);
   
   // Initialize state with explicit React namespace
   const [user, setUser] = React.useState<User | null>(null);

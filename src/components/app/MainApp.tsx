@@ -1,7 +1,7 @@
-import React, { Suspense } from 'react';
+import * as React from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ServiceProviderRoute from "@/components/ServiceProviderRoute";
 import AdminRoute from "@/components/AdminRoute";
@@ -111,11 +111,11 @@ const AppRoutes = () => {
 };
 
 const MainApp = () => {
+  console.log('MainApp: React available:', React);
+  
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
+      <AppRoutes />
     </ErrorBoundary>
   );
 };
