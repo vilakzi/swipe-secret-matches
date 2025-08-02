@@ -17,26 +17,23 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  console.log('App: Starting with React:', React);
   
   return (
-    <React.StrictMode>
-      <AuthProvider>
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="dark"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <BrowserRouter>
-              <MainApp />
-              <Toaster />
-            </BrowserRouter>
-          </ThemeProvider>
-        </QueryClientProvider>
-      </AuthProvider>
-    </React.StrictMode>
+    <AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <BrowserRouter>
+            <MainApp />
+            <Toaster />
+          </BrowserRouter>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </AuthProvider>
   );
 }
 

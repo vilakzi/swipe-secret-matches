@@ -27,7 +27,7 @@ const LoadingSpinner = () => (
 );
 
 const AppRoutes = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, session } = useAuth();
 
   if (loading) {
     return <LoadingSpinner />;
@@ -36,7 +36,7 @@ const AppRoutes = () => {
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-background">
-        <Suspense fallback={<LoadingSpinner />}>
+        <React.Suspense fallback={<LoadingSpinner />}>
           <Routes>
             <Route 
               path="/auth" 
@@ -104,14 +104,13 @@ const AppRoutes = () => {
               </AppLayout>
             } />
           </Routes>
-        </Suspense>
+        </React.Suspense>
       </div>
     </TooltipProvider>
   );
 };
 
 const MainApp = () => {
-  console.log('MainApp: React available:', React);
   
   return (
     <ErrorBoundary>

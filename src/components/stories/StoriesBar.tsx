@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import * as React from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Plus, X } from 'lucide-react';
@@ -23,16 +23,23 @@ interface Story {
 
 export const StoriesBar = () => {
   const { user } = useAuth();
-  const [stories, setStories] = useState<Story[]>([]);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [selectedStory, setSelectedStory] = useState<Story | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [stories, setStories] = React.useState<Story[]>([]);
+  const [showCreateModal, setShowCreateModal] = React.useState(false);
+  const [selectedStory, setSelectedStory] = React.useState<Story | null>(null);
+  const [loading, setLoading] = React.useState(true);
 
-  useEffect(() => {
-    fetchStories();
-  }, []);
+  React.useEffect(() => {
+    if (user) {
+      fetchStories();
+    }
+  }, [user]);
 
-  const fetchStories = async () => {
+  const fetchStories = React.useCallback(async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from('stories')
@@ -55,7 +62,7 @@ export const StoriesBar = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   const handleStoryClick = async (story: Story) => {
     setSelectedStory(story);

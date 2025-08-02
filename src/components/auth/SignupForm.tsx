@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,14 +9,14 @@ import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { useAuthHandlers } from '@/hooks/useAuthHandlers';
 
 const SignupForm = () => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = React.useState({
     email: '',
     password: '',
     displayName: '',
     phone: '',
     userType: 'user' as 'user' | 'service_provider'
   });
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
   const { loading, handleSubmit } = useAuthHandlers();
 
   const onSubmit = async (e: React.FormEvent) => {
