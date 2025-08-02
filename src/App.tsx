@@ -2,7 +2,7 @@ import * as React from 'react';
 import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from "next-themes";
-import { Toaster } from "@/components/ui/toaster";
+
 import { AuthProvider } from "@/contexts/AuthContext";
 import MainApp from "@/components/app/MainApp";
 
@@ -29,7 +29,6 @@ function App() {
         >
           <BrowserRouter>
             <MainApp />
-            <Toaster />
           </BrowserRouter>
         </ThemeProvider>
       </QueryClientProvider>

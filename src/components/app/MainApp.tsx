@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/toaster";
 import { useAuth } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ServiceProviderRoute from "@/components/ServiceProviderRoute";
@@ -105,6 +106,7 @@ const AppRoutes = () => {
             } />
           </Routes>
         </React.Suspense>
+        <Toaster />
       </div>
     </TooltipProvider>
   );
