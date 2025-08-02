@@ -10,10 +10,9 @@ interface UserPresence {
 }
 
 export const usePresence = () => {
-  try {
-    const { user } = useAuth();
-    const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
-    const [channel, setChannel] = useState<any>(null);
+  const { user } = useAuth();
+  const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
+  const [channel, setChannel] = useState<any>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -99,15 +98,7 @@ export const usePresence = () => {
     };
   }, [channel, user]);
 
-    const isUserOnline = (userId: string) => onlineUsers.has(userId);
+  const isUserOnline = (userId: string) => onlineUsers.has(userId);
 
-    return { isUserOnline, onlineUsers };
-  } catch (error) {
-    console.error('usePresence hook error:', error);
-    // Return fallback values if context is not available
-    return { 
-      isUserOnline: () => false, 
-      onlineUsers: new Set<string>() 
-    };
-  }
+  return { isUserOnline, onlineUsers };
 };
