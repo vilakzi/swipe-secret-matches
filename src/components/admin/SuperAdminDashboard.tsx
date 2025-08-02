@@ -11,14 +11,14 @@ import {
   XCircle,
   Crown
 } from 'lucide-react';
-import EnhancedContentUpload from './EnhancedContentUpload';
+import ContentUpload from './ContentUpload';
 import ContentModerationPanel from './ContentModerationPanel';
 import ContentManager from './ContentManager';
 import SuperAdminPanel from './SuperAdminPanel';
-import { useEnhancedAdminContent } from '@/hooks/useEnhancedAdminContent';
+import { useAdminContent } from '@/hooks/useAdminContent';
 
 const SuperAdminDashboard = () => {
-  const { content } = useEnhancedAdminContent();
+  const { content } = useAdminContent();
   
   // Calculate stats
   const stats = {
@@ -137,7 +137,7 @@ const SuperAdminDashboard = () => {
         </TabsContent>
 
         <TabsContent value="upload" className="space-y-6">
-          <EnhancedContentUpload />
+          <ContentUpload />
         </TabsContent>
 
         <TabsContent value="moderation" className="space-y-6">

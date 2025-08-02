@@ -17,11 +17,11 @@ import {
   AlertTriangle,
   Shield
 } from 'lucide-react';
-import { useEnhancedAdminContent, EnhancedAdminContent } from '@/hooks/useEnhancedAdminContent';
+import { useAdminContent } from '@/hooks/useAdminContent';
 
 const ContentModerationPanel = () => {
-  const { content, loading, approveContent, rejectContent } = useEnhancedAdminContent();
-  const [selectedContent, setSelectedContent] = useState<EnhancedAdminContent | null>(null);
+  const { content, loading, approveContent, rejectContent } = useAdminContent();
+  const [selectedContent, setSelectedContent] = useState<any | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [moderationNotes, setModerationNotes] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');

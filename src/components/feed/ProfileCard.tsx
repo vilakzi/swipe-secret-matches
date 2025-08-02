@@ -2,8 +2,6 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Heart, MessageCircle, Lock, BadgeCheck } from 'lucide-react';
-import OnlineStatus from '@/components/OnlineStatus';
-import { usePresence } from '@/hooks/usePresence';
 import { useNavigate } from 'react-router-dom';
 import OptimizedImage from '@/components/ui/OptimizedImage';
 import ImageModal from '@/components/ui/ImageModal';
@@ -20,7 +18,6 @@ interface ProfileCardProps {
 }
 
 const ProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact }: ProfileCardProps) => {
-  const { isUserOnline } = usePresence();
   const navigate = useNavigate();
   const { isOpen, imageSrc, imageAlt, openModal, closeModal } = useImageModal();
 
@@ -67,11 +64,6 @@ const ProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact }: Prof
                 className="w-10 h-10 rounded-full hover:opacity-80 transition-opacity"
                 onClick={handleAvatarClick}
                 expandable
-              />
-              <OnlineStatus 
-                isOnline={isUserOnline(item.profile.id.toString())} 
-                size="sm"
-                className="absolute -bottom-1 -right-1"
               />
             </div>
             <div>

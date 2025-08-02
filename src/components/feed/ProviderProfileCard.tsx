@@ -1,5 +1,4 @@
 import { Card } from '@/components/ui/card';
-import { usePresence } from '@/hooks/usePresence';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProviderHeader from './provider/ProviderHeader';
@@ -45,7 +44,6 @@ interface ProviderProfileCardProps {
 }
 
 const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact }: ProviderProfileCardProps) => {
-  const { isUserOnline } = usePresence();
   const navigate = useNavigate();
   const [showPortfolio, setShowPortfolio] = useState(false);
 
@@ -92,7 +90,7 @@ const ProviderProfileCard = ({ item, likedItems, isSubscribed, onLike, onContact
     <Card className="bg-gray-800 border-gray-700 mb-4">
       <ProviderHeader
         profile={item.profile}
-        isOnline={isUserOnline(item.profile.id.toString())}
+        isOnline={false}
         isSubscribed={isSubscribed}
         onProfileClick={handleProfileClick}
       />

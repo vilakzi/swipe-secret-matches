@@ -46,13 +46,13 @@ const InstagramFeed = () => {
         .from('posts')
         .select(`
           *,
-          profiles!posts_user_id_fkey (
+          profiles!posts_provider_id_fkey (
             id,
             username,
             full_name,
             avatar_url
           ),
-          likes!posts_likes_post_id_fkey (user_id)
+          likes!left (user_id)
         `)
         .order('created_at', { ascending: false })
         .range(offset, offset + 9);

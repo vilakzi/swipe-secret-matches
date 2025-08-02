@@ -29,7 +29,6 @@ interface Profile {
 interface PostCardHeaderProps {
   profile: Profile;
   isSubscribed: boolean;
-  isUserOnline: (profileId: string) => boolean;
   onProfileClick: () => void;
   onAvatarClick: (e: React.MouseEvent) => void;
   isVideoPost?: boolean;
@@ -39,7 +38,6 @@ interface PostCardHeaderProps {
 const PostCardHeader = ({
   profile,
   isSubscribed,
-  isUserOnline,
   onProfileClick,
   onAvatarClick,
   isVideoPost = false,
@@ -58,9 +56,6 @@ const PostCardHeader = ({
               />
               <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
             </Avatar>
-            {isUserOnline(profile.id) && (
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-gray-800 rounded-full"></div>
-            )}
           </div>
           <div className="flex-1">
             <div className="flex items-center space-x-2">

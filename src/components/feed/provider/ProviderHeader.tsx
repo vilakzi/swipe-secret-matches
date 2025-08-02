@@ -2,7 +2,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MapPin, Clock, User, Lock } from 'lucide-react';
-import OnlineStatus from '@/components/OnlineStatus';
 
 interface Profile {
   id: string;
@@ -51,11 +50,6 @@ const ProviderHeader = ({ profile, isOnline, isSubscribed, onProfileClick }: Pro
             src={profile.image}
             alt={profile.name}
             className="w-12 h-12 rounded-full object-cover hover:opacity-80 transition-opacity"
-          />
-          <OnlineStatus 
-            isOnline={isOnline} 
-            size="sm"
-            className="absolute -bottom-1 -right-1"
           />
         </div>
         <div>

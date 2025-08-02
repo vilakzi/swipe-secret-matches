@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useContentFeed } from '@/hooks/useContentFeed';
+// Removed broken useContentFeed import
 import { useUserRole } from '@/hooks/useUserRole';
 // Utility imports
 import { isValidMedia } from '@/utils/feed/mediaUtils';
@@ -36,7 +36,7 @@ const FeedContent = ({
   const [sortOption, setSortOption] = useState<SortOption>('newest');
   const [filterOption, setFilterOption] = useState<FilterOption>('all');
   const [locationOption, setLocationOption] = useState<LocationOption>('all');
-  const { contentFeedItems } = useContentFeed();
+  // Removed broken contentFeedItems dependency
   const { user } = useAuth();
   const { role } = useUserRole();
 
@@ -56,25 +56,8 @@ const FeedContent = ({
       }
     }));
 
-    // Convert content feed items to FeedItem type compatible format
-    const contentAsRegularFeed = contentFeedItems.filter(
-      c => !!c && !!c.id && isValidMedia(c.postImage)
-    ).map(item => ({
-      ...item,
-      isContent: true,
-      // Add location metadata for filtering
-      locationMetadata: {
-        target_locations: item.category === 'soweto' ? ['soweto'] :
-                         item.category === 'jhb-central' ? ['jhb-central'] :
-                         item.category === 'pta' ? ['pta'] : ['all'],
-        location_specific: item.category !== 'all'
-      },
-      // Ensure the profile matches FeedItem's Profile type
-      profile: {
-        ...item.profile,
-        userType: item.profile.userType as "user" | "service_provider" | "admin" | "superadmin"
-      }
-    } as FeedItem & { isContent: true; locationMetadata: any }));
+    // Remove broken contentFeedItems reference
+    const contentAsRegularFeed: any[] = [];
 
     // Admin posts from database
     const adminPosts = enrichedFeedItems.filter(item =>
@@ -108,7 +91,7 @@ const FeedContent = ({
     ];
 
     return { allFeedItems };
-  }, [feedItems, contentFeedItems, adminRoles]);
+  }, [feedItems, adminRoles]);
 
   // Enhanced location filtering with admin content support
   const filterByLocation = useMemo(() => {

@@ -3,10 +3,8 @@ import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import OnlineStatus from '@/components/OnlineStatus';
 import InstagramFeed from '@/components/feed/InstagramFeed';
 import BottomNavigation from '@/components/navigation/BottomNavigation';
-import { usePresence } from '@/hooks/usePresence';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useInactivityTracker } from '@/hooks/useInactivityTracker';
 import { toast } from '@/hooks/use-toast';
@@ -15,7 +13,6 @@ import ErrorBoundary from '@/components/common/ErrorBoundary';
 const Index = () => {
   const { user, signOut } = useAuth();
   const { isServiceProvider, loading: roleLoading } = useUserRole();
-  const { isUserOnline } = usePresence(); // Always call the hook
   const navigate = useNavigate();
 
   // Auto-logout after 30 minutes of inactivity
