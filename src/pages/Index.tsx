@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import * as React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -18,7 +18,7 @@ const Index = () => {
   // Auto-logout after 30 minutes of inactivity
   useInactivityTracker({
     timeoutMinutes: 30,
-    onInactive: useCallback(() => {
+    onInactive: React.useCallback(() => {
       toast({
         title: "Session expired",
         description: "You've been logged out due to inactivity",
@@ -28,11 +28,11 @@ const Index = () => {
     }, [signOut])
   });
 
-  const handleDashboard = useCallback(() => {
+  const handleDashboard = React.useCallback(() => {
     navigate('/dashboard');
   }, [navigate]);
 
-  const handleProfile = useCallback(() => {
+  const handleProfile = React.useCallback(() => {
     navigate('/profile');
   }, [navigate]);
 
