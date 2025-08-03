@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,10 +13,10 @@ interface AnalyticsData {
 }
 
 const AppAnalytics = () => {
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [analyticsData, setAnalyticsData] = React.useState<AnalyticsData[]>([]);
+  const [loading, setLoading] = React.useState(true);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const fetchData = async () => {
       await fetchAnalytics();
     };

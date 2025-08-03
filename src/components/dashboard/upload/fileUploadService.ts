@@ -7,7 +7,7 @@ export const uploadFileToStorage = async (
   file: File,
   onProgress?: (progress: number) => void
 ) => {
-  console.log(`Starting upload: ${fileName}, size: ${file.size} bytes`);
+  // Starting file upload process
   
   onProgress?.(5);
 
@@ -41,7 +41,7 @@ export const uploadFileToStorage = async (
     
     onProgress?.(30);
 
-    console.log('Attempting upload to Supabase storage...');
+    // Attempting upload to Supabase storage
     
     const { data, error } = await supabase.storage
       .from('posts')
@@ -54,7 +54,7 @@ export const uploadFileToStorage = async (
     onProgress?.(70);
 
     if (error) {
-      console.error('Upload error:', error);
+      // Handle upload error with proper error messaging
       
       if (error.message?.includes('fetch')) {
         throw new Error('Network error. Please check your connection and try again.');
@@ -79,7 +79,7 @@ export const uploadFileToStorage = async (
       throw new Error(`Upload failed: ${error.message}`);
     }
 
-    console.log('Upload successful:', data);
+    // Upload successful
     return data;
   }, 3, 2000);
 
@@ -97,12 +97,12 @@ export const uploadFileToStorage = async (
 
     onProgress?.(95);
     
-    console.log('Upload completed successfully:', publicUrl);
+    // Upload completed successfully
     onProgress?.(100);
     
     return publicUrl;
   } catch (error) {
-    console.error('Failed to get public URL:', error);
+    // Failed to get public URL - handle error gracefully
     throw new Error('Upload completed but failed to get file URL. Please try again.');
   }
 };

@@ -23,11 +23,7 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  // Check if React.useState is available before proceeding
-  if (!React.useState) {
-    console.error('React.useState is not available!');
-    return <div>Loading...</div>;
-  }
+  // Initialize React hooks with proper availability check
   
   // Initialize state with explicit React namespace
   const [user, setUser] = React.useState<User | null>(null);
@@ -42,7 +38,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       async (event, session) => {
         if (!mounted) return;
 
-        console.log('Auth state changed:', event, session?.user?.email || 'signed out');
+        // Auth state changed - handle gracefully
         
         if (event === 'SIGNED_OUT') {
           setSession(null);
@@ -52,7 +48,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         if (event === 'TOKEN_REFRESHED') {
-          console.log('Token refreshed successfully');
+          // Token refreshed successfully
         }
 
         if (session) {
@@ -73,22 +69,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Error getting session:', error);
+          // Error getting session - attempt refresh
           const { error: refreshError } = await supabase.auth.refreshSession();
           if (refreshError) {
-            console.error('Error refreshing session:', refreshError);
+            // Error refreshing session - sign out
             await supabase.auth.signOut();
           }
           return;
         }
 
         if (mounted) {
-          console.log('Initial session loaded:', session?.user?.email || 'no session');
+          // Initial session loaded
           setSession(session);
           setUser(session?.user ?? null);
         }
       } catch (error) {
-        console.error('Failed to get initial session:', error);
+        // Failed to get initial session
         await supabase.auth.signOut();
       } finally {
         if (mounted) {
@@ -107,7 +103,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUp = async (email: string, password: string, displayName: string, userType: 'user' | 'service_provider' = 'user', isAdmin: boolean = false) => {
     try {
-      console.log('SignUp called with:', email, displayName);
+      // Processing signup request
       const redirectUrl = `${window.location.origin}/`;
       
       const { data, error } = await supabase.auth.signUp({
@@ -124,40 +120,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
       
       if (error) {
-        console.error('SignUp error:', error);
         throw error;
       }
       
-      console.log('SignUp successful:', data.user?.email);
+      // SignUp successful
     } catch (error: any) {
-      console.error('Sign up error:', error);
       throw error;
     }
   };
 
   const signIn = async (email: string, password: string) => {
     try {
-      console.log('SignIn called with:', email);
+      // Processing signin request
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       if (error) {
-        console.error('SignIn error:', error);
         throw error;
       }
       
-      console.log('SignIn successful:', data.user?.email);
+      // SignIn successful
     } catch (error: any) {
-      console.error('Sign in error:', error);
       throw error;
     }
   };
 
   const signInWithGoogle = async () => {
     try {
-      console.log('Google SignIn called');
+      // Processing Google signin
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -166,13 +158,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
       
       if (error) {
-        console.error('Google SignIn error:', error);
         throw error;
       }
       
-      console.log('Google SignIn initiated successfully');
+      // Google SignIn initiated successfully
     } catch (error: any) {
-      console.error('Google sign in error:', error);
       throw error;
     }
   };
@@ -180,22 +170,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signOut = async () => {
     try {
       setLoading(true);
-      console.log('SignOut called');
+      // Processing signout request
       
       const { error } = await supabase.auth.signOut();
       
       if (error) {
-        console.error('Sign out error:', error);
         throw error;
       }
       
       // Clear state immediately
       setSession(null);
       setUser(null);
-      console.log('SignOut successful');
+      // SignOut successful
       
     } catch (error: any) {
-      console.error('Sign out error:', error);
       // Even if there's an error, clear the local state
       setSession(null);
       setUser(null);

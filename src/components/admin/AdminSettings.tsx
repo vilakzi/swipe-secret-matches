@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,10 +14,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 const AdminSettings = () => {
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [lastCheck, setLastCheck] = useState('');
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const [lastCheck, setLastCheck] = React.useState('');
 
-  useEffect(() => {
+  React.useEffect(() => {
     setLastCheck(new Date().toLocaleString());
   }, []);
 

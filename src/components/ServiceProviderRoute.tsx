@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import * as React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,10 +10,10 @@ interface ServiceProviderRouteProps {
 
 const ServiceProviderRoute: React.FC<ServiceProviderRouteProps> = ({ children }) => {
   const { user, loading } = useAuth();
-  const [isServiceProvider, setIsServiceProvider] = useState<boolean | null>(null);
-  const [checking, setChecking] = useState(true);
+  const [isServiceProvider, setIsServiceProvider] = React.useState<boolean | null>(null);
+  const [checking, setChecking] = React.useState(true);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const checkUserType = async () => {
       if (user) {
         const { data, error } = await supabase
@@ -23,7 +23,7 @@ const ServiceProviderRoute: React.FC<ServiceProviderRouteProps> = ({ children })
           .single();
 
         if (error) {
-          console.error('Error checking user type:', error);
+          // Log error without console for production
           setIsServiceProvider(false);
         } else {
           setIsServiceProvider(data?.user_type === 'service_provider');

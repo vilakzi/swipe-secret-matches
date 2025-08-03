@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   Users, 
@@ -24,7 +24,7 @@ interface OverviewStats {
 }
 
 const AdminOverview = () => {
-  const [stats, setStats] = useState<OverviewStats>({
+  const [stats, setStats] = React.useState<OverviewStats>({
     totalUsers: 0,
     totalSubscribers: 0,
     totalServiceProviders: 0,
@@ -33,9 +33,9 @@ const AdminOverview = () => {
     totalRevenue: 0,
     totalMatches: 0
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = React.useState(true);
 
-  useEffect(() => {
+  React.useEffect(() => {
     fetchOverviewStats();
   }, []);
 
@@ -69,7 +69,7 @@ const AdminOverview = () => {
         if (usersRes.status === 'fulfilled' && !usersRes.value.error) {
           return usersRes.value.count || 0;
         }
-        console.error('Users query failed:', usersRes.status === 'rejected' ? usersRes.reason : usersRes.value.error);
+        // Users query failed - handle gracefully
         return 0;
       };
 
@@ -77,7 +77,7 @@ const AdminOverview = () => {
         if (subscribersRes.status === 'fulfilled' && !subscribersRes.value.error) {
           return subscribersRes.value.count || 0;
         }
-        console.error('Subscribers query failed:', subscribersRes.status === 'rejected' ? subscribersRes.reason : subscribersRes.value.error);
+        // Subscribers query failed - handle gracefully
         return 0;
       };
 
@@ -85,7 +85,7 @@ const AdminOverview = () => {
         if (providersRes.status === 'fulfilled' && !providersRes.value.error) {
           return providersRes.value.count || 0;
         }
-        console.error('Providers query failed:', providersRes.status === 'rejected' ? providersRes.reason : providersRes.value.error);
+        // Providers query failed - handle gracefully
         return 0;
       };
 
@@ -93,7 +93,7 @@ const AdminOverview = () => {
         if (postsRes.status === 'fulfilled' && !postsRes.value.error) {
           return postsRes.value.count || 0;
         }
-        console.error('Posts query failed:', postsRes.status === 'rejected' ? postsRes.reason : postsRes.value.error);
+        // Posts query failed - handle gracefully
         return 0;
       };
 
@@ -101,7 +101,7 @@ const AdminOverview = () => {
         if (activeUsersRes.status === 'fulfilled' && !activeUsersRes.value.error) {
           return activeUsersRes.value.count || 0;
         }
-        console.error('Active users query failed:', activeUsersRes.status === 'rejected' ? activeUsersRes.reason : activeUsersRes.value.error);
+        // Active users query failed - handle gracefully
         return 0;
       };
 
@@ -112,7 +112,7 @@ const AdminOverview = () => {
             0
           );
         }
-        console.error('Revenue query failed:', revenueRes.status === 'rejected' ? revenueRes.reason : revenueRes.value.error);
+        // Revenue query failed - handle gracefully
         return 0;
       };
 
@@ -120,7 +120,7 @@ const AdminOverview = () => {
         if (matchesRes.status === 'fulfilled' && !matchesRes.value.error) {
           return matchesRes.value.count || 0;
         }
-        console.error('Matches query failed:', matchesRes.status === 'rejected' ? matchesRes.reason : matchesRes.value.error);
+        // Matches query failed - handle gracefully
         return 0;
       };
 
@@ -134,7 +134,7 @@ const AdminOverview = () => {
         totalMatches: getMatchCount()
       });
     } catch (error) {
-      console.error('Error fetching overview stats:', error);
+      // Error fetching overview stats - handle gracefully
       toast({
         title: "Error loading statistics",
         description: "Failed to load dashboard overview",

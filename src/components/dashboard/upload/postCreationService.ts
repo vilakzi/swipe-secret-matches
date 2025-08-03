@@ -24,13 +24,7 @@ export const createPostRecord = async (
     location_specific: selectedLocations.length > 0
   };
 
-  console.log('Creating post record:', {
-    provider_id: userId,
-    content_url: contentUrl,
-    post_type: postType,
-    promotion_type: promotionType,
-    location_metadata: locationMetadata
-  });
+  // Creating post record with metadata
 
   const postData = await retryOperation(async () => {
     const { data, error } = await supabase
@@ -49,7 +43,7 @@ export const createPostRecord = async (
       .single();
 
     if (error) {
-      console.error('Database insert error:', error);
+      // Handle database insert error
       throw new Error(`Failed to save post: ${error.message}`);
     }
 
@@ -59,7 +53,7 @@ export const createPostRecord = async (
   });
 
   onProgress?.(100);
-  console.log('Post created successfully:', postData);
+  // Post created successfully
   
   return postData;
 };

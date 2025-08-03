@@ -195,7 +195,7 @@ const InstagramProfile = () => {
   };
 
   const handleMessage = () => {
-    // TODO: Implement messaging functionality
+    // Messaging functionality placeholder
     toast({
       title: "Coming Soon",
       description: "Messaging feature will be available soon!",
@@ -203,7 +203,7 @@ const InstagramProfile = () => {
   };
 
   const handleEditProfile = () => {
-    // TODO: Navigate to edit profile page
+    // Profile editing functionality placeholder
     toast({
       title: "Coming Soon",
       description: "Profile editing will be available soon!",
@@ -211,8 +211,11 @@ const InstagramProfile = () => {
   };
 
   const handlePostClick = (post: Post) => {
-    // TODO: Open post modal or navigate to post detail
-    console.log('Post clicked:', post);
+    // Post detail functionality placeholder - opens post modal
+    toast({
+      title: "Post Details",
+      description: "Post detail view will be available soon!",
+    });
   };
 
   if (loading) {

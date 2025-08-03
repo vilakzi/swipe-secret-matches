@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import * as React from 'react';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Upload } from 'lucide-react';
@@ -15,9 +15,9 @@ export const UploadButton: React.FC<UploadButtonProps> = ({
   maxFileSize = 10 * 1024 * 1024 // 10MB default
 }) => {
   const isOnline = useNetworkStatus();
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadStatus, setUploadStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = React.useState(false);
+  const [uploadStatus, setUploadStatus] = React.useState<'idle' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

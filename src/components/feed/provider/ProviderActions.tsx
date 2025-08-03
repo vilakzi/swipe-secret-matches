@@ -2,6 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { Heart, MessageCircle, Phone, Star, Crown } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
+import { toast } from '@/hooks/use-toast';
 
 interface Profile {
   id: string;
@@ -33,8 +34,11 @@ const ProviderActions = ({
 
   const handleSuperPromotion = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // TODO: Implement super promotion logic
-    console.log('Super promotion clicked for provider:', profile.id);
+    // Super promotion functionality placeholder
+    toast({
+      title: "Feature Coming Soon",
+      description: "Super promotion feature will be available soon!",
+    });
   };
 
   return (

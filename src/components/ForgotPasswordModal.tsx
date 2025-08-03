@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -17,13 +17,13 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
   onClose,
   onForgotPassword,
 }) => {
-  const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [emailError, setEmailError] = useState<string | null>(null);
-  const [emailTouched, setEmailTouched] = useState(false);
+  const [email, setEmail] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
+  const [emailError, setEmailError] = React.useState<string | null>(null);
+  const [emailTouched, setEmailTouched] = React.useState(false);
 
   // Validate email on change
-  useEffect(() => {
+  React.useEffect(() => {
     if (emailTouched && email) {
       const validation = validateEmail(email);
       setEmailError(validation.error || null);

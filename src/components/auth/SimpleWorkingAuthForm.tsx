@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -58,7 +58,7 @@ const SimpleWorkingAuthForm = () => {
         navigate('/');
       }
     } catch (error: any) {
-      console.error('Auth error:', error);
+      // Handle auth error gracefully
       toast({
         title: "Error",
         description: error.message || "Authentication failed",
@@ -77,7 +77,7 @@ const SimpleWorkingAuthForm = () => {
         description: "Redirecting to Google..."
       });
     } catch (error: any) {
-      console.error('Google auth error:', error);
+      // Handle Google auth error gracefully
       toast({
         title: "Error", 
         description: error.message || "Google sign in failed",
