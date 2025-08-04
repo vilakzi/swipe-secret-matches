@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
 
 interface VideoControlsProps {

@@ -42,7 +42,7 @@ export const useFileUpload = (onRefresh?: () => void) => {
     }
 
     try {
-      console.log(`Starting mobile ${type} upload for file:`, file.name, 'Size:', file.size);
+      // Mobile upload started
       
       // Show initial upload toast
       toast({
@@ -66,11 +66,11 @@ export const useFileUpload = (onRefresh?: () => void) => {
         .upload(fileName, file, uploadOptions);
 
       if (uploadError) {
-        console.error('Mobile upload error:', uploadError);
+        // Mobile upload failed
         throw new Error(`Upload failed: ${uploadError.message}`);
       }
 
-      console.log('Mobile upload successful:', data);
+      // Mobile upload successful
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
@@ -81,7 +81,7 @@ export const useFileUpload = (onRefresh?: () => void) => {
         throw new Error('Failed to get public URL');
       }
 
-      console.log('Public URL generated:', publicUrl);
+      // Public URL generated
 
       // Create post entry in database
       const { data: postData, error: postError } = await supabase
@@ -100,11 +100,11 @@ export const useFileUpload = (onRefresh?: () => void) => {
         .single();
 
       if (postError) {
-        console.error('Mobile post creation error:', postError);
+        // Mobile post creation failed
         throw new Error(`Failed to create post: ${postError.message}`);
       }
 
-      console.log('Mobile post created successfully:', postData);
+      // Mobile post created successfully
 
       toast({
         title: "Upload successful!",
@@ -117,7 +117,7 @@ export const useFileUpload = (onRefresh?: () => void) => {
       }
       
     } catch (error: any) {
-      console.error('Mobile upload failed:', error);
+      // Mobile upload operation failed
       
       let errorMessage = "Something went wrong during upload";
       

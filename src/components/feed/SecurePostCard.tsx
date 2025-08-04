@@ -1,5 +1,5 @@
 
-import React from 'react';
+import * as React from 'react';
 import { sanitizeHtml } from '@/utils/inputSanitization';
 import { validateUserInput } from '@/utils/securityValidation';
 

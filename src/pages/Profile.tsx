@@ -1,5 +1,5 @@
 
-import React from 'react';
+import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Settings } from 'lucide-react';
@@ -16,7 +16,7 @@ const Profile = () => {
       await signOut();
       navigate('/auth');
     } catch (error) {
-      console.error('Error signing out:', error);
+      // Sign out failed
     }
   };
 

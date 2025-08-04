@@ -1,5 +1,5 @@
 
-import React from 'react';
+import * as React from 'react';
 import { Filter, SortAsc, Clock, ThumbsUp, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {

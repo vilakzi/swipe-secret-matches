@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { Heart, MessageCircle, UserPlus, AtSign } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 

@@ -72,7 +72,7 @@ export const useContinuousFeedAlgorithm = ({
       return rawFeedItems.slice(0, 20);
     }
 
-    console.log('🔄 Creating continuous content pool with', rawFeedItems.length, 'items');
+    // Creating continuous content pool
 
     // Create multiple passes of content with different scoring
     const contentPools: FeedItem[][] = [];
@@ -129,13 +129,7 @@ export const useContinuousFeedAlgorithm = ({
       }
     }
 
-    console.log('🔄 Continuous pool created:', {
-      totalItems: finalPool.length,
-      adminItems: finalPool.filter(i => i.isAdminCard || i.profile?.role === 'admin').length,
-      posts: finalPool.filter(i => i.type === 'post').length,
-      profiles: finalPool.filter(i => i.type === 'profile').length,
-      refreshCount: refreshCount + 1
-    });
+    // Continuous pool created
 
     return finalPool;
   }, [rawFeedItems, enabled, contentPoolSize, scoreContent, refreshCount]);
@@ -150,7 +144,7 @@ export const useContinuousFeedAlgorithm = ({
     if (!enabled) return;
 
     const refreshTimer = setInterval(() => {
-      console.log('🔄 Auto-refreshing continuous feed');
+      // Auto-refreshing continuous feed
       setRefreshCount(prev => prev + 1);
       setContentQueue(createContinuousContentPool());
     }, refreshInterval);
@@ -163,7 +157,7 @@ export const useContinuousFeedAlgorithm = ({
     if (!enabled) return;
 
     const resetTimer = setInterval(() => {
-      console.log('🧹 Resetting seen content for fresh experience');
+      // Resetting seen content
       setSeenContent(new Set());
     }, seenContentResetTime);
 
@@ -181,7 +175,7 @@ export const useContinuousFeedAlgorithm = ({
 
   // Manual refresh
   const refreshContentPool = useCallback(() => {
-    console.log('🔄 Manual refresh triggered');
+    // Manual refresh triggered
     setRefreshCount(prev => prev + 1);
     setContentQueue(createContinuousContentPool());
   }, [createContinuousContentPool]);

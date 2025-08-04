@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -33,10 +32,13 @@ export const useUserRole = () => {
           .from('profiles')
           .select('role')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         if (error) {
-          console.error('Error fetching user role:', error);
+          // Only log actual errors, not "no rows found"
+          if (error.code !== 'PGRST116') {
+            console.error('Error fetching user role:', error);
+          }
           setRole('user');
         } else {
           const userRole = data?.role || 'user';
@@ -49,7 +51,6 @@ export const useUserRole = () => {
           });
         }
       } catch (error) {
-        console.error('Error fetching user role:', error);
         setRole('user');
       } finally {
         setLoading(false);

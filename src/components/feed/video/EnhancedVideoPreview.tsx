@@ -1,5 +1,5 @@
 
-import React from 'react';
+import * as React from 'react';
 import { Play, AlertCircle, RotateCcw } from 'lucide-react';
 import { useVideoThumbnail } from '@/hooks/useVideoThumbnail';
 import { Button } from '@/components/ui/button';

@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { User, Compass, Settings, Briefcase, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';

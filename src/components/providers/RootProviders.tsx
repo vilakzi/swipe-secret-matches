@@ -1,5 +1,5 @@
 
-import React from 'react';
+import * as React from 'react';
 import { BrowserRouter } from "react-router-dom";
 
 interface RootProvidersProps {
@@ -7,7 +7,7 @@ interface RootProvidersProps {
 }
 
 const RootProviders = ({ children }: RootProvidersProps) => {
-  console.log('RootProviders: Ultra minimal setup');
+  // Minimal root providers setup
   
   return (
     <BrowserRouter>

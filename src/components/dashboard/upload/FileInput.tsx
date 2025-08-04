@@ -1,5 +1,5 @@
 
-import React from 'react';
+import * as React from 'react';
 import { Input } from '@/components/ui/input';
 import { Wifi, WifiOff } from 'lucide-react';
 import { useUserRole } from "@/hooks/useUserRole";

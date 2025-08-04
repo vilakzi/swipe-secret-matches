@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import {
   Dialog,
   DialogContent,
@@ -32,7 +32,7 @@ const VideoModal = ({ isOpen, onClose, videoSrc, videoPoster }: VideoModalProps)
         }
       }
     } catch (error) {
-      console.error('Fullscreen error:', error);
+      // Fullscreen operation failed
     }
   };
 

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Filter, Image, Video, RotateCcw } from 'lucide-react';
 import { useFileUpload } from './hooks/useFileUpload';

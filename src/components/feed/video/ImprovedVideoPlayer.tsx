@@ -1,5 +1,5 @@
 
-import React from 'react';
+import * as React from 'react';
 import { useVideoAutoPlay } from '@/hooks/useVideoAutoPlay';
 import { useVideoPlayer } from '@/hooks/useVideoPlayer';
 import VideoControls from './VideoControls';

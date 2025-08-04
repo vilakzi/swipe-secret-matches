@@ -70,7 +70,7 @@ export const useAdvancedContinuousFlow = ({
   const generateDynamicPool = useCallback(() => {
     if (allAvailableContent.length === 0) return [];
 
-    console.log(`🔄 Generating dynamic pool (cycle ${rotationCycle + 1}) with ${allAvailableContent.length} source items`);
+    // Generating dynamic pool
 
     // Create multiple content passes for diversity
     const contentPasses: { items: FeedItem[], bonus: number }[] = [
@@ -131,14 +131,7 @@ export const useAdvancedContinuousFlow = ({
       }
     }
 
-    console.log(`🔄 Dynamic pool generated:`, {
-      totalItems: finalPool.length,
-      adminItems: finalPool.filter(i => i.isAdminCard || i.profile?.role === 'admin').length,
-      posts: finalPool.filter(i => i.type === 'post').length,
-      profiles: finalPool.filter(i => i.type === 'profile').length,
-      freshContent: finalPool.filter(i => !viewedContent.has(i.id)).length,
-      cycle: rotationCycle
-    });
+    // Dynamic pool generated
 
     return finalPool;
   }, [allAvailableContent, contentPoolSize, scoreContent, rotationCycle, viewedContent]);
@@ -152,12 +145,12 @@ export const useAdvancedContinuousFlow = ({
   // Auto-rotation system
   useEffect(() => {
     const rotationTimer = setInterval(() => {
-      console.log('🔄 Auto-rotating content pool for freshness');
+      // Auto-rotating content pool
       setRotationCycle(prev => prev + 1);
       
       // Periodically clear viewed content for recycling
       if (rotationCycle > 0 && rotationCycle % 5 === 0) {
-        console.log('🧹 Clearing viewed content for fresh recycling');
+        // Clearing viewed content
         setViewedContent(new Set());
       }
     }, rotationInterval);
@@ -176,14 +169,14 @@ export const useAdvancedContinuousFlow = ({
 
   // Manual refresh with guaranteed different content
   const forceRefresh = useCallback(() => {
-    console.log('🔄 Force refresh - generating completely new content flow');
+    // Force refresh triggered
     setRotationCycle(prev => prev + Math.floor(Math.random() * 10) + 1);
     setViewedContent(new Set()); // Clear for maximum freshness
   }, []);
 
   // Reset for new session
   const resetSession = useCallback(() => {
-    console.log('🔄 Resetting session - clearing all viewed content');
+    // Resetting session
     setViewedContent(new Set());
     setRotationCycle(0);
   }, []);

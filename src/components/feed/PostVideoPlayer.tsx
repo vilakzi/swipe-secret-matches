@@ -1,5 +1,5 @@
 
-import React from 'react';
+import * as React from 'react';
 import ImprovedVideoPlayer from './video/ImprovedVideoPlayer';
 import { isVideo } from '@/utils/feed/mediaUtils';
 

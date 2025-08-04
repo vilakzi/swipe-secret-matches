@@ -1,5 +1,5 @@
 
-import React from 'react';
+import * as React from 'react';
 import { Settings as SettingsIcon, User, Bell, Shield, HelpCircle, LogOut } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ const Settings = () => {
       await signOut();
       navigate('/auth');
     } catch (error) {
-      console.error('Error signing out:', error);
+      // Sign out failed
     }
   };
 

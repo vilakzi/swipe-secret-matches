@@ -100,10 +100,10 @@ export const useEngagementTracking = () => {
           value: 1
         })
         .then(() => {
-          console.log('Analytics tracked:', type, itemId);
+          // Analytics tracked
         })
         .catch((error) => {
-          console.warn('Analytics tracking failed:', error);
+          // Analytics tracking failed
         });
     }
   }, []);

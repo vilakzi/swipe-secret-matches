@@ -1,5 +1,5 @@
 
-import React from 'react';
+import * as React from 'react';
 import { Play, Pause, Volume2, VolumeX, Maximize, Minimize } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 

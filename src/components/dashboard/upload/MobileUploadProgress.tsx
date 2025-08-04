@@ -1,5 +1,5 @@
 
-import React from 'react';
+import * as React from 'react';
 import { Progress } from '@/components/ui/progress';
 import { CheckCircle, AlertTriangle, Upload } from 'lucide-react';
 

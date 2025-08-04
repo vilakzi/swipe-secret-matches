@@ -18,7 +18,7 @@ export const useFeedItemCreation = ({
   userId
 }: UseFeedItemCreationProps) => {
   const allFeedItems = useMemo(() => {
-    console.log('Creating feed with OPTIMIZED algorithm - NO duplicates, shuffle key:', shuffleKey);
+    // Creating optimized feed
     
     // Ensure we have valid arrays
     const validProfiles = Array.isArray(filteredProfiles) ? filteredProfiles : [];
@@ -105,7 +105,7 @@ export const useFeedItemCreation = ({
     try {
       shuffledItems = shuffleArrayWithSeed(allOtherItems, shuffleKey);
     } catch (error) {
-      console.error('Shuffle error, using original order:', error);
+      // Shuffle error, using original order
       shuffledItems = allOtherItems;
     }
     
@@ -114,7 +114,7 @@ export const useFeedItemCreation = ({
       ? [...userPosts, ...shuffledItems]
       : shuffledItems;
 
-    console.log(`OPTIMIZED Feed: ${result.length} total items (${userPosts.length} user posts, ${otherPosts.length} other posts, ${profileItems.length} profiles) - GUARANTEED NO DUPLICATES`);
+    // Feed creation completed
     
     return result;
   }, [filteredProfiles, posts, shuffleKey, userId]);

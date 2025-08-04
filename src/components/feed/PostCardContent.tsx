@@ -1,5 +1,5 @@
 
-import React from 'react';
+import * as React from 'react';
 import OptimizedImage from "@/components/ui/OptimizedImage";
 import PostVideoPlayer from "./PostVideoPlayer";
 import VideoModal from "@/components/ui/VideoModal";

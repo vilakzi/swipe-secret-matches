@@ -1,5 +1,5 @@
 
-import React from 'react';
+import * as React from 'react';
 import {
   Dialog,
   DialogContent,
@@ -32,7 +32,7 @@ const ImageModal = ({ isOpen, onClose, imageSrc, imageAlt }: ImageModalProps) =>
         }
       }
     } catch (error) {
-      console.error('Fullscreen error:', error);
+      // Fullscreen operation failed
     }
   };
 

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import * as React from 'react';
 import { MapPin } from 'lucide-react';
 
 export type LocationOption = 'all' | 'soweto' | 'jhb-central' | 'pta';

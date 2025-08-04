@@ -1,5 +1,5 @@
 
-import React from 'react';
+import * as React from 'react';
 import { Play } from 'lucide-react';
 
 interface VideoPosterProps {

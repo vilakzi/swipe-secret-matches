@@ -53,11 +53,11 @@ export const useDynamicFeedAlgorithm = ({
   // Optimized algorithm with race condition prevention
   const algorithmicFeed = useMemo(() => {
     if (!enabled || rawFeedItems.length === 0) {
-      console.log('🚀 Algorithm disabled or no items, returning raw items');
+      // Algorithm disabled, returning raw items
       return rawFeedItems.slice(0, Math.min(maxItemsPerLoad, 12));
     }
 
-    console.log(`🚀 Algorithm processing ${rawFeedItems.length} items (refresh #${refreshCount + 1})`);
+    // Algorithm processing items
 
     try {
       // Enhanced sorting with admin priority and mobile optimization
@@ -89,11 +89,11 @@ export const useDynamicFeedAlgorithm = ({
       const finalSize = Math.min(maxItemsPerLoad, sortedItems.length);
       const finalItems = sortedItems.slice(0, finalSize).map(({ algorithmScore, originalIndex, ...item }) => item);
       
-      console.log(`🚀 Algorithm completed: ${finalItems.length} items processed`);
+      // Algorithm completed processing
       
       return finalItems;
     } catch (error) {
-      console.error('🚀 Algorithm error:', error);
+      // Algorithm processing error
       // Fallback: return original items
       return rawFeedItems.slice(0, Math.min(maxItemsPerLoad, 12));
     }
@@ -101,7 +101,7 @@ export const useDynamicFeedAlgorithm = ({
 
   // Manual refresh
   const manualRefresh = useCallback(() => {
-    console.log('🚀 Manual algorithm refresh triggered');
+    // Manual algorithm refresh triggered
     setRefreshCount(prev => prev + 1);
   }, []);
 
@@ -110,7 +110,7 @@ export const useDynamicFeedAlgorithm = ({
     if (!enabled || autoRefreshInterval <= 0) return;
 
     const refreshTimer = setInterval(() => {
-      console.log('🚀 Auto algorithm refresh triggered');
+      // Auto algorithm refresh triggered
       setRefreshCount(prev => prev + 1);
     }, autoRefreshInterval);
 

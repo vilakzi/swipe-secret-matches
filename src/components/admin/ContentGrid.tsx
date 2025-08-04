@@ -1,5 +1,5 @@
 
-import React from 'react';
+import * as React from 'react';
 import { AdminContent } from '@/hooks/useAdminContent';
 import ContentCard from './ContentCard';
 
