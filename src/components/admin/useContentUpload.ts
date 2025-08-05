@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import * as React from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { useAdminContent } from '@/hooks/useAdminContent';
@@ -15,8 +15,8 @@ export interface UploadFile {
 const BUCKET = 'content_files';
 
 export function useContentUpload() {
-  const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([]);
-  const [uploading, setUploading] = useState(false);
+  const [uploadFiles, setUploadFiles] = React.useState<UploadFile[]>([]);
+  const [uploading, setUploading] = React.useState(false);
   const { createContent } = useAdminContent();
   const { toast } = useToast();
 
@@ -39,7 +39,7 @@ export function useContentUpload() {
   };
 
   // Local handler for dropped files (add to UI & upload to storage)
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+  const onDrop = React.useCallback(async (acceptedFiles: File[]) => {
     const { data: { user } } = await supabase.auth.getUser();
     const prefix = user?.id || 'anonymous';
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Search, Users } from 'lucide-react';
@@ -24,12 +24,12 @@ export interface UserOverview {
 }
 
 const UserManagement = () => {
-  const [users, setUsers] = useState<UserOverview[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<UserOverview[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [removingContentUserId, setRemovingContentUserId] = useState<string | null>(null);
-  const [totalUserCount, setTotalUserCount] = useState(0);
+  const [users, setUsers] = React.useState<UserOverview[]>([]);
+  const [filteredUsers, setFilteredUsers] = React.useState<UserOverview[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [searchTerm, setSearchTerm] = React.useState('');
+  const [removingContentUserId, setRemovingContentUserId] = React.useState<string | null>(null);
+  const [totalUserCount, setTotalUserCount] = React.useState(0);
 
   const { addError } = useError();
 

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Upload, Crown, MapPin } from 'lucide-react';
@@ -15,13 +15,13 @@ type LocationOption = 'all' | 'soweto' | 'jhb-central' | 'pta';
 
 const UnifiedContentUpload = () => {
   const { user } = useAuth();
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [caption, setCaption] = useState('');
-  const [selectedLocation, setSelectedLocation] = useState<LocationOption>('all');
-  const [uploading, setUploading] = useState(false);
-  const [step, setStep] = useState<Step>(1);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [newPost, setNewPost] = useState<any>(null);
+  const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
+  const [caption, setCaption] = React.useState('');
+  const [selectedLocation, setSelectedLocation] = React.useState<LocationOption>('all');
+  const [uploading, setUploading] = React.useState(false);
+  const [step, setStep] = React.useState<Step>(1);
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
+  const [newPost, setNewPost] = React.useState<any>(null);
 
   const locations = [
     { value: 'all' as LocationOption, label: 'All Locations', gradient: 'from-gray-500 to-gray-600' },

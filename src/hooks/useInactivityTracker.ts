@@ -1,5 +1,5 @@
 
-import { useEffect, useRef, useCallback } from 'react';
+import * as React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface UseInactivityTrackerProps {
@@ -12,11 +12,11 @@ export const useInactivityTracker = ({
   onInactive 
 }: UseInactivityTrackerProps = {}) => {
   const { signOut } = useAuth();
-  const timeoutRef = useRef<NodeJS.Timeout>();
-  const lastActivityRef = useRef<number>(Date.now());
+  const timeoutRef = React.useRef<NodeJS.Timeout>();
+  const lastActivityRef = React.useRef<number>(Date.now());
 
-  const handleInactivity = useCallback(() => {
-    console.log('🔒 User inactive for 2 minutes, logging out...');
+  const handleInactivity = React.useCallback(() => {
+    // User inactive - logging out
     if (onInactive) {
       onInactive();
     } else {
@@ -24,7 +24,7 @@ export const useInactivityTracker = ({
     }
   }, [onInactive, signOut]);
 
-  const resetTimer = useCallback(() => {
+  const resetTimer = React.useCallback(() => {
     lastActivityRef.current = Date.now();
     
     if (timeoutRef.current) {
@@ -36,11 +36,11 @@ export const useInactivityTracker = ({
     }, timeoutMinutes * 60 * 1000);
   }, [timeoutMinutes, handleInactivity]);
 
-  const handleActivity = useCallback(() => {
+  const handleActivity = React.useCallback(() => {
     resetTimer();
   }, [resetTimer]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     // Activity events to track
     const events = [
       'mousedown',

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -28,16 +28,16 @@ interface PaymentOverview {
 }
 
 const PaymentTracking = () => {
-  const [payments, setPayments] = useState<PaymentOverview[]>([]);
-  const [filteredPayments, setFilteredPayments] = useState<PaymentOverview[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [payments, setPayments] = React.useState<PaymentOverview[]>([]);
+  const [filteredPayments, setFilteredPayments] = React.useState<PaymentOverview[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [searchTerm, setSearchTerm] = React.useState('');
 
-  useEffect(() => {
+  React.useEffect(() => {
     fetchPayments();
   }, []);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const filtered = payments.filter(payment =>
       payment.display_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       payment.email?.toLowerCase().includes(searchTerm.toLowerCase())

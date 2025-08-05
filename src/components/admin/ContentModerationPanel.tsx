@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,10 +21,10 @@ import { useAdminContent } from '@/hooks/useAdminContent';
 
 const ContentModerationPanel = () => {
   const { content, loading, approveContent, rejectContent } = useAdminContent();
-  const [selectedContent, setSelectedContent] = useState<any | null>(null);
-  const [rejectionReason, setRejectionReason] = useState('');
-  const [moderationNotes, setModerationNotes] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
+  const [selectedContent, setSelectedContent] = React.useState<any | null>(null);
+  const [rejectionReason, setRejectionReason] = React.useState('');
+  const [moderationNotes, setModerationNotes] = React.useState('');
+  const [filterStatus, setFilterStatus] = React.useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
 
   const filteredContent = content.filter(item => {
     if (filterStatus === 'all') return true;

@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAdminContent, AdminContent } from '@/hooks/useAdminContent';
 import ContentGrid from './ContentGrid';
@@ -7,8 +7,8 @@ import ContentEditDialog from './ContentEditDialog';
 
 const ContentManager = () => {
   const { content, loading, updateContent, deleteContent, refetch } = useAdminContent();
-  const [editingContent, setEditingContent] = useState<AdminContent | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingContent, setEditingContent] = React.useState<AdminContent | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
 
   const handleEdit = (item: AdminContent) => {
     setEditingContent(item);

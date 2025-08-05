@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,7 @@ import { Shield, UserPlus, Crown } from 'lucide-react';
 import { useContentPromotion } from '@/hooks/useContentPromotion';
 
 const SuperAdminPanel = () => {
-  const [emailToPromote, setEmailToPromote] = useState('content@connectsbuddy.online');
+  const [emailToPromote, setEmailToPromote] = React.useState('content@connectsbuddy.online');
   const { promoteUserEmail, isLoading } = useContentPromotion();
 
   const handlePromoteUser = async () => {

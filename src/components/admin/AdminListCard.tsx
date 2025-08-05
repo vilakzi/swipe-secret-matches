@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from "react";
+import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead } from "@/components/ui/table";
 import { getAdmins, AdminInfo } from "@/utils/admin/getAdmins";
 
 const AdminListCard: React.FC = () => {
-  const [admins, setAdmins] = useState<AdminInfo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [admins, setAdmins] = React.useState<AdminInfo[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const fetchAdmins = async () => {
       try {
         const allAdmins = await getAdmins();

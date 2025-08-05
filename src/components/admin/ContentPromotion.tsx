@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,9 +20,9 @@ interface ContentPromotionProps {
 }
 
 const ContentPromotion = ({ content, onPromotionChange }: ContentPromotionProps) => {
-  const [isPromoteDialogOpen, setIsPromoteDialogOpen] = useState(false);
-  const [priorityLevel, setPriorityLevel] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPromoteDialogOpen, setIsPromoteDialogOpen] = React.useState(false);
+  const [priorityLevel, setPriorityLevel] = React.useState(1);
+  const [isLoading, setIsLoading] = React.useState(false);
 
   const handlePromote = async () => {
     setIsLoading(true);

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import * as React from 'react';
 import FormField from './FormField';
 import { validateEmail } from '@/utils/emailValidation';
 
@@ -14,10 +14,10 @@ const EmailField: React.FC<EmailFieldProps> = ({
   onEmailChange,
   disabled = false,
 }) => {
-  const [emailError, setEmailError] = useState<string | null>(null);
-  const [emailTouched, setEmailTouched] = useState(false);
+  const [emailError, setEmailError] = React.useState<string | null>(null);
+  const [emailTouched, setEmailTouched] = React.useState(false);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (emailTouched && email) {
       const validation = validateEmail(email);
       setEmailError(validation.error || null);
