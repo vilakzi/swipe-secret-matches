@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
