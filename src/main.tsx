@@ -11,7 +11,11 @@ if (!rootElement) {
 }
 
 const root = ReactDOM.createRoot(rootElement);
-root.render(<App />);
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
 
 // Register service worker after React is mounted
 if ('serviceWorker' in navigator) {
