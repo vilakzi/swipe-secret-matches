@@ -42,38 +42,87 @@ const InstagramFeed = () => {
 
   const fetchPosts = useCallback(async (offset = 0, search = '') => {
     try {
-      let query = supabase
+      // 1) Fetch posts (basic data only)
+      let baseQuery = supabase
         .from('posts')
-        .select(`
-          *,
-          profiles!posts_provider_id_fkey (
-            id,
-            username,
-            full_name,
-            avatar_url
-          ),
-          likes!left (user_id)
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
         .range(offset, offset + 9);
 
       if (search) {
-        query = query.or(`caption.ilike.%${search}%,profiles.username.ilike.%${search}%,profiles.full_name.ilike.%${search}%`);
+        baseQuery = baseQuery.ilike('caption', `%${search}%`);
       }
 
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Error fetching posts:', error);
-        return [];
+      const { data: postsData, error: postsError } = await baseQuery;
+      if (postsError) {
+        console.error('Error fetching posts:', postsError);
+        return [] as Post[];
       }
 
-      return data || [];
+      const validPosts = (postsData || []).filter(
+        (p: any) => typeof p.content_url === 'string' && p.content_url.trim() !== ''
+      );
+
+      if (validPosts.length === 0) return [] as Post[];
+
+      // 2) Fetch related profiles by user_id
+      const userIds = Array.from(new Set(validPosts.map((p: any) => p.user_id).filter(Boolean)));
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, username, full_name, avatar_url')
+        .in('user_id', userIds);
+
+      if (profilesError) {
+        console.warn('Profiles fetch warning:', profilesError);
+      }
+      const profilesByUserId = new Map(
+        (profilesData || []).map((p: any) => [p.user_id, p])
+      );
+
+      // 3) Fetch likes for current user to know if liked
+      let likesByPostId = new Map<string, boolean>();
+      if (user && validPosts.length > 0) {
+        const postIds = validPosts.map((p: any) => p.id);
+        const { data: userLikes, error: likesError } = await supabase
+          .from('likes')
+          .select('post_id')
+          .eq('user_id', user.id)
+          .in('post_id', postIds);
+        if (likesError) {
+          console.warn('Likes fetch warning:', likesError);
+        }
+        likesByPostId = new Map((userLikes || []).map((l: any) => [l.post_id, true]));
+      }
+
+      // 4) Compose final posts array with minimal profile + likes info
+      const composed: Post[] = validPosts.map((p: any) => {
+        const prof = profilesByUserId.get(p.user_id) || {};
+        const isLiked = likesByPostId.get(p.id) || false;
+        return {
+          id: p.id,
+          user_id: p.user_id,
+          content_url: p.content_url,
+          caption: p.caption,
+          post_type: p.post_type,
+          created_at: p.created_at,
+          likes_count: p.likes_count || 0,
+          comments_count: p.comments_count || 0,
+          profiles: {
+            id: p.user_id,
+            username: prof.username || 'user',
+            full_name: prof.full_name || 'User',
+            avatar_url: prof.avatar_url || ''
+          },
+          likes: isLiked ? [{ user_id: user?.id as string }] : []
+        } as Post;
+      });
+
+      return composed;
     } catch (error) {
       console.error('Error fetching posts:', error);
-      return [];
+      return [] as Post[];
     }
-  }, []);
+  }, [user]);
 
   const loadInitialPosts = useCallback(async () => {
     setLoading(true);
@@ -112,11 +161,11 @@ const InstagramFeed = () => {
           const updatedLikes = isLiked 
             ? post.likes.filter(like => like.user_id !== user.id)
             : [...post.likes, { user_id: user.id }];
-          
+
           return {
             ...post,
             likes: updatedLikes,
-            likes_count: updatedLikes.length
+            likes_count: Math.max(0, post.likes_count + (isLiked ? -1 : 1))
           };
         }
         return post;
