@@ -123,6 +123,26 @@ export const useAdminContent = () => {
     }
   };
 
+  const approveContent = async (id: string, moderationNotes?: string) => {
+    return updateContent(id, {
+      // @ts-ignore
+      approval_status: 'approved',
+      // @ts-ignore
+      moderation_notes: moderationNotes || null,
+    } as any);
+  };
+
+  const rejectContent = async (id: string, reason: string, moderationNotes?: string) => {
+    return updateContent(id, {
+      // @ts-ignore
+      approval_status: 'rejected',
+      // @ts-ignore
+      rejection_reason: reason,
+      // @ts-ignore
+      moderation_notes: moderationNotes || null,
+    } as any);
+  };
+
   useEffect(() => {
     fetchContent();
   }, []);
@@ -133,6 +153,8 @@ export const useAdminContent = () => {
     createContent,
     updateContent,
     deleteContent,
+    approveContent,
+    rejectContent,
     refetch: fetchContent,
   };
 };

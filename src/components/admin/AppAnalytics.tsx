@@ -26,24 +26,8 @@ const AppAnalytics = () => {
 
   const fetchAnalytics = async () => {
     try {
-      // Use the correct table or view name: 'content_analytics'
-      const { data, error } = await supabase
-        .from('content_analytics')
-        .select('date,total_users,total_subscribers,active_users_7d,total_posts')
-        .order('date', { ascending: true })
-        .limit(30);
-
-      if (error) {
-        setAnalyticsData([]);
-        throw error;
-      }
-
-      if (Array.isArray(data)) {
-        setAnalyticsData(data as unknown as AnalyticsData[]);
-      } else {
-        setAnalyticsData([]);
-        throw new Error("Analytics data is not an array");
-      }
+      // No analytics view in DB. Show placeholder data for now.
+      setAnalyticsData([]);
     } catch (error) {
       console.error('Error fetching analytics:', error);
       toast({

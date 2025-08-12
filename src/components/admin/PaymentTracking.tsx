@@ -47,13 +47,8 @@ const PaymentTracking = () => {
 
   const fetchPayments = async () => {
     try {
-      const { data, error } = await supabase
-        .from('admin_payment_overview')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setPayments(data || []);
+      // No payments view/table yet. Show empty list for now.
+      setPayments([]);
     } catch (error) {
       console.error('Error fetching payments:', error);
       toast({
