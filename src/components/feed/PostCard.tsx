@@ -26,6 +26,7 @@ interface PostCardProps {
   };
   currentUserId?: string;
   onLike: (postId: string, isLiked: boolean) => void;
+  onContact?: (profile: any) => void;
 }
 
 const PostCard = ({ post, currentUserId, onLike }: PostCardProps) => {

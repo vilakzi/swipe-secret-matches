@@ -188,8 +188,8 @@ const SuperAdminDashboard = () => {
                     }, {} as Record<string, number>)
                   ).map(([category, count]) => (
                     <div key={category} className="p-2 bg-gray-100 rounded text-center">
-                      <div className="text-sm font-medium capitalize">{category}</div>
-                      <div className="text-lg font-bold">{count}</div>
+                      <div className="text-sm font-medium capitalize">{String(category)}</div>
+                      <div className="text-lg font-bold">{String(count)}</div>
                     </div>
                   ))}
                 </div>

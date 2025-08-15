@@ -50,12 +50,12 @@ const ContentPromoterCard = memo<ContentPromoterCardProps>(({
 
   const handleLike = useCallback(async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onContentLike && item.isContent) {
+    if (onContentLike && item.isAdminPost) {
       await onContentLike(item.id, item.profile.id);
     } else {
       onLike(item.id, item.profile.id);
     }
-  }, [item.id, item.profile.id, item.isContent, onContentLike, onLike]);
+  }, [item.id, item.profile.id, item.isAdminPost, onContentLike, onLike]);
 
   const handleShare = useCallback(async (e: React.MouseEvent) => {
     e.stopPropagation();

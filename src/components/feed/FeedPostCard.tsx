@@ -6,49 +6,39 @@ interface FeedPostCardProps {
   likedItems: Set<string>;
   isSubscribed: boolean;
   onLike: (itemId: string, profileId: string) => void;
-  onContact: (profile: Profile) => void;
+  onContact?: (profile: Profile) => void;
 }
 
 const FeedPostCard = (props: FeedPostCardProps) => {
-  // Ensure userType is defined before passing to PostCard
-  const safeOnContact = (profile: Profile) => {
-    if (
-      profile.userType === "user" ||
-      profile.userType === "service_provider" ||
-      profile.userType === "admin" ||
-      profile.userType === "superadmin"
-    ) {
-      props.onContact(profile as Profile & { userType: "user" | "service_provider" | "admin" | "superadmin" });
-    } else {
-      // Optionally handle the error case here
-      console.warn("Invalid userType in profile:", profile);
-    }
+  // Convert FeedItem to PostCard compatible format
+  const post = {
+    id: props.item.id,
+    user_id: props.item.profile.id,
+    content_url: props.item.postImage || '',
+    caption: props.item.caption || '',
+    post_type: (props.item.isVideo ? 'video' : 'image') as 'image' | 'video',
+    created_at: props.item.createdAt || new Date().toISOString(),
+    likes_count: 0, // Will be managed by parent
+    comments_count: 0, // Will be managed by parent
+    profiles: {
+      id: props.item.profile.id,
+      username: props.item.profile.name,
+      full_name: props.item.profile.name,
+      avatar_url: props.item.profile.image,
+    },
+    likes: [], // Will be managed by parent
   };
 
-  // Only pass onContact if item.profile.userType is valid
-  const validUserTypes = ["user", "service_provider", "admin", "superadmin"] as const;
-  const isValidUserType = validUserTypes.includes(props.item.profile.userType as any);
+  const handleLike = (postId: string, isLiked: boolean) => {
+    props.onLike(postId, props.item.profile.id);
+  };
 
   return (
     <PostCard
-      {...props}
-      onContact={
-        isValidUserType
-          ? (profile) => {
-              if (
-                profile.userType === "user" ||
-                profile.userType === "service_provider" ||
-                profile.userType === "admin" ||
-                profile.userType === "superadmin"
-              ) {
-                // Now TypeScript knows userType is not undefined
-                safeOnContact(profile as Profile & { userType: "user" | "service_provider" | "admin" | "superadmin" });
-              } else {
-                console.warn("Invalid userType in profile:", profile);
-              }
-            }
-          : () => {}
-      }
+      post={post}
+      currentUserId={undefined}
+      onLike={handleLike}
+      onContact={props.onContact}
     />
   );
 };

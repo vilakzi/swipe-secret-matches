@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Heart, MessageCircle, UserPlus, AtSign } from 'lucide-react';
+import { Heart, MessageCircle, UserPlus, AtSign, Bell } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface Notification {

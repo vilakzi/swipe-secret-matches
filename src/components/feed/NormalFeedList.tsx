@@ -9,6 +9,7 @@ interface NormalFeedListProps {
   isSubscribed: boolean;
   onLike: (itemId: string, profileId: string) => void;
   onContact: (profile: Profile) => void;
+  onVideoViewing?: (viewing: boolean) => void;
 }
 
 const PAGE_SIZE = 15;
@@ -29,6 +30,7 @@ const NormalFeedList: React.FC<NormalFeedListProps> = ({
   isSubscribed,
   onLike,
   onContact,
+  onVideoViewing,
 }) => {
   // Memoize shuffled feed for performance
   const shuffledFeed = useMemo(() => shuffleArray(userFeed), [userFeed]);

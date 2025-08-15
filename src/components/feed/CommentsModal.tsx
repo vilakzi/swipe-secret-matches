@@ -63,7 +63,10 @@ const CommentsModal = ({ isOpen, onClose, postId, postUser }: CommentsModalProps
         return;
       }
 
-      setComments(data || []);
+      setComments((data || []).map(comment => ({
+        ...comment,
+        profiles: Array.isArray(comment.profiles) ? comment.profiles[0] : comment.profiles
+      })));
     } catch (error) {
       console.error('Error fetching comments:', error);
     } finally {
