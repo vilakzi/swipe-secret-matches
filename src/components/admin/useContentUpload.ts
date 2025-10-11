@@ -95,7 +95,9 @@ export function useContentUpload() {
     const fileUrl = uploadFile.file_url || uploadFile.preview;
     await createContent({
       title: uploadFile.file.name,
+      content: uploadFile.file.name,
       content_type: uploadFile.type,
+      category: 'general',
       file_url: fileUrl,
       thumbnail_url: uploadFile.type === 'image' ? (uploadFile.thumbnail_url || fileUrl) : undefined,
       file_size: uploadFile.file.size,

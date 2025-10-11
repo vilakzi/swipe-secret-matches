@@ -48,6 +48,7 @@ export interface FeedItem {
   isAdminCard?: boolean;
   isAdminPost?: boolean;
   isWelcome?: boolean;
+  isContent?: boolean;
   // Video-specific properties
   isVideo?: boolean;
   videoDuration?: number;
@@ -55,6 +56,11 @@ export interface FeedItem {
   // Post metadata
   createdAt?: string;
   updatedAt?: string;
+  timestamp?: string;
+  // Location metadata
+  locationMetadata?: {
+    target_locations?: string[];
+  };
   // Algorithm properties - support both simple and detailed scoring
   algorithmScore?: number | ContentScore;
   originalIndex?: number;

@@ -31,7 +31,7 @@ export const useFreshFeedRotation = ({
 
     // Separate viewed and unviewed items
     const unviewedItems = allFeedItems.filter(item => !viewedItems.has(item.id));
-    const viewedItems = allFeedItems.filter(item => viewedItems.has(item.id));
+    const viewedItemsArray = allFeedItems.filter(item => viewedItems.has(item.id));
     
     let freshBatch: FeedItem[] = [];
     
@@ -41,7 +41,7 @@ export const useFreshFeedRotation = ({
     } else if (unviewedItems.length > 0) {
       // Mix unviewed with some viewed content
       const remainingSlots = batchSize - unviewedItems.length;
-      const rotatedViewed = viewedItems.slice(rotationIndexRef.current % viewedItems.length);
+      const rotatedViewed = viewedItemsArray.slice(rotationIndexRef.current % viewedItemsArray.length);
       
       freshBatch = [
         ...unviewedItems,
@@ -49,7 +49,7 @@ export const useFreshFeedRotation = ({
       ];
       
       // Update rotation index for next time
-      rotationIndexRef.current = (rotationIndexRef.current + remainingSlots) % Math.max(viewedItems.length, 1);
+      rotationIndexRef.current = (rotationIndexRef.current + remainingSlots) % Math.max(viewedItemsArray.length, 1);
     } else {
       // All content has been viewed, rotate through everything
       const startIndex = rotationIndexRef.current % allFeedItems.length;
@@ -76,7 +76,7 @@ export const useFreshFeedRotation = ({
     lastRefreshRef.current = now;
     setCurrentBatch(freshBatch);
     
-    console.log(`🔄 Fresh batch generated: ${freshBatch.length} items (${unviewedItems.length} unviewed, ${viewedItems.length} viewed)`);
+    console.log(`🔄 Fresh batch generated: ${freshBatch.length} items (${unviewedItems.length} unviewed, ${viewedItemsArray.length} viewed)`);
     
     return freshBatch;
   }, [allFeedItems, batchSize, viewedItems]);

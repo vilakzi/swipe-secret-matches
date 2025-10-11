@@ -19,7 +19,7 @@ export const useContinuousFeedData = () => {
   // Fetch all data sources
   const { realProfiles, loading: profilesLoading } = useRealProfiles();
   const { newJoiners, loading: newJoinersLoading } = useNewJoiners();
-  const { posts, refetchPosts } = usePostFetching();
+  const { posts, refetch: refetchPosts } = usePostFetching();
 
   // Universal feed data (everyone sees everyone)
   const { profiles: allProfiles, posts: allPosts } = useUniversalFeedData(realProfiles, newJoiners, posts);

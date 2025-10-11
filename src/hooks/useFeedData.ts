@@ -20,7 +20,7 @@ export const useFeedData = (itemsPerPage: number = 8) => {
 
   const { realProfiles, loading: profilesLoading } = useRealProfiles();
   const { newJoiners, loading: newJoinersLoading } = useNewJoiners();
-  const { posts, refetchPosts } = usePostFetching();
+  const { posts, refetch: refetchPosts } = usePostFetching();
 
   // Safe engagement tracking
   const engagementTracker = useEngagementTracking();
