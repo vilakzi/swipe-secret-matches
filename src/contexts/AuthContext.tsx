@@ -34,34 +34,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     let mounted = true;
 
     // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mounted) return;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
 
-        // Auth state changed - handle gracefully
-        
-        if (event === 'SIGNED_OUT') {
-          setSession(null);
-          setUser(null);
-          setLoading(false);
-          return;
-        }
-
-        if (event === 'TOKEN_REFRESHED') {
-          // Token refreshed successfully
-        }
-
-        if (session) {
-          setSession(session);
-          setUser(session.user);
-        } else {
-          setSession(null);
-          setUser(null);
-        }
-        
+      if (event === 'SIGNED_OUT') {
+        setSession(null);
+        setUser(null);
         setLoading(false);
+        return;
       }
-    );
+
+      if (session) {
+        setSession(session);
+        setUser(session.user);
+      } else {
+        setSession(null);
+        setUser(null);
+      }
+
+      setLoading(false);
+    });
 
     // THEN check for existing session
     const getInitialSession = async () => {
