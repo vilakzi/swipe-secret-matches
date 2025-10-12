@@ -10,9 +10,6 @@ import {
   Shield,
   FileText
 } from 'lucide-react';
-import UnifiedContentUpload from './UnifiedContentUpload';
-import ContentManager from './ContentManager';
-import ContentModerationPanel from './ContentModerationPanel';
 import UserManagement from './UserManagement';
 import AnalyticsDashboard from './AnalyticsDashboard';
 import AdminSettings from './AdminSettings';
@@ -26,29 +23,8 @@ const AdminDashboard = () => {
           <p className="text-gray-300">Manage content, users, and platform settings</p>
         </div>
 
-        <Tabs defaultValue="upload" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 bg-gray-800 border-gray-700">
-            <TabsTrigger 
-              value="upload" 
-              className="flex items-center gap-2 data-[state=active]:bg-purple-600"
-            >
-              <Upload className="w-4 h-4" />
-              Upload
-            </TabsTrigger>
-            <TabsTrigger 
-              value="content" 
-              className="flex items-center gap-2 data-[state=active]:bg-purple-600"
-            >
-              <FileText className="w-4 h-4" />
-              Content
-            </TabsTrigger>
-            <TabsTrigger 
-              value="moderation" 
-              className="flex items-center gap-2 data-[state=active]:bg-purple-600"
-            >
-              <Shield className="w-4 h-4" />
-              Moderation
-            </TabsTrigger>
+        <Tabs defaultValue="users" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3 bg-gray-800 border-gray-700">
             <TabsTrigger 
               value="users" 
               className="flex items-center gap-2 data-[state=active]:bg-purple-600"
@@ -71,18 +47,6 @@ const AdminDashboard = () => {
               Settings
             </TabsTrigger>
           </TabsList>
-
-          <TabsContent value="upload" className="space-y-6">
-            <UnifiedContentUpload />
-          </TabsContent>
-
-          <TabsContent value="content" className="space-y-6">
-            <ContentManager />
-          </TabsContent>
-
-          <TabsContent value="moderation" className="space-y-6">
-            <ContentModerationPanel />
-          </TabsContent>
 
           <TabsContent value="users" className="space-y-6">
             <UserManagement />

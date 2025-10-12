@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.12 (cd3cf9e)"
@@ -404,21 +404,6 @@ export type Database = {
         }
         Relationships: []
       }
-      "themba connect": {
-        Row: {
-          created_at: string
-          id: number
-        }
-        Insert: {
-          created_at?: string
-          id?: number
-        }
-        Update: {
-          created_at?: string
-          id?: number
-        }
-        Relationships: []
-      }
       user_activity: {
         Row: {
           is_online: boolean
@@ -451,11 +436,11 @@ export type Database = {
       }
       create_notification: {
         Args: {
-          p_user_id: string
           p_actor_id: string
-          p_type: string
-          p_post_id?: string
           p_comment_id?: string
+          p_post_id?: string
+          p_type: string
+          p_user_id: string
         }
         Returns: string
       }
